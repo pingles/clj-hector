@@ -39,6 +39,18 @@
 
 (def *string-serializer* (StringSerializer/get))
 
+(defn put-row
+  "Stores values in columns in map m against row key pk"
+  [ks cf pk m]
+  (let [mut (HFactory/createMutator ks *string-serializer*)]
+    (if (= 1 (count (keys m)))
+      (.insert mut pk cf (HFactory/createStringColumn (first (keys m))
+                                                      (first (vals m))))
+      (do (doseq [kv m]
+            (.addInsertion mut pk cf (HFactory/createStringColumn (first kv)
+                                                                  (last kv))))
+          (.execute mut)))))
+
 (defn get-rows
   "In keyspace ks, retrieve rows for pks within column family cf"
   [ks cf pks]
@@ -50,6 +62,12 @@
                     (. setKeys pks)
                     (.setRange "" "" false, 3))
                   execute get)))
+
+(defn delete-columns
+  [ks cf pk cs]
+  (let [mut (HFactory/createMutator ks *string-serializer*)]
+    (doseq [c cs] (.addDeletion mut pk cf c *string-serializer*))
+    (.execute mut)))
 
 (defn get-columns
   "In keyspace ks, retrieve c columns for row pk from column family cf"
