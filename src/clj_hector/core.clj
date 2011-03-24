@@ -1,11 +1,19 @@
 (ns clj-hector.core
-  (:import [me.prettyprint.hector.api.factory HFactory]
+  (:import [java.io Closeable]
+           [me.prettyprint.hector.api Cluster]
+           [me.prettyprint.hector.api.factory HFactory]
            [me.prettyprint.cassandra.service CassandraHostConfigurator]
            [me.prettyprint.cassandra.serializers StringSerializer]
            [me.prettyprint.cassandra.model QueryResultImpl HColumnImpl ColumnSliceImpl RowImpl RowsImpl]))
 
 ;; work in progress; following through sample usages on hector wiki
 ;; https://github.com/rantav/hector/wiki/User-Guide
+
+(defn closeable-cluster
+  [cluster]
+  (proxy [Cluster Closeable] []
+    (close []
+           (.. cluster getConnectionManager shutdown))))
 
 (defn cluster
   "Connects to Cassandra cluster"
