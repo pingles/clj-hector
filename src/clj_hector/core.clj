@@ -2,7 +2,7 @@
   (:import [me.prettyprint.hector.api.factory HFactory]
            [me.prettyprint.cassandra.service CassandraHostConfigurator]
            [me.prettyprint.cassandra.serializers StringSerializer]
-           [me.prettyprint.cassandra.model HColumnImpl ColumnSliceImpl RowImpl RowsImpl]))
+           [me.prettyprint.cassandra.model QueryResultImpl HColumnImpl ColumnSliceImpl RowImpl RowsImpl]))
 
 ;; work in progress; following through sample usages on hector wiki
 ;; https://github.com/rantav/hector/wiki/User-Guide
@@ -35,7 +35,12 @@
                       (to-clojure c))))
   HColumnImpl
   (to-clojure [s]
-              {(.getName s) (.getValue s)}))
+              {(.getName s) (.getValue s)})
+
+  QueryResultImpl
+  (to-clojure [s]
+              (with-meta (to-clojure (.get s)) {:exec_us (.getExecutionTimeMicro s)
+                                                :host (.getHostUsed s)})))
 
 (def *string-serializer* (StringSerializer/get))
 
@@ -59,8 +64,8 @@
                                                            *string-serializer*
                                                            *string-serializer*)
                     (.setColumnFamily cf)
-                    (. setKeys pks)
-                    (.setRange "" "" false, 3))
+                    (. setKeys (object-array pks))
+                    (.setRange "" "" false Integer/MAX_VALUE))
                   execute get)))
 
 (defn delete-columns
@@ -77,7 +82,7 @@
                       (.setColumnFamily cf)
                       (.setKey pk)
                       (.setName c))
-                    execute get))
+                    execute))
     (to-clojure (.. (doto (HFactory/createSliceQuery ks
                                                      *string-serializer*
                                                      *string-serializer*
@@ -85,5 +90,5 @@
                       (.setColumnFamily cf)
                       (.setKey pk)
                       (. setColumnNames (object-array c)))
-                    execute get))))
+                    execute))))
 
