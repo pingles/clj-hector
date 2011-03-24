@@ -52,6 +52,7 @@
               (with-meta (to-clojure (.get s)) {:exec_us (.getExecutionTimeMicro s)
                                                 :host (.getHostUsed s)})))
 
+
 (def *string-serializer* (StringSerializer/get))
 
 (defn put-row
