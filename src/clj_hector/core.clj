@@ -17,9 +17,11 @@
 
 (defn cluster
   "Connects to Cassandra cluster"
-  [cluster-name host port]
-  (HFactory/getOrCreateCluster cluster-name
-                               (CassandraHostConfigurator. (str host ":" port))))
+  ([cluster-name host]
+     (cluster cluster-name host 9160))
+  ([cluster-name host port]
+     (HFactory/getOrCreateCluster cluster-name
+                                  (CassandraHostConfigurator. (str host ":" port)))))
 (defn keyspace
   [cluster name]
   (HFactory/createKeyspace name cluster))
@@ -74,7 +76,7 @@
                     (.setColumnFamily cf)
                     (. setKeys (object-array pks))
                     (.setRange "" "" false Integer/MAX_VALUE))
-                  execute get)))
+                  execute)))
 
 (defn delete-columns
   [ks cf pk cs]
