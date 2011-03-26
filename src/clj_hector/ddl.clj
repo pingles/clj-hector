@@ -64,16 +64,16 @@
             kss))))
 
 
-(defn- parse-comaparator
+(defn- parse-comparator
   ([comparator-type]
      (condp = (.getClassName comparator-type)
-       "org.apache.cassandra.db.marshal.UTF8Type" :utf-8
-       "org.apache.cassandra.db.marshal.AsciiType" :ascii
-       "org.apache.cassandra.db.marshal.BytesType" :byte
-       "org.apache.cassandra.db.marshal.IntegerType" :integer
+       "org.apache.cassandra.db.marshal.UTF8Type"        :utf-8
+       "org.apache.cassandra.db.marshal.AsciiType"       :ascii
+       "org.apache.cassandra.db.marshal.BytesType"       :byte
+       "org.apache.cassandra.db.marshal.IntegerType"     :integer
        "org.apache.cassandra.db.marshal.LexicalUUIDType" :lexical-uuid
-       "org.apache.cassandra.db.marshal.LongType" :long
-       "org.apache.cassandra.db.marshal.TimeUUIDType" :time-uuid)))
+       "org.apache.cassandra.db.marshal.LongType"        :long
+       "org.apache.cassandra.db.marshal.TimeUUIDType"    :time-uuid)))
 
 (defn column-families
   "Returns all the column families for a certain keyspace"
@@ -83,5 +83,5 @@
            cf-defs (.getCfDefs ks)]
        (map (fn [cf-def]
               {:name (.getName cf-def)
-               :comparator (parse-comaparator (.getComparatorType cf-def))})
+               :comparator (parse-comparator (.getComparatorType cf-def))})
             cf-defs))))

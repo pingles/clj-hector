@@ -31,7 +31,6 @@
                                       :comparator :long}]})
     (add-column-family *test-cassandra-cluster* random-ks {:name "c" :comparator :long})
     (let [column-families (column-families *test-cassandra-cluster* random-ks)
-          _ (println (str "CF: " (vec column-families)))
           column-family (first (filter (fn [cf] (= (:name cf) "c")) column-families))]
       (is (not (nil? column-family)))
       (is (= :long (:comparator column-family))))
