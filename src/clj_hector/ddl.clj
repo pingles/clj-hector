@@ -25,8 +25,10 @@
                                     (make-column-family keyspace name)
                                     (make-column-family keyspace name comparator)))
                                 column-families)]
-       (HFactory/createKeyspaceDefinition
-        keyspace strategy-class replication-factor column-families))))
+       (HFactory/createKeyspaceDefinition keyspace
+                                          strategy-class
+                                          replication-factor
+                                          column-families))))
 
 (defn add-column-family
   "Adds a column family to a keyspace"
