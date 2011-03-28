@@ -3,7 +3,7 @@
            [me.prettyprint.hector.api Cluster]
            [me.prettyprint.hector.api.factory HFactory]
            [me.prettyprint.cassandra.service CassandraHostConfigurator]
-           [me.prettyprint.cassandra.serializers StringSerializer]
+           [me.prettyprint.cassandra.serializers StringSerializer IntegerSerializer]
            [me.prettyprint.cassandra.model QueryResultImpl HColumnImpl ColumnSliceImpl RowImpl RowsImpl]))
 
 ;; work in progress; following through sample usages on hector wiki
@@ -55,7 +55,8 @@
 (defn serializer
   "Returns serialiser based on type of item"
   [t]
-  (StringSerializer/get))
+  (cond (integer? t) (IntegerSerializer/get)
+        :else (StringSerializer/get)))
 
 (def *string-serializer* (StringSerializer/get))
 
