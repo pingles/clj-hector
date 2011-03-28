@@ -24,5 +24,8 @@
       (is (= '({:key "row-key"
                 :columns {"k" "v"}})
              (get-rows ks cf ["row-key"]))))
+    (testing "columns"
+      (is (= {"k" "v"}
+             (get-columns ks cf "row-key" ["k"]))))
     (ddl/drop-keyspace *test-cluster* ks-name)))
 
