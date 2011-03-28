@@ -14,7 +14,6 @@
 
 (deftest string-key-values
   (let [ks-name (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")
-        random (str (java.util.UUID/randomUUID))
         cf "a"
         ks (keyspace *test-cluster* ks-name)]
     (ddl/add-keyspace *test-cluster* {:name ks-name
@@ -31,7 +30,6 @@
 
 (deftest string-key-int-values
   (let [ks-name (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")
-        random (str (java.util.UUID/randomUUID))
         cf "a"
         ks (keyspace *test-cluster* ks-name)]
     (ddl/add-keyspace *test-cluster* {:name ks-name
