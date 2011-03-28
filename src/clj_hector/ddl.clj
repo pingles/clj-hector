@@ -1,6 +1,6 @@
 (ns clj-hector.ddl
   (:import [me.prettyprint.hector.api.factory HFactory]
-           [me.prettyprint.hector.api.ddl ColumnFamilyDefinition]))
+           [me.prettyprint.hector.api.ddl ComparatorType ColumnFamilyDefinition]))
 
 (defn- make-column-family
   "Returns an object defining a new column family"
@@ -8,13 +8,13 @@
      (HFactory/createColumnFamilyDefinition keyspace column-family-name))
   ([keyspace column-family-name comparator-type]
      (let [cmp (condp = comparator-type
-                   :ascii         me.prettyprint.hector.api.ddl.ComparatorType/ASCIITYPE
-                   :byte          me.prettyprint.hector.api.ddl.ComparatorType/BYTESTYPE
-                   :integer       me.prettyprint.hector.api.ddl.ComparatorType/INTEGERTYPE
-                   :lexical-uuid  me.prettyprint.hector.api.ddl.ComparatorType/LEXICALUUIDTYPE
-                   :long          me.prettyprint.hector.api.ddl.ComparatorType/LONGTYPE
-                   :time-uuid     me.prettyprint.hector.api.ddl.ComparatorType/TIMEUUIDTYPE
-                   :utf-8         me.prettyprint.hector.api.ddl.ComparatorType/UTF8TYPE
+                   :ascii         ComparatorType/ASCIITYPE
+                   :byte          ComparatorType/BYTESTYPE
+                   :integer       ComparatorType/INTEGERTYPE
+                   :lexical-uuid  ComparatorType/LEXICALUUIDTYPE
+                   :long          ComparatorType/LONGTYPE
+                   :time-uuid     ComparatorType/TIMEUUIDTYPE
+                   :utf-8         ComparatorType/UTF8TYPE
                    (throw (Exception. "Unknown comparator type passed in column family definition")))]
        (HFactory/createColumnFamilyDefinition keyspace column-family-name cmp))))
 
