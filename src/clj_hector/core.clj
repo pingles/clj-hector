@@ -57,6 +57,12 @@
   [t]
   (StringSerializer/get))
 
+(def *string-serializer* (StringSerializer/get))
+
+(defn- create-column
+  [k v]
+  (HFactory/createColumn k v (serializer k) (serializer v)))
+
 (defn put-row
   "Stores values in columns in map m against row key pk"
   [ks cf pk m]
@@ -64,11 +70,11 @@
     (if (= 1 (count (keys m)))
       (let [k (first (keys m))
             v (first (vals m))]
-        (.insert mut pk cf (HFactory/createColumn k v (serializer k) (serializer v))))
+        (.insert mut pk cf (create-column k v)))
       (do (doseq [kv m]
             (let [k (first kv)
                   v (last kv)]
-              (.addInsertion mut pk cf (HFactory/createColumn k v (serializer k) (serializer v)))))
+              (.addInsertion mut pk cf (create-column k v))))
           (.execute mut)))))
 
 (defn get-rows
@@ -85,8 +91,8 @@
 
 (defn delete-columns
   [ks cf pk cs]
-  (let [mut (HFactory/createMutator ks *string-serializer*)]
-    (doseq [c cs] (.addDeletion mut pk cf c *string-serializer*))
+  (let [mut (HFactory/createMutator ks (serializer pk))]
+    (doseq [c cs] (.addDeletion mut pk cf c (serializer pk)))
     (.execute mut)))
 
 (defn get-columns
