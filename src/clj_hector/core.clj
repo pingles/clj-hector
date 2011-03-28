@@ -78,10 +78,10 @@
           (.execute mut)))))
 
 (defn get-rows
-  "In keyspace ks, retrieve rows for pks within column family cf"
+  "In keyspace ks, retrieve rows for pks within column family cf."
   [ks cf pks]
   (to-clojure (.. (doto (HFactory/createMultigetSliceQuery ks
-                                                           *string-serializer*
+                                                           (serializer (first pks))
                                                            *string-serializer*
                                                            *string-serializer*)
                     (.setColumnFamily cf)
@@ -99,7 +99,10 @@
   "In keyspace ks, retrieve c columns for row pk from column family cf"
   [ks cf pk c]
   (if (< 2 (count c))
-    (to-clojure (.. (doto (HFactory/createStringColumnQuery ks)
+    (to-clojure (.. (doto (HFactory/createColumnQuery ks
+                                                      (serializer pk)
+                                                      *string-serializer*
+                                                      *string-serializer*)
                       (.setColumnFamily cf)
                       (.setKey pk)
                       (.setName c))

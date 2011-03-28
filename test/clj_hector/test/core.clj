@@ -10,7 +10,7 @@
   (is (instance? StringSerializer
                  (serializer "Hello"))))
 
-(deftest rows
+(deftest storing-and-reading-strings
   (let [ks-name (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")
         random (str (java.util.UUID/randomUUID))
         cf "a"
@@ -20,7 +20,9 @@
                                       :replication 1
                                       :column-families [{:name cf}]})
     (put-row ks cf "row-key" {"k" "v"})
-    (is (= '({:key "row-key"
-              :columns {"k" "v"}})
-           (get-rows ks cf ["row-key"])))
+    (testing "rows"
+      (is (= '({:key "row-key"
+                :columns {"k" "v"}})
+             (get-rows ks cf ["row-key"]))))
     (ddl/drop-keyspace *test-cluster* ks-name)))
+
