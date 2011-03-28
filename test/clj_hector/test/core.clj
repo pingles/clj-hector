@@ -1,6 +1,8 @@
 (ns clj-hector.test.core
   (:use [clj-hector.core] :reload)
-  (:use [clojure.test]))
+  (:use [clojure.test])
+  (:import [me.prettyprint.cassandra.serializers StringSerializer]))
 
-(deftest replace-me ;; FIXME: write
-  (is false "No tests have been written."))
+(deftest serializer-lookup
+  (is (instance? StringSerializer
+                 (serializer "Hello"))))

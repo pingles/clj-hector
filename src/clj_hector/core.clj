@@ -52,19 +52,23 @@
               (with-meta (to-clojure (.get s)) {:exec_us (.getExecutionTimeMicro s)
                                                 :host (.getHostUsed s)})))
 
-
-(def *string-serializer* (StringSerializer/get))
+(defn serializer
+  "Returns serialiser based on type of item"
+  [t]
+  (StringSerializer/get))
 
 (defn put-row
   "Stores values in columns in map m against row key pk"
   [ks cf pk m]
-  (let [mut (HFactory/createMutator ks *string-serializer*)]
+  (let [mut (HFactory/createMutator ks (serializer pk))]
     (if (= 1 (count (keys m)))
-      (.insert mut pk cf (HFactory/createStringColumn (first (keys m))
-                                                      (first (vals m))))
+      (let [k (first (keys m))
+            v (first (vals m))]
+        (.insert mut pk cf (HFactory/createColumn k v (serializer k) (serializer v))))
       (do (doseq [kv m]
-            (.addInsertion mut pk cf (HFactory/createStringColumn (first kv)
-                                                                  (last kv))))
+            (let [k (first kv)
+                  v (last kv)]
+              (.addInsertion mut pk cf (HFactory/createColumn k v (serializer k) (serializer v)))))
           (.execute mut)))))
 
 (defn get-rows
