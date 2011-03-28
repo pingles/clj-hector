@@ -15,7 +15,9 @@ A simple Clojure client for Cassandra that wraps Hector
 ## TODO
 
 * Serialization of non-String types
+* Better support of CassandraHostConfigurator
 * Type hints to avoid reflecting
+* Sure there's plenty more :)
 
 ## License
 
