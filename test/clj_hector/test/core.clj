@@ -4,7 +4,7 @@
   (:require [clj-hector.ddl :as ddl])
   (:import [me.prettyprint.cassandra.serializers StringSerializer IntegerSerializer]))
 
-(def *test-cluster* (cluster "Pauls Cluster" "localhost"))
+(def *test-cluster* (cluster "test" "localhost"))
 
 (deftest serializer-lookup
   (is (instance? StringSerializer

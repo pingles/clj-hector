@@ -12,6 +12,11 @@ A simple Clojure client for Cassandra that wraps Hector
         (keyspace "Twitter")
         (get-rows "Users" ["paul"]))
 
+## TODO
+
+* Serialization of non-String types
+* Type hints to avoid reflecting
+
 ## License
 
 Copyright (c) Paul Ingles
