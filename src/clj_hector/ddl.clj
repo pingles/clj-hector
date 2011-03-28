@@ -50,7 +50,10 @@
                         :network-topology "org.apache.cassandra.locator.NetworkTopologyStrategy"
                         "org.apache.cassandra.locator.SimpleStrategy")
            replication (or replication 1)]
-       (.addKeyspace cluster (make-keyspace-definition name strategy replication column-families)))))
+       (.addKeyspace cluster (make-keyspace-definition name
+                                                       strategy
+                                                       replication
+                                                       column-families)))))
 
 (defn drop-keyspace
   "Deletes a whole keyspace from the cluster"
