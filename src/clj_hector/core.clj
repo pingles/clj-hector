@@ -52,11 +52,14 @@
               (with-meta (to-clojure (.get s)) {:exec_us (.getExecutionTimeMicro s)
                                                 :host (.getHostUsed s)})))
 
+(def *serializers* {:integer (IntegerSerializer/get)
+                    :string (StringSerializer/get)})
+
 (defn serializer
   "Returns serialiser based on type of item"
   [t]
-  (cond (integer? t) (IntegerSerializer/get)
-        :else (StringSerializer/get)))
+  (cond (integer? t) (:integer *serializers*)
+        :else (:string *serializers*)))
 
 (def *string-serializer* (StringSerializer/get))
 
@@ -73,22 +76,24 @@
             v (first (vals m))]
         (.insert mut pk cf (create-column k v)))
       (do (doseq [kv m]
-            (let [k (first kv)
-                  v (last kv)]
+            (let [k (first kv) v (last kv)]
               (.addInsertion mut pk cf (create-column k v))))
           (.execute mut)))))
 
 (defn get-rows
   "In keyspace ks, retrieve rows for pks within column family cf."
-  [ks cf pks]
-  (to-clojure (.. (doto (HFactory/createMultigetSliceQuery ks
-                                                           (serializer (first pks))
-                                                           *string-serializer*
-                                                           *string-serializer*)
-                    (.setColumnFamily cf)
-                    (. setKeys (object-array pks))
-                    (.setRange "" "" false Integer/MAX_VALUE))
-                  execute)))
+  ([ks cf pks]
+     (get-rows ks cf pks {:v-serializer :string}))
+  ([ks cf pks opts]
+     (to-clojure (let [value-serializer (*serializers* (:v-serializer opts))]
+                   (.. (doto (HFactory/createMultigetSliceQuery ks
+                                                                (serializer (first pks))
+                                                                *string-serializer*
+                                                                value-serializer)
+                         (.setColumnFamily cf)
+                         (. setKeys (object-array pks))
+                         (.setRange "" "" false Integer/MAX_VALUE))
+                       execute)))))
 
 (defn delete-columns
   [ks cf pk cs]
@@ -98,22 +103,25 @@
 
 (defn get-columns
   "In keyspace ks, retrieve c columns for row pk from column family cf"
-  [ks cf pk c]
-  (if (< 2 (count c))
-    (to-clojure (.. (doto (HFactory/createColumnQuery ks
-                                                      (serializer pk)
-                                                      *string-serializer*
-                                                      *string-serializer*)
-                      (.setColumnFamily cf)
-                      (.setKey pk)
-                      (.setName c))
-                    execute))
-    (to-clojure (.. (doto (HFactory/createSliceQuery ks
-                                                     *string-serializer*
-                                                     *string-serializer*
-                                                     *string-serializer*)
-                      (.setColumnFamily cf)
-                      (.setKey pk)
-                      (. setColumnNames (object-array c)))
-                    execute))))
+  ([ks cf pk c]
+     (get-columns ks cf pk c {:v-serializer :string}))
+  ([ks cf pk c opts]
+     (let [value-serializer (*serializers* (:v-serializer opts))] 
+       (if (< 2 (count c))
+         (to-clojure (.. (doto (HFactory/createColumnQuery ks
+                                                           (serializer pk)
+                                                           *string-serializer*
+                                                           value-serializer)
+                           (.setColumnFamily cf)
+                           (.setKey pk)
+                           (.setName c))
+                         execute))
+         (to-clojure (.. (doto (HFactory/createSliceQuery ks
+                                                          (serializer pk)
+                                                          *string-serializer*
+                                                          value-serializer)
+                           (.setColumnFamily cf)
+                           (.setKey pk)
+                           (. setColumnNames (object-array c)))
+                         execute))))))
 

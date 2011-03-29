@@ -39,7 +39,7 @@
     (put-row ks cf "row-key" {"k" 1234})
     (is (= '({:key "row-key"
               :columns {"k" 1234}})
-           (get-rows ks cf ["row-key"])))
+           (get-rows ks cf ["row-key"] {:v-serializer :integer})))
     (is (= {"k" 1234}
-           (get-columns ks cf "row-key" ["k"])))
+           (get-columns ks cf "row-key" ["k"] {:v-serializer :integer})))
     (ddl/drop-keyspace *test-cluster* ks-name)))
