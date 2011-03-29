@@ -14,10 +14,11 @@ A simple Clojure client for Cassandra that wraps Hector
 
 ## TODO
 
+* Turn off spurious logging by default
 * Serialization of non-String types
 * Better support of CassandraHostConfigurator
 * Type hints to avoid reflecting
-* Sure there's plenty more :)
+* Plenty more :)
 
 ## License
 
