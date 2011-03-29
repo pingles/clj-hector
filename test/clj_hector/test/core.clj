@@ -2,7 +2,7 @@
   (:use [clj-hector.core] :reload)
   (:use [clojure.test])
   (:require [clj-hector.ddl :as ddl])
-  (:import [me.prettyprint.cassandra.serializers StringSerializer IntegerSerializer]))
+  (:import [me.prettyprint.cassandra.serializers StringSerializer IntegerSerializer LongSerializer]))
 
 (def *test-cluster* (cluster "test" "localhost"))
 
@@ -10,7 +10,9 @@
   (is (instance? StringSerializer
                  (serializer "Hello")))
   (is (instance? IntegerSerializer
-                 (serializer 1234))))
+                 (serializer 1234)))
+  (is (instance? LongSerializer
+                 (serializer (long 1234)))))
 
 (deftest string-key-values
   (let [ks-name (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")
