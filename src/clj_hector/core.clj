@@ -40,9 +40,7 @@
   
   ColumnSliceImpl
   (to-clojure [s]
-              (into {}
-                    (for [c (.getColumns s)]
-                      (to-clojure c))))
+              (into {} (for [c (.getColumns s)] (to-clojure c))))
   HColumnImpl
   (to-clojure [s]
               {(.getName s) (.getValue s)})
