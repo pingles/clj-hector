@@ -96,7 +96,7 @@
                                                                 value-serializer)
                          (.setColumnFamily cf)
                          (. setKeys (object-array pks))
-                         (.setRange nil nil false Integer/MAX_VALUE))
+                         (.setRange (:start opts) (:end opts) false Integer/MAX_VALUE))
                        execute)))))
 
 (defn delete-columns
