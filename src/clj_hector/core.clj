@@ -40,7 +40,7 @@
   
   ColumnSliceImpl
   (to-clojure [s]
-              (into {} (for [c (.getColumns s)] (to-clojure c))))
+              (into (sorted-map) (for [c (.getColumns s)] (to-clojure c))))
   HColumnImpl
   (to-clojure [s]
               {(.getName s) (.getValue s)})
