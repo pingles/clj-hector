@@ -64,3 +64,22 @@
            (get-columns ks cf "row-key" [(long 1)] {:n-serializer :long
                                                     :v-serializer :long})))
     (ddl/drop-keyspace *test-cluster* ks-name)))
+
+(deftest long-key-long-name-and-values
+  (let [ks-name (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")
+        cf "a"
+        ks (keyspace *test-cluster* ks-name)]
+    (ddl/add-keyspace *test-cluster* {:name ks-name
+                                      :strategy :local
+                                      :replication 1
+                                      :column-families [{:name cf
+                                                         :comparator :long}]})
+    (put-row ks cf (long 101) {(long 1) (long 1234)})
+    (is (= {:key (long 101)
+            :columns {(long 1) (long 1234)}}
+           (first (get-rows ks cf [(long 101)] {:n-serializer :long
+                                                :v-serializer :long}))))
+    (is (= {(long 1) (long 1234)}
+           (get-columns ks cf (long 101) [(long 1)] {:n-serializer :long
+                                                     :v-serializer :long})))
+    (ddl/drop-keyspace *test-cluster* ks-name)))
