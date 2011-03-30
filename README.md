@@ -28,6 +28,8 @@ Basic retrieval of rows
 
 ## TODO
 
+* Better support different Hector query types- multimethod dispatch
+  based on arity of pk and c args?
 * Turn off spurious logging by default
 * Serialization of non-String types
 * Better support of CassandraHostConfigurator
