@@ -61,8 +61,6 @@
         (instance? Long t) (:long *serializers*)
         :else (:string *serializers*)))
 
-(def *string-serializer* (StringSerializer/get))
-
 (defn- create-column
   [k v]
   (HFactory/createColumn k v (serializer k) (serializer v)))
@@ -80,19 +78,25 @@
               (.addInsertion mut pk cf (create-column k v))))
           (.execute mut)))))
 
+(def *default-serializer* :string)
+
 (defn get-rows
   "In keyspace ks, retrieve rows for pks within column family cf."
   ([ks cf pks]
-     (get-rows ks cf pks {:v-serializer :string}))
+     (get-rows ks cf pks {:v-serializer :string
+                          :n-serializer :string}))
   ([ks cf pks opts]
-     (to-clojure (let [value-serializer (*serializers* (:v-serializer opts))]
+     (to-clojure (let [value-serializer (*serializers* (or (:v-serializer opts)
+                                                           *default-serializer*))
+                       name-serializer (*serializers* (or (:n-serializer opts)
+                                                          *default-serializer*))]
                    (.. (doto (HFactory/createMultigetSliceQuery ks
                                                                 (serializer (first pks))
-                                                                *string-serializer*
+                                                                name-serializer
                                                                 value-serializer)
                          (.setColumnFamily cf)
                          (. setKeys (object-array pks))
-                         (.setRange "" "" false Integer/MAX_VALUE))
+                         (.setRange nil nil false Integer/MAX_VALUE))
                        execute)))))
 
 (defn delete-columns
@@ -104,13 +108,17 @@
 (defn get-columns
   "In keyspace ks, retrieve c columns for row pk from column family cf"
   ([ks cf pk c]
-     (get-columns ks cf pk c {:v-serializer :string}))
+     (get-columns ks cf pk c {:v-serializer :string
+                              :n-serializer :string}))
   ([ks cf pk c opts]
-     (let [value-serializer (*serializers* (:v-serializer opts))] 
+     (let [value-serializer (*serializers* (or (:v-serializer opts)
+                                               *default-serializer*))
+           name-serializer (*serializers* (or (:n-serializer opts)
+                                              *default-serializer*))]
        (if (< 2 (count c))
          (to-clojure (.. (doto (HFactory/createColumnQuery ks
                                                            (serializer pk)
-                                                           *string-serializer*
+                                                           name-serializer
                                                            value-serializer)
                            (.setColumnFamily cf)
                            (.setKey pk)
@@ -118,7 +126,7 @@
                          execute))
          (to-clojure (.. (doto (HFactory/createSliceQuery ks
                                                           (serializer pk)
-                                                          *string-serializer*
+                                                          name-serializer
                                                           value-serializer)
                            (.setColumnFamily cf)
                            (.setKey pk)
