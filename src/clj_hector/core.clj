@@ -45,6 +45,10 @@
   (to-clojure [s]
               {(.getName s) (.getValue s)})
 
+  Integer
+  (to-clojure [s]
+              {:count s})
+
   QueryResultImpl
   (to-clojure [s]
               (with-meta (to-clojure (.get s)) {:exec_us (.getExecutionTimeMicro s)
@@ -60,6 +64,8 @@
   (cond (instance? Integer t) (:integer *serializers*)
         (instance? Long t) (:long *serializers*)
         :else (:string *serializers*)))
+
+(def *default-serializer* :string)
 
 (defn- create-column
   [k v]
@@ -77,8 +83,6 @@
             (let [k (first kv) v (last kv)]
               (.addInsertion mut pk cf (create-column k v))))
           (.execute mut)))))
-
-(def *default-serializer* :string)
 
 (defn get-rows
   "In keyspace ks, retrieve rows for pks within column family cf."
@@ -104,6 +108,18 @@
   (let [mut (HFactory/createMutator ks (serializer pk))]
     (doseq [c cs] (.addDeletion mut pk cf c (serializer pk)))
     (.execute mut)))
+
+(defn count-columns
+  "Counts number of columns for pk in column family cf"
+  [ks pk cf & opts]
+  (let [name-serializer (*serializers* *default-serializer*)]
+    (to-clojure (.. (doto (HFactory/createCountQuery ks
+                                                     (serializer pk)
+                                                     name-serializer)
+                      (.setKey pk)
+                      (.setRange (:start opts) (:end opts) Integer/MAX_VALUE)
+                      (.setColumnFamily cf))
+                    execute))))
 
 (defn get-columns
   "In keyspace ks, retrieve c columns for row pk from column family cf"

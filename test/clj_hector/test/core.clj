@@ -108,3 +108,15 @@
     (ddl/drop-keyspace *test-cluster* ks-name)))
 
 
+(deftest counting
+  (let [ks-name (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")
+        cf "a"
+        ks (keyspace *test-cluster* ks-name)]
+    (ddl/add-keyspace *test-cluster* {:name ks-name
+                                      :strategy :local
+                                      :replication 1
+                                      :column-families [{:name cf}]})
+    (put-row ks cf "row-key" {"k" "v" "k2" "v2"})
+    (is (= {:count 2}
+           (count-columns ks "row-key" cf)))
+    (ddl/drop-keyspace *test-cluster* ks-name)))
