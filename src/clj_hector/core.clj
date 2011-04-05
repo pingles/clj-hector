@@ -110,7 +110,7 @@
     (.execute mut)))
 
 (defn count-columns
-  "Counts number of columns for pk in column family cf"
+  "Counts number of columns for pk in column family cf. The method is not O(1). It takes all the columns from disk to calculate the answer. The only benefit of the method is that you do not need to pull all the columns over Thrift interface to count them."
   [ks pk cf & opts]
   (let [name-serializer (*serializers* *default-serializer*)]
     (to-clojure (.. (doto (HFactory/createCountQuery ks
