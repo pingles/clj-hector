@@ -17,7 +17,9 @@
 (deftest string-key-values
   (let [ks-name (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")
         cf "a"
-        ks (keyspace *test-cluster* ks-name)]
+        ks (keyspace *test-cluster* ks-name)
+        opts {:v-serializer :string
+              :n-serializer :string}]
     (ddl/add-keyspace *test-cluster* {:name ks-name
                                       :strategy :local
                                       :replication 1
@@ -25,15 +27,17 @@
     (put-row ks cf "row-key" {"k" "v"})
     (is (= '({:key "row-key"
               :columns {"k" "v"}})
-           (get-rows ks cf ["row-key"])))
+           (get-rows ks cf ["row-key"] opts)))
     (is (= {"k" "v"}
-           (get-columns ks cf "row-key" ["k"])))
+           (get-columns ks cf "row-key" ["k"] opts)))
     (ddl/drop-keyspace *test-cluster* ks-name)))
 
-(deftest string-key-int-values
+(deftest string-name-int-values
   (let [ks-name (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")
         cf "a"
-        ks (keyspace *test-cluster* ks-name)]
+        ks (keyspace *test-cluster* ks-name)
+        opts {:v-serializer :integer
+              :n-serializer :string}]
     (ddl/add-keyspace *test-cluster* {:name ks-name
                                       :strategy :local
                                       :replication 1
@@ -41,15 +45,17 @@
     (put-row ks cf "row-key" {"k" 1234})
     (is (= '({:key "row-key"
               :columns {"k" 1234}})
-           (get-rows ks cf ["row-key"] {:v-serializer :integer})))
+           (get-rows ks cf ["row-key"] opts)))
     (is (= {"k" 1234}
-           (get-columns ks cf "row-key" ["k"] {:v-serializer :integer})))
+           (get-columns ks cf "row-key" ["k"] opts)))
     (ddl/drop-keyspace *test-cluster* ks-name)))
 
 (deftest string-key-long-name-and-values
   (let [ks-name (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")
         cf "a"
-        ks (keyspace *test-cluster* ks-name)]
+        ks (keyspace *test-cluster* ks-name)
+        opts {:n-serializer :long
+              :v-serializer :long}]
     (ddl/add-keyspace *test-cluster* {:name ks-name
                                       :strategy :local
                                       :replication 1
@@ -58,17 +64,17 @@
     (put-row ks cf "row-key" {(long 1) (long 1234)})
     (is (= {:key "row-key"
             :columns {(long 1) (long 1234)}}
-           (first (get-rows ks cf ["row-key"] {:n-serializer :long
-                                               :v-serializer :long}))))
+           (first (get-rows ks cf ["row-key"] opts))))
     (is (= {(long 1) (long 1234)}
-           (get-columns ks cf "row-key" [(long 1)] {:n-serializer :long
-                                                    :v-serializer :long})))
+           (get-columns ks cf "row-key" [(long 1)] opts)))
     (ddl/drop-keyspace *test-cluster* ks-name)))
 
 (deftest long-key-long-name-and-values
   (let [ks-name (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")
         cf "a"
-        ks (keyspace *test-cluster* ks-name)]
+        ks (keyspace *test-cluster* ks-name)
+        opts {:n-serializer :long
+              :v-serializer :long}]
     (ddl/add-keyspace *test-cluster* {:name ks-name
                                       :strategy :local
                                       :replication 1
@@ -77,11 +83,9 @@
     (put-row ks cf (long 101) {(long 1) (long 1234)})
     (is (= {:key (long 101)
             :columns {(long 1) (long 1234)}}
-           (first (get-rows ks cf [(long 101)] {:n-serializer :long
-                                                :v-serializer :long}))))
+           (first (get-rows ks cf [(long 101)] opts))))
     (is (= {(long 1) (long 1234)}
-           (get-columns ks cf (long 101) [(long 1)] {:n-serializer :long
-                                                     :v-serializer :long})))
+           (get-columns ks cf (long 101) [(long 1)] opts)))
     (ddl/drop-keyspace *test-cluster* ks-name)))
 
 
