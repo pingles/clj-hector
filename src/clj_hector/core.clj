@@ -62,7 +62,9 @@
 (defn- serializer
   "Returns serialiser based on type of item"
   [x]
-  (SerializerTypeInferer/getSerializer x))
+  (if (keyword? x)
+    (x *serializers*)
+    (SerializerTypeInferer/getSerializer x)))
 
 (def *default-serializer* :string)
 
@@ -89,10 +91,10 @@
   ([ks cf pks]
      (get-rows ks cf pks {}))
   ([ks cf pks opts]
-     (to-clojure (let [value-serializer (*serializers* (or (:v-serializer opts)
-                                                           :bytes))
-                       name-serializer (*serializers* (or (:n-serializer opts)
-                                                          :bytes))]
+     (to-clojure (let [value-serializer (serializer (or (:v-serializer opts)
+                                                        :bytes))
+                       name-serializer (serializer (or (:n-serializer opts)
+                                                       :bytes))]
                    (.. (doto (HFactory/createMultigetSliceQuery ks
                                                                 (serializer (first pks))
                                                                 name-serializer
@@ -112,7 +114,8 @@
 (defn count-columns
   "Counts number of columns for pk in column family cf. The method is not O(1). It takes all the columns from disk to calculate the answer. The only benefit of the method is that you do not need to pull all the columns over Thrift interface to count them."
   [ks pk cf & opts]
-  (let [name-serializer (*serializers* :string)]
+  (let [name-serializer (serializer (or (:n-serializer opts)
+                                        :bytes))]
     (to-clojure (.. (doto (HFactory/createCountQuery ks
                                                      (TypeInferringSerializer/get)
                                                      name-serializer)
