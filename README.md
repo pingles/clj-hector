@@ -52,8 +52,7 @@ Hector exposes data about how long queries took to execute (and on which host). 
 
 * Better support different Hector query types- multimethod dispatch
   based on arity of pk and c args?
-* Turn off spurious logging by default
-* Serialization of non-String types
+* Super columns
 * Better support of CassandraHostConfigurator
 * Type hints to avoid reflecting
 * Plenty more :)
