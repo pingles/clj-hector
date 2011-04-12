@@ -148,8 +148,7 @@
 (defn count-columns
   "Counts number of columns for pk in column family cf. The method is not O(1). It takes all the columns from disk to calculate the answer. The only benefit of the method is that you do not need to pull all the columns over Thrift interface to count them."
   [ks pk cf & opts]
-  (let [name-serializer (serializer (or (:n-serializer opts)
-                                        :bytes))]
+  (let [name-serializer (serializer (or (:n-serializer opts) :bytes))]
     (to-clojure (.. (doto (HFactory/createCountQuery ks
                                                      (TypeInferringSerializer/get)
                                                      name-serializer)
@@ -164,10 +163,8 @@
      (get-columns ks cf pk c {}))
   ([ks cf pk c opts]
      (let [s (TypeInferringSerializer/get)
-           value-serializer (serializer (or (:v-serializer opts)
-                                            :bytes))
-           name-serializer (serializer (or (:n-serializer opts)
-                                           :bytes))]
+           value-serializer (serializer (or (:v-serializer opts) :bytes))
+           name-serializer (serializer (or (:n-serializer opts) :bytes))]
        (if (< 2 (count c))
          (to-clojure (.. (doto (HFactory/createColumnQuery ks s name-serializer value-serializer)
                            (.setColumnFamily cf)
