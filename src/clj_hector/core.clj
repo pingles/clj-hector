@@ -134,7 +134,7 @@
                                                                      v-serializer)
                          (.setColumnFamily cf)
                          (.setKeys (object-array pks))
-                         (.setColumnNames (object-array [sc]))
+                         (.setColumnNames (object-array (seq sc)))
                          (.setRange (:start opts) (:end opts) false Integer/MAX_VALUE))
                        execute)))))
 
