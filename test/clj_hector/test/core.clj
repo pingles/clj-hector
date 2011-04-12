@@ -146,3 +146,24 @@
     (is (= {:count 2}
            (count-columns ks "row-key" cf)))
     (ddl/drop-keyspace *test-cluster* ks-name)))
+
+(deftest supercolumn-with-string-key-name-and-value
+  (let [ks-name (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")
+        cf "a"
+        ks (keyspace *test-cluster* ks-name)
+        opts {:v-serializer :string
+              :n-serializer :string}
+        sc "super-column-name"]
+    (ddl/add-keyspace *test-cluster* {:name ks-name
+                                      :strategy :local
+                                      :replication 1
+                                      :column-families [{:name cf
+                                                         :type :super}]})
+    (put-row ks cf sc "row-key" {"k" "v"})
+    (is (= :super
+           (:type (first (ddl/column-families *test-cluster* ks-name)))))
+    (is (= ""
+           (get-rows ks cf sc ["row-key"] opts)))
+    ;; (is (= {"k" "v"}
+    ;;        (get-columns ks cf "row-key" ["k"] opts)))
+    (ddl/drop-keyspace *test-cluster* ks-name)))

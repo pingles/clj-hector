@@ -20,10 +20,15 @@
 
 (defn- make-keyspace-definition
   ([keyspace strategy-class replication-factor column-families]
-     (let [column-families (map (fn [{:keys [name comparator]}]
-                                  (if (nil? comparator)
-                                    (make-column-family keyspace name)
-                                    (make-column-family keyspace name comparator)))
+     (let [column-families (map (fn [{:keys [name comparator type]}]
+                                  (let [cf-def (if (nil? comparator)
+                                                 (make-column-family keyspace name)
+                                                 (make-column-family keyspace name comparator))]
+                                    (if (nil? type)
+                                      cf-def
+                                      (doto cf-def (.setColumnType (if (= :super type)
+                                                                     ColumnType/SUPER
+                                                                     ColumnType/STANDARD))))))
                                 column-families)]
        (HFactory/createKeyspaceDefinition keyspace
                                           strategy-class

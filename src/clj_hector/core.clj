@@ -69,22 +69,35 @@
 (def *default-serializer* :string)
 
 (defn- create-column
-  [k v]
-  (let [s (TypeInferringSerializer/get)]
-    (HFactory/createColumn k v s s)))
+  "Creates columns or super-columns"
+  ([k v]
+     (let [s (TypeInferringSerializer/get)]
+       (HFactory/createColumn k v s s)))
+  ([sc k v]
+     (HFactory/createSuperColumn sc
+                                 (list (create-column k v))
+                                 (TypeInferringSerializer/get)
+                                 (TypeInferringSerializer/get)
+                                 (TypeInferringSerializer/get))))
 
 (defn put-row
   "Stores values in columns in map m against row key pk"
-  [ks cf pk m]
-  (let [mut (HFactory/createMutator ks (TypeInferringSerializer/get))]
-    (if (= 1 (count (keys m)))
-      (let [k (first (keys m))
-            v (first (vals m))]
-        (.insert mut pk cf (create-column k v)))
-      (do (doseq [kv m]
-            (let [k (first kv) v (last kv)]
-              (.addInsertion mut pk cf (create-column k v))))
-          (.execute mut)))))
+  ([ks cf pk m]
+     (let [mut (HFactory/createMutator ks (TypeInferringSerializer/get))]
+       (if (= 1 (count (keys m)))
+         (let [k (first (keys m))
+               v (first (vals m))]
+           (.insert mut pk cf (create-column k v)))
+         (do (doseq [kv m]
+               (let [k (first kv) v (last kv)]
+                 (.addInsertion mut pk cf (create-column k v))))
+             (.execute mut)))))
+  ([ks cf pk sc m]
+     (let [mut (HFactory/createMutator ks (TypeInferringSerializer/get))]
+       (if (= 1 (count (keys m)))
+         (let [k (first (keys m))
+               v (first (vals m))]
+           (.insert mut pk cf (create-column sc k v)))))))
 
 (defn get-rows
   "In keyspace ks, retrieve rows for pks within column family cf."
@@ -102,7 +115,8 @@
                          (.setColumnFamily cf)
                          (. setKeys (object-array pks))
                          (.setRange (:start opts) (:end opts) false Integer/MAX_VALUE))
-                       execute)))))
+                       execute))))
+  ([ks cf sc pks opts]))
 
 (defn delete-columns
   [ks cf pk cs]
