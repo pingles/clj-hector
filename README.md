@@ -33,7 +33,14 @@ A simple Clojure client for Cassandra that wraps Hector
     #<MutationResultImpl MutationResult took (2us) for query (n/a) on host: localhost(127.0.0.1):9160>
     user> (get-rows ks "Users" ["Paul"] {:n-serializer :string :v-serializer :integer})
     ({:key "Paul", :columns {"age" 30}})
-    
+
+The following serializers are supported
+
+* `:string`
+* `:integer`
+* `:long`
+* `:bytes`
+
 ### Query metadata
 
 Hector exposes data about how long queries took to execute (and on which host). This is provided as metadata on the query result maps:
