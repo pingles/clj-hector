@@ -3,7 +3,7 @@
            [me.prettyprint.hector.api Cluster]
            [me.prettyprint.hector.api.factory HFactory]
            [me.prettyprint.cassandra.service CassandraHostConfigurator]
-           [me.prettyprint.cassandra.serializers StringSerializer IntegerSerializer LongSerializer]
+           [me.prettyprint.cassandra.serializers StringSerializer IntegerSerializer LongSerializer TypeInferringSerializer]
            [me.prettyprint.cassandra.model QueryResultImpl HColumnImpl ColumnSliceImpl RowImpl RowsImpl]))
 
 ;; work in progress; following through sample usages on hector wiki
@@ -69,12 +69,13 @@
 
 (defn- create-column
   [k v]
-  (HFactory/createColumn k v (serializer k) (serializer v)))
+  (let [s (TypeInferringSerializer/get)]
+    (HFactory/createColumn k v s s)))
 
 (defn put-row
   "Stores values in columns in map m against row key pk"
   [ks cf pk m]
-  (let [mut (HFactory/createMutator ks (serializer pk))]
+  (let [mut (HFactory/createMutator ks (TypeInferringSerializer/get))]
     (if (= 1 (count (keys m)))
       (let [k (first (keys m))
             v (first (vals m))]
@@ -105,8 +106,9 @@
 
 (defn delete-columns
   [ks cf pk cs]
-  (let [mut (HFactory/createMutator ks (serializer pk))]
-    (doseq [c cs] (.addDeletion mut pk cf c (serializer pk)))
+  (let [s (TypeInferringSerializer/get)
+        mut (HFactory/createMutator ks s)]
+    (doseq [c cs] (.addDeletion mut pk cf c s))
     (.execute mut)))
 
 (defn count-columns
@@ -114,7 +116,7 @@
   [ks pk cf & opts]
   (let [name-serializer (*serializers* *default-serializer*)]
     (to-clojure (.. (doto (HFactory/createCountQuery ks
-                                                     (serializer pk)
+                                                     (TypeInferringSerializer/get)
                                                      name-serializer)
                       (.setKey pk)
                       (.setRange (:start opts) (:end opts) Integer/MAX_VALUE)
@@ -127,13 +129,14 @@
      (get-columns ks cf pk c {:v-serializer :string
                               :n-serializer :string}))
   ([ks cf pk c opts]
-     (let [value-serializer (*serializers* (or (:v-serializer opts)
+     (let [s (TypeInferringSerializer/get)
+           value-serializer (*serializers* (or (:v-serializer opts)
                                                *default-serializer*))
            name-serializer (*serializers* (or (:n-serializer opts)
                                               *default-serializer*))]
        (if (< 2 (count c))
          (to-clojure (.. (doto (HFactory/createColumnQuery ks
-                                                           (serializer pk)
+                                                           s
                                                            name-serializer
                                                            value-serializer)
                            (.setColumnFamily cf)
@@ -141,7 +144,7 @@
                            (.setName c))
                          execute))
          (to-clojure (.. (doto (HFactory/createSliceQuery ks
-                                                          (serializer pk)
+                                                          s
                                                           name-serializer
                                                           value-serializer)
                            (.setColumnFamily cf)
