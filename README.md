@@ -20,11 +20,12 @@ A simple Clojure client for Cassandra that wraps Hector
 
     (def c (cluster "Pauls Cluster" "localhost"))
     (def ks (keyspace c "Twitter"))
-    (get-rows ks "Users" ["paul"])
+    (get-rows ks "Users" ["paul"] {:n-serializer :string})
 
-    (-> (cluster "Pauls Cluster" "localhost")
-        (keyspace "Twitter")
-        (get-rows "Users" ["paul"]))
+    user> (-> (cluster "Pauls Cluster" "localhost")
+              (keyspace "Twitter")
+              (get-rows "Users" ["paul"] {:n-serializer :string}))
+    ({:key "paul", :columns {"age" #<byte[] [B@324a897c>, "login" #<byte[] [B@3b8845af>}})
 
 ### Serializing non-String types
 
