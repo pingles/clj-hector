@@ -152,18 +152,21 @@
         cf "a"
         ks (keyspace *test-cluster* ks-name)
         opts {:v-serializer :string
-              :n-serializer :string}
+              :n-serializer :string
+              :s-serializer :string}
         sc "super-column-name"]
     (ddl/add-keyspace *test-cluster* {:name ks-name
                                       :strategy :local
                                       :replication 1
                                       :column-families [{:name cf
                                                          :type :super}]})
-    (put-row ks cf sc "row-key" {"k" "v"})
+    (put-row ks cf "row-key" sc {"k" "v"})
     (is (= :super
            (:type (first (ddl/column-families *test-cluster* ks-name)))))
-    (is (= ""
-           (get-rows ks cf sc ["row-key"] opts)))
+    (is (= {:key "row-key"
+            :super-columns [{:name sc
+                             :columns {"k" "v"}}]}
+           (first (get-rows ks cf ["row-key"] sc opts))))
     ;; (is (= {"k" "v"}
     ;;        (get-columns ks cf "row-key" ["k"] opts)))
     (ddl/drop-keyspace *test-cluster* ks-name)))

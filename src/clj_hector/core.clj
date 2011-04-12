@@ -4,7 +4,7 @@
            [me.prettyprint.hector.api.factory HFactory]
            [me.prettyprint.cassandra.service CassandraHostConfigurator]
            [me.prettyprint.cassandra.serializers StringSerializer IntegerSerializer LongSerializer TypeInferringSerializer BytesArraySerializer SerializerTypeInferer]
-           [me.prettyprint.cassandra.model QueryResultImpl HColumnImpl ColumnSliceImpl RowImpl RowsImpl]))
+           [me.prettyprint.cassandra.model QueryResultImpl HColumnImpl ColumnSliceImpl RowImpl RowsImpl SuperRowImpl SuperRowsImpl HSuperColumnImpl]))
 
 ;; work in progress; following through sample usages on hector wiki
 ;; https://github.com/rantav/hector/wiki/User-Guide
@@ -30,6 +30,20 @@
   (to-clojure [x] "Convert hector types to Clojure data structures"))
 
 (extend-protocol ToClojure
+  SuperRowsImpl
+  (to-clojure [s]
+              (map to-clojure (iterator-seq (.iterator s))))
+
+  SuperRowImpl
+  (to-clojure [s]
+              {:key (.getKey s)
+               :super-columns (map to-clojure (seq (.. s getSuperSlice getSuperColumns)))})
+
+  HSuperColumnImpl
+  (to-clojure [s]
+              {:name (.getName s)
+               :columns (into (sorted-map) (for [c (.getColumns s)] (to-clojure c)))})
+
   RowsImpl
   (to-clojure [s]
               (map to-clojure (iterator-seq (.iterator s))))
@@ -116,7 +130,23 @@
                          (. setKeys (object-array pks))
                          (.setRange (:start opts) (:end opts) false Integer/MAX_VALUE))
                        execute))))
-  ([ks cf sc pks opts]))
+  ([ks cf pks sc opts]
+     (to-clojure (let [s-serializer (serializer (or (:s-serializer opts)
+                                                    :bytes))
+                       n-serializer (serializer (or (:n-serializer opts)
+                                                    :bytes))
+                       v-serializer (serializer (or (:v-serializer opts)
+                                                    :bytes))]
+                   (.. (doto (HFactory/createMultigetSuperSliceQuery ks
+                                                                     (serializer (first pks))
+                                                                     s-serializer
+                                                                     n-serializer
+                                                                     v-serializer)
+                         (.setColumnFamily cf)
+                         (.setKeys (object-array pks))
+                         (.setColumnNames (object-array [sc]))
+                         (.setRange (:start opts) (:end opts) false Integer/MAX_VALUE))
+                       execute)))))
 
 (defn delete-columns
   [ks cf pk cs]
