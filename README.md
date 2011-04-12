@@ -16,6 +16,11 @@ A simple Clojure client for Cassandra that wraps Hector
     (add-column-family cluster "Keyspace Name" {:name "c"})
     (drop-keyspace cluster "Keyspace Name)
 
+#### Creating super column families
+
+    (add-column-family cluster "Keyspace Name" {:name "SuperCol"
+                                                :type :super})
+
 ### Basic retrieval of rows
 
     (def c (cluster "Pauls Cluster" "localhost"))
