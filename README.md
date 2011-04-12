@@ -26,6 +26,13 @@ Basic retrieval of rows
         (keyspace "Twitter")
         (get-rows "Users" ["paul"]))
 
+Serializing non-String types
+
+    user> (put-row ks "Users" "Paul" {"age" 30})
+    #<MutationResultImpl MutationResult took (2us) for query (n/a) on host: localhost(127.0.0.1):9160>
+    user> (get-rows ks "Users" ["Paul"] {:v-serializer :integer})
+    ({:key "Paul", :columns {"age" 30}})
+
 ## TODO
 
 * Better support different Hector query types- multimethod dispatch
