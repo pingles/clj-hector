@@ -160,12 +160,14 @@
                                       :replication 1
                                       :column-families [{:name cf
                                                          :type :super}]})
-    (put-row ks cf "row-key" sc {"k" "v"})
+    (put-row ks cf "row-key" sc {"k" "v"
+                                 "k2" "v2"})
     (is (= :super
            (:type (first (ddl/column-families *test-cluster* ks-name)))))
     (is (= {:key "row-key"
             :super-columns [{:name sc
-                             :columns {"k" "v"}}]}
+                             :columns {"k" "v"
+                                       "k2" "v2"}}]}
            (first (get-rows ks cf ["row-key"] sc opts))))
     ;; (is (= {"k" "v"}
     ;;        (get-columns ks cf "row-key" ["k"] opts)))

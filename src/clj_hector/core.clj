@@ -97,17 +97,16 @@
 (defn put-row
   "Stores values in columns in map m against row key pk"
   ([ks cf pk m]
-     (let [mut (HFactory/createMutator ks (TypeInferringSerializer/get))]
-       (do (doseq [kv m]
-             (let [k (first kv) v (last kv)]
-               (.addInsertion mut pk cf (create-column k v))))
-           (.execute mut))))
+     (put-row ks cf pk nil m))
   ([ks cf pk sc m]
      (let [mut (HFactory/createMutator ks (TypeInferringSerializer/get))]
-       (if (= 1 (count (keys m)))
-         (let [k (first (keys m))
-               v (first (vals m))]
-           (.insert mut pk cf (create-column sc k v)))))))
+       (do (doseq [kv m]
+             (let [k (first kv) v (last kv)
+                   col (if (nil? sc)
+                         (create-column k v)
+                         (create-column sc k v))]
+               (.addInsertion mut pk cf col)))
+           (.execute mut)))))
 
 (defn get-rows
   "In keyspace ks, retrieve rows for pks within column family cf."
@@ -123,7 +122,7 @@
                                                                 name-serializer
                                                                 value-serializer)
                          (.setColumnFamily cf)
-                         (. setKeys (object-array pks))
+                         (.setKeys (object-array pks))
                          (.setRange (:start opts) (:end opts) false Integer/MAX_VALUE))
                        execute))))
   ([ks cf pks sc opts]
@@ -170,25 +169,19 @@
      (get-columns ks cf pk c {}))
   ([ks cf pk c opts]
      (let [s (TypeInferringSerializer/get)
-           value-serializer (*serializers* (or (:v-serializer opts)
-                                               :bytes))
-           name-serializer (*serializers* (or (:n-serializer opts)
-                                              :bytes))]
+           value-serializer (serializer (or (:v-serializer opts)
+                                            :bytes))
+           name-serializer (serializer (or (:n-serializer opts)
+                                           :bytes))]
        (if (< 2 (count c))
-         (to-clojure (.. (doto (HFactory/createColumnQuery ks
-                                                           s
-                                                           name-serializer
-                                                           value-serializer)
+         (to-clojure (.. (doto (HFactory/createColumnQuery ks s name-serializer value-serializer)
                            (.setColumnFamily cf)
                            (.setKey pk)
                            (.setName c))
                          execute))
-         (to-clojure (.. (doto (HFactory/createSliceQuery ks
-                                                          s
-                                                          name-serializer
-                                                          value-serializer)
+         (to-clojure (.. (doto (HFactory/createSliceQuery ks s name-serializer value-serializer)
                            (.setColumnFamily cf)
                            (.setKey pk)
-                           (. setColumnNames (object-array c)))
+                           (.setColumnNames (object-array c)))
                          execute))))))
 
