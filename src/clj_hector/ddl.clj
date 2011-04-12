@@ -1,6 +1,6 @@
 (ns clj-hector.ddl
   (:import [me.prettyprint.hector.api.factory HFactory]
-           [me.prettyprint.hector.api.ddl ComparatorType ColumnFamilyDefinition]))
+           [me.prettyprint.hector.api.ddl ComparatorType ColumnFamilyDefinition ColumnType]))
 
 (defn- make-column-family
   "Returns an object defining a new column family"
@@ -32,10 +32,14 @@
 
 (defn add-column-family
   "Adds a column family to a keyspace"
-  ([cluster keyspace {:keys [name comparator]}]
-     (if (nil? comparator)
-       (.addColumnFamily cluster (make-column-family keyspace name))
-       (.addColumnFamily cluster (make-column-family keyspace name comparator)))))
+  ([cluster keyspace {:keys [name comparator type]}]
+     (let [cf (if (nil? comparator)
+                (make-column-family keyspace name)
+                (make-column-family keyspace name comparator))]
+       (.addColumnFamily cluster (doto cf
+                                   (.setColumnType (if (= :super type)
+                                                     ColumnType/SUPER
+                                                     ColumnType/STANDARD)))))))
 
 (defn drop-column-family
   "Removes a column family from a keyspace"
@@ -68,6 +72,11 @@
                      :replication-factor (.getReplicationFactor ks)})
             kss))))
 
+(defn- parse-type
+  [x]
+  (if (= ColumnType/SUPER x)
+    :super
+    :standard))
 
 (defn- parse-comparator
   ([comparator-type]
@@ -88,5 +97,6 @@
            cf-defs (.getCfDefs ks)]
        (map (fn [cf-def]
               {:name (.getName cf-def)
-               :comparator (parse-comparator (.getComparatorType cf-def))})
+               :comparator (parse-comparator (.getComparatorType cf-def))
+               :type (parse-type (.getColumnType cf-def))})
             cf-defs))))

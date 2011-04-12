@@ -43,3 +43,20 @@
     (drop-keyspace *test-cassandra-cluster* random-ks)
     (let [kss (map :name (keyspaces *test-cassandra-cluster*))]
       (is (= 0 (count (filter (partial = random-ks) kss)))))))
+
+(deftest should-add-remove-super-column-family
+  (let [random-ks (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")]
+    (add-keyspace *test-cassandra-cluster*
+                  {:name random-ks
+                   :strategy :local
+                   :replication 1
+                   :column-families [{:name "a"
+                                      :comparator :long}]})
+    (add-column-family *test-cassandra-cluster* random-ks {:name "b" :comparator :long :type :super})
+    (is (= {:name "b"
+            :comparator :long
+            :type :super}
+           (first (filter #(= (:name %) "b")
+                          (column-families *test-cassandra-cluster* random-ks)))))
+    (drop-keyspace *test-cassandra-cluster* random-ks)))
+
