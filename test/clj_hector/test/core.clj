@@ -6,14 +6,6 @@
 
 (def *test-cluster* (cluster "test" "localhost"))
 
-(deftest serializer-lookup
-  (is (instance? StringSerializer
-                 (serializer "Hello")))
-  (is (instance? IntegerSerializer
-                 (serializer 1234)))
-  (is (instance? LongSerializer
-                 (serializer (long 1234)))))
-
 (deftest string-key-values
   (let [ks-name (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")
         cf "a"

@@ -3,7 +3,7 @@
            [me.prettyprint.hector.api Cluster]
            [me.prettyprint.hector.api.factory HFactory]
            [me.prettyprint.cassandra.service CassandraHostConfigurator]
-           [me.prettyprint.cassandra.serializers StringSerializer IntegerSerializer LongSerializer TypeInferringSerializer BytesArraySerializer]
+           [me.prettyprint.cassandra.serializers StringSerializer IntegerSerializer LongSerializer TypeInferringSerializer BytesArraySerializer SerializerTypeInferer]
            [me.prettyprint.cassandra.model QueryResultImpl HColumnImpl ColumnSliceImpl RowImpl RowsImpl]))
 
 ;; work in progress; following through sample usages on hector wiki
@@ -59,12 +59,10 @@
                     :long (LongSerializer/get)
                     :bytes (BytesArraySerializer/get)})
 
-(defn serializer
+(defn- serializer
   "Returns serialiser based on type of item"
-  [t]
-  (cond (instance? Integer t) (:integer *serializers*)
-        (instance? Long t) (:long *serializers*)
-        :else (:string *serializers*)))
+  [x]
+  (SerializerTypeInferer/getSerializer x))
 
 (def *default-serializer* :string)
 
