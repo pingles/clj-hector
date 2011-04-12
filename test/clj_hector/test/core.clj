@@ -111,6 +111,36 @@
                                                :end (long 3)}))))
     (ddl/drop-keyspace *test-cluster* ks-name)))
 
+(deftest defaults-to-byte-array-for-name-value-serialization
+  (let [ks-name (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")
+        cf "a"
+        ks (keyspace *test-cluster* ks-name)]
+    (ddl/add-keyspace *test-cluster* {:name ks-name
+                                      :strategy :local
+                                      :replication 1
+                                      :column-families [{:name cf}]})
+    (put-row ks cf "row-key" {"k" "v"})
+    (let [res (first (:columns (first (get-rows ks cf ["row-key"]))))
+          n-bytes (first res)
+          v-bytes (last res)]
+      (is (= "k"
+             (String. n-bytes)))
+      (is (= "v"
+             (String. v-bytes))))
+    (let [res (get-columns ks cf "row-key" [(.getBytes "k")])
+          n-bytes (first (keys res))
+          v-bytes (last (vals res))]
+      (is (= "k"
+             (String. n-bytes)))
+      (is (= "v"
+             (String. v-bytes))))
+    (let [res (get-columns ks cf "row-key" ["k"] {:n-serializer :string})
+          n (first (keys res))
+          v-bytes (last (vals res))]
+      (is (= "k" n))
+      (is (= "v"
+             (String. v-bytes))))
+    (ddl/drop-keyspace *test-cluster* ks-name)))
 
 (deftest counting
   (let [ks-name (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")

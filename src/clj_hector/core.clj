@@ -3,7 +3,7 @@
            [me.prettyprint.hector.api Cluster]
            [me.prettyprint.hector.api.factory HFactory]
            [me.prettyprint.cassandra.service CassandraHostConfigurator]
-           [me.prettyprint.cassandra.serializers StringSerializer IntegerSerializer LongSerializer TypeInferringSerializer]
+           [me.prettyprint.cassandra.serializers StringSerializer IntegerSerializer LongSerializer TypeInferringSerializer BytesArraySerializer]
            [me.prettyprint.cassandra.model QueryResultImpl HColumnImpl ColumnSliceImpl RowImpl RowsImpl]))
 
 ;; work in progress; following through sample usages on hector wiki
@@ -56,7 +56,8 @@
 
 (def *serializers* {:integer (IntegerSerializer/get)
                     :string (StringSerializer/get)
-                    :long (LongSerializer/get)})
+                    :long (LongSerializer/get)
+                    :bytes (BytesArraySerializer/get)})
 
 (defn serializer
   "Returns serialiser based on type of item"
@@ -88,13 +89,12 @@
 (defn get-rows
   "In keyspace ks, retrieve rows for pks within column family cf."
   ([ks cf pks]
-     (get-rows ks cf pks {:v-serializer :string
-                          :n-serializer :string}))
+     (get-rows ks cf pks {}))
   ([ks cf pks opts]
      (to-clojure (let [value-serializer (*serializers* (or (:v-serializer opts)
-                                                           *default-serializer*))
+                                                           :bytes))
                        name-serializer (*serializers* (or (:n-serializer opts)
-                                                          *default-serializer*))]
+                                                          :bytes))]
                    (.. (doto (HFactory/createMultigetSliceQuery ks
                                                                 (serializer (first pks))
                                                                 name-serializer
@@ -114,7 +114,7 @@
 (defn count-columns
   "Counts number of columns for pk in column family cf. The method is not O(1). It takes all the columns from disk to calculate the answer. The only benefit of the method is that you do not need to pull all the columns over Thrift interface to count them."
   [ks pk cf & opts]
-  (let [name-serializer (*serializers* *default-serializer*)]
+  (let [name-serializer (*serializers* :string)]
     (to-clojure (.. (doto (HFactory/createCountQuery ks
                                                      (TypeInferringSerializer/get)
                                                      name-serializer)
@@ -126,14 +126,13 @@
 (defn get-columns
   "In keyspace ks, retrieve c columns for row pk from column family cf"
   ([ks cf pk c]
-     (get-columns ks cf pk c {:v-serializer :string
-                              :n-serializer :string}))
+     (get-columns ks cf pk c {}))
   ([ks cf pk c opts]
      (let [s (TypeInferringSerializer/get)
            value-serializer (*serializers* (or (:v-serializer opts)
-                                               *default-serializer*))
+                                               :bytes))
            name-serializer (*serializers* (or (:n-serializer opts)
-                                              *default-serializer*))]
+                                              :bytes))]
        (if (< 2 (count c))
          (to-clojure (.. (doto (HFactory/createColumnQuery ks
                                                            s
