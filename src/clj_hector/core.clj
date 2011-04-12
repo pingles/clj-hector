@@ -98,14 +98,10 @@
   "Stores values in columns in map m against row key pk"
   ([ks cf pk m]
      (let [mut (HFactory/createMutator ks (TypeInferringSerializer/get))]
-       (if (= 1 (count (keys m)))
-         (let [k (first (keys m))
-               v (first (vals m))]
-           (.insert mut pk cf (create-column k v)))
-         (do (doseq [kv m]
-               (let [k (first kv) v (last kv)]
-                 (.addInsertion mut pk cf (create-column k v))))
-             (.execute mut)))))
+       (do (doseq [kv m]
+             (let [k (first kv) v (last kv)]
+               (.addInsertion mut pk cf (create-column k v))))
+           (.execute mut))))
   ([ks cf pk sc m]
      (let [mut (HFactory/createMutator ks (TypeInferringSerializer/get))]
        (if (= 1 (count (keys m)))
