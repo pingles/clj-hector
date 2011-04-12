@@ -92,6 +92,7 @@
                                  (TypeInferringSerializer/get)
                                  (TypeInferringSerializer/get))))
 
+;; TODO: This could be improved when inserting multiple n/v columns into a supercolumn
 (defn put-row
   "Stores values in columns in map m against row key pk"
   ([ks cf pk m]
