@@ -80,8 +80,6 @@
     (x *serializers*)
     (SerializerTypeInferer/getSerializer x)))
 
-(def *default-serializer* :string)
-
 (defn- create-column
   "Creates columns or super-columns"
   ([k v]
