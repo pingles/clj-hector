@@ -113,10 +113,8 @@
   ([ks cf pks]
      (get-rows ks cf pks {}))
   ([ks cf pks opts]
-     (to-clojure (let [value-serializer (serializer (or (:v-serializer opts)
-                                                        :bytes))
-                       name-serializer (serializer (or (:n-serializer opts)
-                                                       :bytes))]
+     (to-clojure (let [value-serializer (serializer (or (:v-serializer opts) :bytes))
+                       name-serializer (serializer (or (:n-serializer opts) :bytes))]
                    (.. (doto (HFactory/createMultigetSliceQuery ks
                                                                 (serializer (first pks))
                                                                 name-serializer
@@ -126,12 +124,9 @@
                          (.setRange (:start opts) (:end opts) false Integer/MAX_VALUE))
                        execute))))
   ([ks cf pks sc opts]
-     (to-clojure (let [s-serializer (serializer (or (:s-serializer opts)
-                                                    :bytes))
-                       n-serializer (serializer (or (:n-serializer opts)
-                                                    :bytes))
-                       v-serializer (serializer (or (:v-serializer opts)
-                                                    :bytes))]
+     (to-clojure (let [s-serializer (serializer (or (:s-serializer opts) :bytes))
+                       n-serializer (serializer (or (:n-serializer opts) :bytes))
+                       v-serializer (serializer (or (:v-serializer opts) :bytes))]
                    (.. (doto (HFactory/createMultigetSuperSliceQuery ks
                                                                      (serializer (first pks))
                                                                      s-serializer
