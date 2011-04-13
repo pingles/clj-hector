@@ -16,11 +16,6 @@ A simple Clojure client for Cassandra that wraps Hector
     (add-column-family cluster "Keyspace Name" {:name "c"})
     (drop-keyspace cluster "Keyspace Name)
 
-#### Creating super column families
-
-    (add-column-family cluster "Keyspace Name" {:name "SuperCol"
-                                                :type :super})
-
 ### Basic retrieval of rows
 
     (def c (cluster "Pauls Cluster" "localhost"))
@@ -45,6 +40,26 @@ The following serializers are supported
 * `:integer`
 * `:long`
 * `:bytes`
+
+### Super Columns
+
+Firstly, the column family will need to support super columns.
+
+    user> (add-column-family cluster "Keyspace Name" {:name "UserRelationships"
+                                                      :type :super})
+
+Storing super columns works around using a nested map structure:
+
+    user> (put-row ks "UserRelationships" "paul" {"SuperCol" {"k" "v"} "SuperCol2" {"k2" "v2"}})
+    #<MutationResultImpl MutationResult took (6us) for query (n/a) on host: localhost(127.0.0.1):9160>
+
+Retrieving super columns with `get-rows`:
+
+    user> (get-rows ks "UserRelationships" ["paul"] ["SuperCol" "SuperCol2"] {:s-serializer :string :n-serializer :string :v-serializer :string})
+    ({:key "paul", :super-columns ({:name "SuperCol", :columns {"a" "1", "k" "v"}} {:name "SuperCol2", :columns {"k2" "v2"}})})
+
+In the above example, note the addition of the s-serializer option:
+this controls how super column names should be deserialized.
 
 ### Query metadata
 
