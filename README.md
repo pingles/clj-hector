@@ -48,7 +48,7 @@ Firstly, the column family will need to support super columns.
     user> (add-column-family cluster "Keyspace Name" {:name "UserRelationships"
                                                       :type :super})
 
-Storing super columns works around using a nested map structure:
+Storing super columns works using a nested map structure:
 
     user> (put-row ks "UserRelationships" "paul" {"SuperCol" {"k" "v"} "SuperCol2" {"k2" "v2"}})
     #<MutationResultImpl MutationResult took (6us) for query (n/a) on host: localhost(127.0.0.1):9160>
