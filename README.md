@@ -73,6 +73,7 @@ Hector exposes data about how long queries took to execute (and on which host). 
 * Better support different Hector query types- multimethod dispatch
   based on arity of pk and c args?
 * Super columns
+  * Add suport for `get-columns` and `delete-columns`
 * Better support of CassandraHostConfigurator
 * Type hints to avoid reflecting
 * Plenty more :)
