@@ -153,22 +153,26 @@
         ks (keyspace *test-cluster* ks-name)
         opts {:v-serializer :string
               :n-serializer :string
-              :s-serializer :string}
-        sc "super-column-name"]
+              :s-serializer :string}]
     (ddl/add-keyspace *test-cluster* {:name ks-name
                                       :strategy :local
                                       :replication 1
                                       :column-families [{:name cf
                                                          :type :super}]})
-    (put-row ks cf "row-key" sc {"k" "v"
-                                 "k2" "v2"})
+    (put-row ks cf "row-key" {"SuperCol" {"k" "v"
+                                          "k2" "v2"}
+                              "SuperCol2" {"k" "v"
+                                           "k2" "v2"}})
     (is (= :super
            (:type (first (ddl/column-families *test-cluster* ks-name)))))
     (is (= {:key "row-key"
-            :super-columns [{:name sc
+            :super-columns [{:name "SuperCol"
+                             :columns {"k" "v"
+                                       "k2" "v2"}}
+                            {:name "SuperCol2"
                              :columns {"k" "v"
                                        "k2" "v2"}}]}
-           (first (get-rows ks cf ["row-key"] sc opts))))
+           (first (get-rows ks cf ["row-key"] ["SuperCol" "SuperCol2"] opts))))
     ;; (is (= {"k" "v"}
     ;;        (get-columns ks cf "row-key" ["k"] opts)))
     (ddl/drop-keyspace *test-cluster* ks-name)))

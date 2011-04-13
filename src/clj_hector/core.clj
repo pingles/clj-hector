@@ -82,29 +82,21 @@
 
 (defn- create-column
   "Creates columns or super-columns"
-  ([k v]
+  ([n v]
      (let [s (TypeInferringSerializer/get)]
-       (HFactory/createColumn k v s s)))
-  ([sc k v]
-     (HFactory/createSuperColumn sc
-                                 (list (create-column k v))
-                                 (TypeInferringSerializer/get)
-                                 (TypeInferringSerializer/get)
-                                 (TypeInferringSerializer/get))))
+       (if (map? v)
+         (let [cols (map (fn [kv] (create-column (first kv) (last kv)))
+                         v)]
+           (HFactory/createSuperColumn n cols s s s))
+         (HFactory/createColumn n v s s)))))
 
-;; TODO: This could be improved when inserting multiple n/v columns into a supercolumn
 (defn put-row
   "Stores values in columns in map m against row key pk"
   ([ks cf pk m]
-     (put-row ks cf pk nil m))
-  ([ks cf pk sc m]
      (let [mut (HFactory/createMutator ks (TypeInferringSerializer/get))]
        (do (doseq [kv m]
-             (let [k (first kv) v (last kv)
-                   col (if (nil? sc)
-                         (create-column k v)
-                         (create-column sc k v))]
-               (.addInsertion mut pk cf col)))
+             (let [k (first kv) v (last kv)]
+               (.addInsertion mut pk cf (create-column k v))))
            (.execute mut)))))
 
 (defn get-rows
