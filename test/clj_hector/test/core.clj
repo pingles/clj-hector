@@ -1,5 +1,5 @@
 (ns clj-hector.test.core
-  (:use [clj-hector.core] :reload)
+  (:use [clj-hector.core] :reload-all)
   (:use [clojure.test])
   (:require [clj-hector.ddl :as ddl])
   (:import [me.prettyprint.cassandra.serializers StringSerializer IntegerSerializer LongSerializer]))
