@@ -173,6 +173,6 @@
                              :columns {"k" "v"
                                        "k2" "v2"}}]}
            (first (get-rows ks cf ["row-key"] ["SuperCol" "SuperCol2"] opts))))
-    ;; (is (= {"k" "v"}
-    ;;        (get-columns ks cf "row-key" ["k"] opts)))
+    (is (= {"k2" "v2"}
+           (get-columns ks cf "row-key" "SuperCol" ["k2" "v2"] opts)))
     (ddl/drop-keyspace *test-cluster* ks-name)))

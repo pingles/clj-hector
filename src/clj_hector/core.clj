@@ -111,6 +111,19 @@
          (s/to-clojure (.. (doto (HFactory/createSliceQuery ks s name-serializer value-serializer)
                              (.setColumnFamily cf)
                              (.setKey pk)
-                             (.setColumnNames (object-array c)))
-                           execute))))))
+                             (.setColumnNames (object-array (seq c))))
+                           execute)))))
+  ([ks cf pk sc c opts]
+     (let [s (s/serializer (or (:s-serializer opts)
+                               :bytes))
+           n (s/serializer (or (:n-serializer opts)
+                               :bytes))
+           v (s/serializer (or (:v-serializer opts)
+                               :bytes))]
+       (s/to-clojure (.. (doto (HFactory/createSubSliceQuery ks (TypeInferringSerializer/get) s n v)
+                           (.setColumnFamily cf)
+                           (.setKey pk)
+                           (.setSuperColumn sc)
+                           (.setColumnNames (object-array (seq c))))
+                         execute)))))
 
