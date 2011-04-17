@@ -22,6 +22,10 @@
            (get-rows ks cf ["row-key"] opts)))
     (is (= {"k" "v"}
            (get-columns ks cf "row-key" ["k"] opts)))
+    (delete-columns ks cf "row-key" ["k"])
+    (is (= '({:key "row-key"
+              :columns {}})
+           (get-rows ks cf ["row-key"] opts)))
     (ddl/drop-keyspace *test-cluster* ks-name)))
 
 (deftest string-name-int-values
@@ -176,3 +180,4 @@
     (is (= {"k2" "v2"}
            (get-columns ks cf "row-key" "SuperCol" ["k2" "v2"] opts)))
     (ddl/drop-keyspace *test-cluster* ks-name)))
+
