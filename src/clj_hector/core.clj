@@ -6,7 +6,7 @@
            [me.prettyprint.cassandra.service CassandraHostConfigurator]
            [me.prettyprint.cassandra.serializers TypeInferringSerializer]))
 
-;; work in progress; following through sample usages on hector wiki
+;; following through sample usages on hector wiki
 ;; https://github.com/rantav/hector/wiki/User-Guide
 
 (defn closeable-cluster
