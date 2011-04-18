@@ -9,17 +9,14 @@
   SuperRowsImpl
   (to-clojure [s]
               (map to-clojure (iterator-seq (.iterator s))))
-
   SuperRowImpl
   (to-clojure [s]
               {:key (.getKey s)
                :super-columns (map to-clojure (seq (.. s getSuperSlice getSuperColumns)))})
-
   HSuperColumnImpl
   (to-clojure [s]
               {:name (.getName s)
                :columns (into (sorted-map) (for [c (.getColumns s)] (to-clojure c)))})
-
   RowsImpl
   (to-clojure [s]
               (map to-clojure (iterator-seq (.iterator s))))
@@ -27,18 +24,15 @@
   (to-clojure [s]
               {:key (.getKey s)
                :columns (to-clojure (.getColumnSlice s))})
-  
   ColumnSliceImpl
   (to-clojure [s]
               (into (sorted-map) (for [c (.getColumns s)] (to-clojure c))))
   HColumnImpl
   (to-clojure [s]
               {(.getName s) (.getValue s)})
-
   Integer
   (to-clojure [s]
               {:count s})
-
   QueryResultImpl
   (to-clojure [s]
               (with-meta (to-clojure (.get s)) {:exec_us (.getExecutionTimeMicro s)
