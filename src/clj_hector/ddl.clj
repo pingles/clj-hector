@@ -1,6 +1,8 @@
 (ns clj-hector.ddl
   (:import [me.prettyprint.hector.api.factory HFactory]
-           [me.prettyprint.hector.api.ddl ComparatorType ColumnFamilyDefinition ColumnType]))
+           [me.prettyprint.hector.api Cluster]
+           [me.prettyprint.cassandra.service ThriftCfDef]
+           [me.prettyprint.hector.api.ddl ComparatorType ColumnFamilyDefinition ColumnType KeyspaceDefinition]))
 
 (defn- make-column-family
   "Returns an object defining a new column family"
@@ -26,9 +28,10 @@
                                                  (make-column-family keyspace name comparator))]
                                     (if (nil? type)
                                       cf-def
-                                      (doto cf-def (.setColumnType (if (= :super type)
-                                                                     ColumnType/SUPER
-                                                                     ColumnType/STANDARD))))))
+                                      (doto ^ThriftCfDef cf-def
+                                            (.setColumnType (if (= :super type)
+                                                              ColumnType/SUPER
+                                                              ColumnType/STANDARD))))))
                                 column-families)]
        (HFactory/createKeyspaceDefinition keyspace
                                           strategy-class
@@ -37,23 +40,23 @@
 
 (defn add-column-family
   "Adds a column family to a keyspace"
-  ([cluster keyspace {:keys [name comparator type]}]
+  ([^Cluster cluster keyspace {:keys [name comparator type]}]
      (let [cf (if (nil? comparator)
                 (make-column-family keyspace name)
                 (make-column-family keyspace name comparator))]
-       (.addColumnFamily cluster (doto cf
+       (.addColumnFamily cluster (doto ^ThriftCfDef cf
                                    (.setColumnType (if (= :super type)
                                                      ColumnType/SUPER
                                                      ColumnType/STANDARD)))))))
 
 (defn drop-column-family
   "Removes a column family from a keyspace"
-  ([cluster keyspace-name column-family-name]
+  ([^Cluster cluster keyspace-name column-family-name]
      (.dropColumnFamily cluster keyspace-name column-family-name)))
 
 (defn add-keyspace
   "Creates a new keyspace from the definition passed as a map"
-  ([cluster {:keys [name strategy replication column-families]}]
+  ([^Cluster cluster {:keys [name strategy replication column-families]}]
      (let [strategy (condp = strategy
                         :local            "org.apache.cassandra.locator.LocalStrategy"
                         :network-topology "org.apache.cassandra.locator.NetworkTopologyStrategy"
@@ -66,15 +69,15 @@
 
 (defn drop-keyspace
   "Deletes a whole keyspace from the cluster"
-  ([cluster keyspace-name]
+  ([^Cluster cluster keyspace-name]
      (.dropKeyspace cluster keyspace-name)))
 
 (defn keyspaces
   "Description of the keyspaces available in the Cassandra cluster"
-  ([cluster]
+  ([^Cluster cluster]
      (let [kss (.describeKeyspaces cluster)]
-       (map (fn [ks] {:name (.getName ks)
-                     :replication-factor (.getReplicationFactor ks)})
+       (map (fn [^KeyspaceDefinition ks] {:name (.getName ks)
+                                         :replication-factor (.getReplicationFactor ks)})
             kss))))
 
 (defn- parse-type
@@ -84,7 +87,7 @@
     :standard))
 
 (defn- parse-comparator
-  ([comparator-type]
+  ([^ComparatorType comparator-type]
      (condp = (.getClassName comparator-type)
        "org.apache.cassandra.db.marshal.UTF8Type"        :utf-8
        "org.apache.cassandra.db.marshal.AsciiType"       :ascii
@@ -96,11 +99,11 @@
 
 (defn column-families
   "Returns all the column families for a certain keyspace"
-  ([cluster keyspace]
-     (let [ks (first (filter (fn [ks] (= (.getName ks) keyspace))
+  ([^Cluster cluster ^String keyspace]
+     (let [ks (first (filter (fn [^KeyspaceDefinition ks] (= (.getName ks) keyspace))
                              (.describeKeyspaces cluster)))
-           cf-defs (.getCfDefs ks)]
-       (map (fn [cf-def]
+           cf-defs (.getCfDefs ^KeyspaceDefinition ks)]
+       (map (fn [^ColumnFamilyDefinition cf-def]
               {:name (.getName cf-def)
                :comparator (parse-comparator (.getComparatorType cf-def))
                :type (parse-type (.getColumnType cf-def))})

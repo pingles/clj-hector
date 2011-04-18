@@ -1,6 +1,7 @@
 (ns clj-hector.core
   (:require [clj-hector.serialize :as s])
   (:import [java.io Closeable]
+           [me.prettyprint.hector.api.mutation Mutator]
            [me.prettyprint.hector.api Cluster]
            [me.prettyprint.hector.api.factory HFactory]
            [me.prettyprint.cassandra.service CassandraHostConfigurator]
@@ -10,16 +11,16 @@
 ;; https://github.com/rantav/hector/wiki/User-Guide
 
 (defn closeable-cluster
-  [cluster]
+  [^Cluster cluster]
   (proxy [Cluster Closeable] []
     (close []
            (.. cluster getConnectionManager shutdown))))
 
 (defn cluster
   "Connects to Cassandra cluster"
-  ([cluster-name host]
+  ([^String cluster-name ^String host]
      (cluster cluster-name host 9160))
-  ([cluster-name host port]
+  ([^String cluster-name ^String host ^Integer port]
      (HFactory/getOrCreateCluster cluster-name
                                   (CassandraHostConfigurator. (str host ":" port)))))
 (defn keyspace
@@ -39,7 +40,7 @@
 (defn put-row
   "Stores values in columns in map m against row key pk"
   ([ks cf pk m]
-     (let [mut (HFactory/createMutator ks (TypeInferringSerializer/get))]
+     (let [^Mutator mut (HFactory/createMutator ks (TypeInferringSerializer/get))]
        (do (doseq [kv m]
              (let [k (first kv) v (last kv)]
                (.addInsertion mut pk cf (create-column k v))))
