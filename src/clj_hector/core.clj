@@ -10,12 +10,6 @@
 ;; following through sample usages on hector wiki
 ;; https://github.com/rantav/hector/wiki/User-Guide
 
-(defn closeable-cluster
-  [^Cluster cluster]
-  (proxy [Cluster Closeable] []
-    (close []
-           (.. cluster getConnectionManager shutdown))))
-
 (defn cluster
   "Connects to Cassandra cluster"
   ([^String cluster-name ^String host]
