@@ -41,20 +41,17 @@
                (.addInsertion mut pk cf (create-column k v))))
            (.execute mut)))))
 
-(defn get-super-rows
-  [ks cf pks sc opts]
-  (let [s-serializer (s/serializer (or (:s-serializer opts) :bytes))
-        n-serializer (s/serializer (or (:n-serializer opts) :bytes))
-        v-serializer (s/serializer (or (:v-serializer opts) :bytes))]
-    (s/to-clojure (.execute (doto (HFactory/createMultigetSuperSliceQuery ks
-                                                                          (s/serializer (first pks))
-                                                                          s-serializer
-                                                                          n-serializer
-                                                                          v-serializer)
-                              (.setColumnFamily cf)
-                              (.setKeys (object-array pks))
-                              (.setColumnNames (object-array (seq sc)))
-                              (.setRange (:start opts) (:end opts) false Integer/MAX_VALUE))))))
+(defnk get-super-rows
+  [ks cf pks sc :s-serializer :bytes :n-serializer :bytes :v-serializer :bytes :start nil :end nil]
+  (s/to-clojure (.execute (doto (HFactory/createMultigetSuperSliceQuery ks
+                                                                        (s/serializer (first pks))
+                                                                        (s/serializer s-serializer)
+                                                                        (s/serializer n-serializer)
+                                                                        (s/serializer v-serializer))
+                            (.setColumnFamily cf)
+                            (.setKeys (object-array pks))
+                            (.setColumnNames (object-array (seq sc)))
+                            (.setRange start end false Integer/MAX_VALUE)))))
 
 (defn get-rows
   "In keyspace ks, retrieve rows for pks within column family cf."
@@ -71,22 +68,17 @@
                            (.setKeys (object-array pks))
                            (.setRange (:start opts) (:end opts) false Integer/MAX_VALUE)))))))
 
-(defn delete-columns
-  [ks cf pk cs]
-  (let [s (TypeInferringSerializer/get)
-        mut (HFactory/createMutator ks s)]
-    (doseq [c cs] (.addDeletion mut pk cf c s))
-    (.execute mut)))
-
-(defnk count-columns
-  "Counts number of columns for pk in column family cf. The method is not O(1). It takes all the columns from disk to calculate the answer. The only benefit of the method is that you do not need to pull all the columns over Thrift interface to count them."
-  [ks pk cf :start nil :end nil]
-  (s/to-clojure (.execute (doto (HFactory/createCountQuery ks
-                                                           (TypeInferringSerializer/get)
-                                                           (s/serializer :bytes))
+(defnk get-super-columns
+  [ks cf pk sc c :s-serializer :bytes :n-serializer :bytes :v-serializer :bytes]
+  (s/to-clojure (.execute (doto (HFactory/createSubSliceQuery ks
+                                                              (TypeInferringSerializer/get)
+                                                              (s/serializer s-serializer)
+                                                              (s/serializer n-serializer)
+                                                              (s/serializer v-serializer))
+                            (.setColumnFamily cf)
                             (.setKey pk)
-                            (.setRange start end Integer/MAX_VALUE)
-                            (.setColumnFamily cf)))))
+                            (.setSuperColumn sc)
+                            (.setColumnNames (object-array (seq c)))))))
 
 (defn get-columns
   "In keyspace ks, retrieve c columns for row pk from column family cf"
@@ -104,17 +96,22 @@
          (s/to-clojure (.execute (doto (HFactory/createSliceQuery ks s name-serializer value-serializer)
                                    (.setColumnFamily cf)
                                    (.setKey pk)
-                                   (.setColumnNames (object-array (seq c)))))))))
-  ([ks cf pk sc c opts]
-     (let [s (s/serializer (or (:s-serializer opts)
-                               :bytes))
-           n (s/serializer (or (:n-serializer opts)
-                               :bytes))
-           v (s/serializer (or (:v-serializer opts)
-                               :bytes))]
-       (s/to-clojure (.execute (doto (HFactory/createSubSliceQuery ks (TypeInferringSerializer/get) s n v)
-                           (.setColumnFamily cf)
-                           (.setKey pk)
-                           (.setSuperColumn sc)
-                           (.setColumnNames (object-array (seq c)))))))))
+                                   (.setColumnNames (object-array (seq c))))))))))
+(defn delete-columns
+  [ks cf pk cs]
+  (let [s (TypeInferringSerializer/get)
+        mut (HFactory/createMutator ks s)]
+    (doseq [c cs] (.addDeletion mut pk cf c s))
+    (.execute mut)))
+
+(defnk count-columns
+  "Counts number of columns for pk in column family cf. The method is not O(1). It takes all the columns from disk to calculate the answer. The only benefit of the method is that you do not need to pull all the columns over Thrift interface to count them."
+  [ks pk cf :start nil :end nil]
+  (s/to-clojure (.execute (doto (HFactory/createCountQuery ks
+                                                           (TypeInferringSerializer/get)
+                                                           (s/serializer :bytes))
+                            (.setKey pk)
+                            (.setRange start end Integer/MAX_VALUE)
+                            (.setColumnFamily cf)))))
+
 

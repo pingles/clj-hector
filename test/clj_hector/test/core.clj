@@ -155,9 +155,9 @@
   (let [ks-name (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")
         cf "a"
         ks (keyspace *test-cluster* ks-name)
-        opts {:v-serializer :string
+        opts [:v-serializer :string
               :n-serializer :string
-              :s-serializer :string}]
+              :s-serializer :string]]
     (ddl/add-keyspace *test-cluster* {:name ks-name
                                       :strategy :local
                                       :replication 1
@@ -175,9 +175,9 @@
                                        "k2" "v2"}}
                             {:name "SuperCol2"
                              :columns {"k" "v"
-                                       "k2" "v2"}}]}
-           (first (get-super-rows ks cf ["row-key"] ["SuperCol" "SuperCol2"] opts))))
+                                       "k2" "v2"}}]} 
+           (first (apply get-super-rows ks cf ["row-key"] ["SuperCol" "SuperCol2"] opts))))
     (is (= {"k2" "v2"}
-           (get-columns ks cf "row-key" "SuperCol" ["k2" "v2"] opts)))
+           (apply get-super-columns ks cf "row-key" "SuperCol" ["k2" "v2"] opts)))
     (ddl/drop-keyspace *test-cluster* ks-name)))
 
