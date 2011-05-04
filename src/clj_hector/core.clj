@@ -47,28 +47,26 @@
   ([ks cf pks opts]
      (s/to-clojure (let [value-serializer (s/serializer (or (:v-serializer opts) :bytes))
                          name-serializer (s/serializer (or (:n-serializer opts) :bytes))]
-                     (.. (doto (HFactory/createMultigetSliceQuery ks
+                     (.execute (doto (HFactory/createMultigetSliceQuery ks
                                                                   (s/serializer (first pks))
                                                                   name-serializer
                                                                   value-serializer)
                            (.setColumnFamily cf)
                            (.setKeys (object-array pks))
-                           (.setRange (:start opts) (:end opts) false Integer/MAX_VALUE))
-                         execute))))
+                           (.setRange (:start opts) (:end opts) false Integer/MAX_VALUE))))))
   ([ks cf pks sc opts]
      (s/to-clojure (let [s-serializer (s/serializer (or (:s-serializer opts) :bytes))
                          n-serializer (s/serializer (or (:n-serializer opts) :bytes))
                          v-serializer (s/serializer (or (:v-serializer opts) :bytes))]
-                     (.. (doto (HFactory/createMultigetSuperSliceQuery ks
-                                                                       (s/serializer (first pks))
-                                                                       s-serializer
-                                                                       n-serializer
-                                                                       v-serializer)
-                           (.setColumnFamily cf)
-                           (.setKeys (object-array pks))
-                           (.setColumnNames (object-array (seq sc)))
-                           (.setRange (:start opts) (:end opts) false Integer/MAX_VALUE))
-                         execute)))))
+                     (.execute (doto (HFactory/createMultigetSuperSliceQuery ks
+                                                                             (s/serializer (first pks))
+                                                                             s-serializer
+                                                                             n-serializer
+                                                                             v-serializer)
+                                 (.setColumnFamily cf)
+                                 (.setKeys (object-array pks))
+                                 (.setColumnNames (object-array (seq sc)))
+                                 (.setRange (:start opts) (:end opts) false Integer/MAX_VALUE)))))))
 
 (defn delete-columns
   [ks cf pk cs]
@@ -81,13 +79,12 @@
   "Counts number of columns for pk in column family cf. The method is not O(1). It takes all the columns from disk to calculate the answer. The only benefit of the method is that you do not need to pull all the columns over Thrift interface to count them."
   [ks pk cf & opts]
   (let [name-serializer (s/serializer (or (:n-serializer opts) :bytes))]
-    (s/to-clojure (.. (doto (HFactory/createCountQuery ks
-                                                       (TypeInferringSerializer/get)
-                                                       name-serializer)
-                        (.setKey pk)
-                        (.setRange (:start opts) (:end opts) Integer/MAX_VALUE)
-                        (.setColumnFamily cf))
-                      execute))))
+    (s/to-clojure (.execute (doto (HFactory/createCountQuery ks
+                                                    (TypeInferringSerializer/get)
+                                                    name-serializer)
+                     (.setKey pk)
+                     (.setRange (:start opts) (:end opts) Integer/MAX_VALUE)
+                     (.setColumnFamily cf))))))
 
 (defn get-columns
   "In keyspace ks, retrieve c columns for row pk from column family cf"
@@ -98,16 +95,14 @@
            value-serializer (s/serializer (or (:v-serializer opts) :bytes))
            name-serializer (s/serializer (or (:n-serializer opts) :bytes))]
        (if (< 2 (count c))
-         (s/to-clojure (.. (doto (HFactory/createColumnQuery ks s name-serializer value-serializer)
-                             (.setColumnFamily cf)
-                             (.setKey pk)
-                             (.setName c))
-                           execute))
-         (s/to-clojure (.. (doto (HFactory/createSliceQuery ks s name-serializer value-serializer)
-                             (.setColumnFamily cf)
-                             (.setKey pk)
-                             (.setColumnNames (object-array (seq c))))
-                           execute)))))
+         (s/to-clojure (.excute (doto (HFactory/createColumnQuery ks s name-serializer value-serializer)
+                                  (.setColumnFamily cf)
+                                  (.setKey pk)
+                                  (.setName c))))
+         (s/to-clojure (.execute (doto (HFactory/createSliceQuery ks s name-serializer value-serializer)
+                                   (.setColumnFamily cf)
+                                   (.setKey pk)
+                                   (.setColumnNames (object-array (seq c)))))))))
   ([ks cf pk sc c opts]
      (let [s (s/serializer (or (:s-serializer opts)
                                :bytes))
@@ -115,10 +110,9 @@
                                :bytes))
            v (s/serializer (or (:v-serializer opts)
                                :bytes))]
-       (s/to-clojure (.. (doto (HFactory/createSubSliceQuery ks (TypeInferringSerializer/get) s n v)
+       (s/to-clojure (.execute (doto (HFactory/createSubSliceQuery ks (TypeInferringSerializer/get) s n v)
                            (.setColumnFamily cf)
                            (.setKey pk)
                            (.setSuperColumn sc)
-                           (.setColumnNames (object-array (seq c))))
-                         execute)))))
+                           (.setColumnNames (object-array (seq c)))))))))
 
