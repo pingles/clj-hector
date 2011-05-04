@@ -27,8 +27,7 @@
   ([n v]
      (let [s (TypeInferringSerializer/get)]
        (if (map? v)
-         (let [cols (map (fn [kv] (create-column (first kv) (last kv)))
-                         v)]
+         (let [cols (map #(create-column (first %) (last %)) v)]
            (HFactory/createSuperColumn n cols s s s))
          (HFactory/createColumn n v s s)))))
 
@@ -36,9 +35,8 @@
   "Stores values in columns in map m against row key pk"
   ([ks cf pk m]
      (let [^Mutator mut (HFactory/createMutator ks (TypeInferringSerializer/get))]
-       (do (doseq [kv m]
-             (let [k (first kv) v (last kv)]
-               (.addInsertion mut pk cf (create-column k v))))
+       (do (doseq [[k v] m]
+             (.addInsertion mut pk cf (create-column k v)))
            (.execute mut)))))
 
 (defnk get-super-rows
