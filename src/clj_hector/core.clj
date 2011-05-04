@@ -41,6 +41,21 @@
                (.addInsertion mut pk cf (create-column k v))))
            (.execute mut)))))
 
+(defn get-super-rows
+  [ks cf pks sc opts]
+  (let [s-serializer (s/serializer (or (:s-serializer opts) :bytes))
+        n-serializer (s/serializer (or (:n-serializer opts) :bytes))
+        v-serializer (s/serializer (or (:v-serializer opts) :bytes))]
+    (s/to-clojure (.execute (doto (HFactory/createMultigetSuperSliceQuery ks
+                                                                          (s/serializer (first pks))
+                                                                          s-serializer
+                                                                          n-serializer
+                                                                          v-serializer)
+                              (.setColumnFamily cf)
+                              (.setKeys (object-array pks))
+                              (.setColumnNames (object-array (seq sc)))
+                              (.setRange (:start opts) (:end opts) false Integer/MAX_VALUE))))))
+
 (defn get-rows
   "In keyspace ks, retrieve rows for pks within column family cf."
   ([ks cf pks]
@@ -54,20 +69,7 @@
                                                                   value-serializer)
                            (.setColumnFamily cf)
                            (.setKeys (object-array pks))
-                           (.setRange (:start opts) (:end opts) false Integer/MAX_VALUE))))))
-  ([ks cf pks sc opts]
-     (s/to-clojure (let [s-serializer (s/serializer (or (:s-serializer opts) :bytes))
-                         n-serializer (s/serializer (or (:n-serializer opts) :bytes))
-                         v-serializer (s/serializer (or (:v-serializer opts) :bytes))]
-                     (.execute (doto (HFactory/createMultigetSuperSliceQuery ks
-                                                                             (s/serializer (first pks))
-                                                                             s-serializer
-                                                                             n-serializer
-                                                                             v-serializer)
-                                 (.setColumnFamily cf)
-                                 (.setKeys (object-array pks))
-                                 (.setColumnNames (object-array (seq sc)))
-                                 (.setRange (:start opts) (:end opts) false Integer/MAX_VALUE)))))))
+                           (.setRange (:start opts) (:end opts) false Integer/MAX_VALUE)))))))
 
 (defn delete-columns
   [ks cf pk cs]
