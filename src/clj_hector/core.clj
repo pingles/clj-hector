@@ -1,5 +1,6 @@
 (ns clj-hector.core
   (:require [clj-hector.serialize :as s])
+  (:use [clojure.contrib.def :only (defnk)])
   (:import [java.io Closeable]
            [me.prettyprint.hector.api.mutation Mutator]
            [me.prettyprint.hector.api Cluster]
@@ -75,16 +76,15 @@
     (doseq [c cs] (.addDeletion mut pk cf c s))
     (.execute mut)))
 
-(defn count-columns
+(defnk count-columns
   "Counts number of columns for pk in column family cf. The method is not O(1). It takes all the columns from disk to calculate the answer. The only benefit of the method is that you do not need to pull all the columns over Thrift interface to count them."
-  [ks pk cf & {:keys [n-serializer start end] :or {n-serializer :bytes}}]
-  (let [name-serializer (s/serializer n-serializer)]
-    (s/to-clojure (.execute (doto (HFactory/createCountQuery ks
-                                                             (TypeInferringSerializer/get)
-                                                             name-serializer)
-                              (.setKey pk)
-                              (.setRange start end Integer/MAX_VALUE)
-                              (.setColumnFamily cf))))))
+  [ks pk cf :start nil :end nil]
+  (s/to-clojure (.execute (doto (HFactory/createCountQuery ks
+                                                           (TypeInferringSerializer/get)
+                                                           (s/serializer :bytes))
+                            (.setKey pk)
+                            (.setRange start end Integer/MAX_VALUE)
+                            (.setColumnFamily cf)))))
 
 (defn get-columns
   "In keyspace ks, retrieve c columns for row pk from column family cf"
