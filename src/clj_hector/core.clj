@@ -48,7 +48,7 @@
                                                                         (s/serializer v-serializer))
                             (.setColumnFamily cf)
                             (.setKeys (object-array pks))
-                            (.setColumnNames (object-array (seq sc)))
+                            (.setColumnNames (object-array sc))
                             (.setRange start end false Integer/MAX_VALUE)))))
 
 (defn get-rows
@@ -76,7 +76,7 @@
                             (.setColumnFamily cf)
                             (.setKey pk)
                             (.setSuperColumn sc)
-                            (.setColumnNames (object-array (seq c)))))))
+                            (.setColumnNames (object-array c))))))
 
 (defn get-columns
   "In keyspace ks, retrieve c columns for row pk from column family cf"
