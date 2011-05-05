@@ -94,7 +94,7 @@
          (s/to-clojure (.execute (doto (HFactory/createSliceQuery ks s name-serializer value-serializer)
                                    (.setColumnFamily cf)
                                    (.setKey pk)
-                                   (.setColumnNames (object-array (seq c))))))))))
+                                   (.setColumnNames (object-array c)))))))))
 (defn delete-columns
   [ks cf pk cs]
   (let [s (TypeInferringSerializer/get)
