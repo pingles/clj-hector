@@ -26,18 +26,24 @@ Add the following to your `project.clj`
 
     (def c (cluster "Pauls Cluster" "localhost"))
     (def ks (keyspace c "Twitter"))
-    (get-rows ks "Users" ["paul"] {:n-serializer :string})
+    (get-rows ks "Users" ["paul"] :n-serializer :string)
 
     user> (-> (cluster "Pauls Cluster" "localhost")
               (keyspace "Twitter")
-              (get-rows "Users" ["paul"] {:n-serializer :string}))
+              (get-rows "Users" ["paul"] :n-serializer :string))
     ({:key "paul", :columns {"age" #<byte[] [B@324a897c>, "login" #<byte[] [B@3b8845af>}})
+
+It's also possible to query for column slices
+
+    user> (-> (cluster "Pauls Cluster" "localhost")
+              (keyspace "Twitter")
+              (get-columns "Users" "paul" ["age" "login"] :n-serializer :string))
 
 ### Serializing non-String types
 
     user> (put-row ks "Users" "Paul" {"age" 30})
     #<MutationResultImpl MutationResult took (2us) for query (n/a) on host: localhost(127.0.0.1):9160>
-    user> (get-rows ks "Users" ["Paul"] {:n-serializer :string :v-serializer :integer})
+    user> (get-rows ks "Users" ["Paul"] :n-serializer :string :v-serializer :integer)
     ({:key "Paul", :columns {"age" 30}})
 
 The following serializers are supported
@@ -59,9 +65,9 @@ Storing super columns works using a nested map structure:
     user> (put-row ks "UserRelationships" "paul" {"SuperCol" {"k" "v"} "SuperCol2" {"k2" "v2"}})
     #<MutationResultImpl MutationResult took (6us) for query (n/a) on host: localhost(127.0.0.1):9160>
 
-Retrieving super columns with `get-rows`:
+Retrieving super columns with `get-super-rows`:
 
-    user> (get-rows ks "UserRelationships" ["paul"] ["SuperCol" "SuperCol2"] {:s-serializer :string :n-serializer :string :v-serializer :string})
+    user> (get-super-rows ks "UserRelationships" ["paul"] ["SuperCol" "SuperCol2"] :s-serializer :string :n-serializer :string :v-serializer :string)
     ({:key "paul", :super-columns ({:name "SuperCol", :columns {"a" "1", "k" "v"}} {:name "SuperCol2", :columns {"k2" "v2"}})})
 
 In the above example, note the addition of the s-serializer option:
