@@ -27,7 +27,7 @@
   ([n v]
      (let [s (TypeInferringSerializer/get)]
        (if (map? v)
-         (let [cols (map #(create-column (first %) (last %)) v)]
+         (let [cols (map (fn [[n v]] (create-column n v)) v)]
            (HFactory/createSuperColumn n cols s s s))
          (HFactory/createColumn n v s s)))))
 
