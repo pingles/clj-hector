@@ -51,20 +51,16 @@
                             (.setColumnNames (object-array sc))
                             (.setRange start end false Integer/MAX_VALUE)))))
 
-(defn get-rows
+(defnk get-rows
   "In keyspace ks, retrieve rows for pks within column family cf."
-  ([ks cf pks]
-     (get-rows ks cf pks {}))
-  ([ks cf pks opts]
-     (s/to-clojure (let [value-serializer (s/serializer (or (:v-serializer opts) :bytes))
-                         name-serializer (s/serializer (or (:n-serializer opts) :bytes))]
-                     (.execute (doto (HFactory/createMultigetSliceQuery ks
-                                                                  (s/serializer (first pks))
-                                                                  name-serializer
-                                                                  value-serializer)
-                           (.setColumnFamily cf)
-                           (.setKeys (object-array pks))
-                           (.setRange (:start opts) (:end opts) false Integer/MAX_VALUE)))))))
+  [ks cf pks :n-serializer :bytes :v-serializer :bytes :start nil :end nil]
+  (s/to-clojure (.execute (doto (HFactory/createMultigetSliceQuery ks
+                                                                   (s/serializer (first pks))
+                                                                   (s/serializer n-serializer)
+                                                                   (s/serializer v-serializer))
+                            (.setColumnFamily cf)
+                            (.setKeys (object-array pks))
+                            (.setRange start end false Integer/MAX_VALUE)))))
 
 (defnk get-super-columns
   [ks cf pk sc c :s-serializer :bytes :n-serializer :bytes :v-serializer :bytes]
@@ -78,23 +74,21 @@
                             (.setSuperColumn sc)
                             (.setColumnNames (object-array c))))))
 
-(defn get-columns
+(defnk get-columns
   "In keyspace ks, retrieve c columns for row pk from column family cf"
-  ([ks cf pk c]
-     (get-columns ks cf pk c {}))
-  ([ks cf pk c opts]
-     (let [s (TypeInferringSerializer/get)
-           value-serializer (s/serializer (or (:v-serializer opts) :bytes))
-           name-serializer (s/serializer (or (:n-serializer opts) :bytes))]
-       (if (< 2 (count c))
-         (s/to-clojure (.excute (doto (HFactory/createColumnQuery ks s name-serializer value-serializer)
-                                  (.setColumnFamily cf)
-                                  (.setKey pk)
-                                  (.setName c))))
-         (s/to-clojure (.execute (doto (HFactory/createSliceQuery ks s name-serializer value-serializer)
-                                   (.setColumnFamily cf)
-                                   (.setKey pk)
-                                   (.setColumnNames (object-array c)))))))))
+  [ks cf pk c :n-serializer :bytes :v-serializer :bytes]
+  (let [s (TypeInferringSerializer/get)
+        value-serializer (s/serializer v-serializer)
+        name-serializer (s/serializer n-serializer)]
+    (if (< 2 (count c))
+      (s/to-clojure (.excute (doto (HFactory/createColumnQuery ks s name-serializer value-serializer)
+                               (.setColumnFamily cf)
+                               (.setKey pk)
+                               (.setName c))))
+      (s/to-clojure (.execute (doto (HFactory/createSliceQuery ks s name-serializer value-serializer)
+                                (.setColumnFamily cf)
+                                (.setKey pk)
+                                (.setColumnNames (object-array c))))))))
 (defn delete-columns
   [ks cf pk cs]
   (let [s (TypeInferringSerializer/get)
