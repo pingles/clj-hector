@@ -68,10 +68,16 @@ Storing super columns works using a nested map structure:
 Retrieving super columns with `get-super-rows`:
 
     user> (get-super-rows ks "UserRelationships" ["paul"] ["SuperCol" "SuperCol2"] :s-serializer :string :n-serializer :string :v-serializer :string)
-    ({:key "paul", :super-columns ({:name "SuperCol", :columns {"a" "1", "k" "v"}} {:name "SuperCol2", :columns {"k2" "v2"}})})
+    ({:key "paul", :super-columns ({:name "SuperCol", :columns {"a"
+    "1", "k" "v"}} {:name "SuperCol2", :columns {"k2" "v2"}})})
 
 In the above example, note the addition of the s-serializer option:
 this controls how super column names should be deserialized.
+
+You can also query for a sequence of columns:
+
+    user> (get-super-columns ks "UserRelationships" "paul" "SuperCol" ["a" "k"] :s-serializer :string :n-serializer :string :v-serializer :string)
+    {"a" "1", "k" "v"}
 
 ### Query metadata
 
