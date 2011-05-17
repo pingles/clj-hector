@@ -37,8 +37,7 @@
   "Stores values in columns in map m against row key pk"
   [ks cf pk m]
   (let [^Mutator mut (HFactory/createMutator ks (TypeInferringSerializer/get))]
-    (do (doseq [[k v] m]
-          (.addInsertion mut pk cf (create-column k v)))
+    (do (doseq [[k v] m] (.addInsertion mut pk cf (create-column k v)))
         (.execute mut))))
 
 (defn- execute-query [^Query query]
@@ -109,13 +108,11 @@ Example: {\"row-key\" {\"SuperCol\" [\"col-name\"]}}"
   (let [mut (HFactory/createMutator ks (TypeInferringSerializer/get))]
     (doseq [[k nv] coll]
       (doseq [[sc-name v] nv]
-        (let [c (apply hash-map (interleave v v))
-              col (create-column sc-name
-                                 c
-                                 :s-serializer (s/serializer s-serializer)
-                                 :n-serializer (s/serializer n-serializer)
-                                 :v-serializer (s/serializer v-serializer))]
-          (.addSubDelete mut k cf col))))
+        (.addSubDelete mut k cf (create-column sc-name
+                                               (apply hash-map (interleave v v))
+                                               :s-serializer (s/serializer s-serializer)
+                                               :n-serializer (s/serializer n-serializer)
+                                               :v-serializer (s/serializer v-serializer)))))
     (.execute mut)))
 
 (defn delete-rows
