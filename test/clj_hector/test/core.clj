@@ -170,12 +170,10 @@
     (is (= :super
            (:type (first (ddl/column-families *test-cluster* ks-name)))))
     (is (= {:key "row-key"
-            :super-columns [{:name "SuperCol"
-                             :columns {"k" "v"
-                                       "k2" "v2"}}
-                            {:name "SuperCol2"
-                             :columns {"k" "v"
-                                       "k2" "v2"}}]} 
+            :super-columns [{"SuperCol" {"k" "v"
+                                         "k2" "v2"}}
+                            {"SuperCol2" {"k" "v"
+                                          "k2" "v2"}}]} 
            (first (apply get-super-rows ks cf ["row-key"] ["SuperCol" "SuperCol2"] opts))))
     (is (= {"k2" "v2"}
            (apply get-super-columns ks cf "row-key" "SuperCol" ["k2" "v2"] opts)))
