@@ -80,23 +80,22 @@
 (defnk get-columns
   "In keyspace ks, retrieve c columns for row pk from column family cf"
   [ks cf pk c :n-serializer :bytes :v-serializer :bytes]
-  (let [s (TypeInferringSerializer/get)
-        vs (s/serializer v-serializer)
+  (let [vs (s/serializer v-serializer)
         ns (s/serializer n-serializer)]
     (if (< 2 (count c))
-      (execute-query (doto (HFactory/createColumnQuery ks s ns vs)
+      (execute-query (doto (HFactory/createColumnQuery ks type-inferring ns vs)
                        (.setColumnFamily cf)
                        (.setKey pk)
                        (.setName c)))
-      (execute-query (doto (HFactory/createSliceQuery ks s ns vs)
+      (execute-query (doto (HFactory/createSliceQuery ks type-inferring ns vs)
                        (.setColumnFamily cf)
                        (.setKey pk)
                        (.setColumnNames (object-array c)))))))
+
 (defn delete-columns
   [ks cf pk cs]
-  (let [s (TypeInferringSerializer/get)
-        mut (HFactory/createMutator ks s)]
-    (doseq [c cs] (.addDeletion mut pk cf c s))
+  (let [mut (HFactory/createMutator ks type-inferring)]
+    (doseq [c cs] (.addDeletion mut pk cf c type-inferring))
     (.execute mut)))
 
 (defnk delete-super-columns
