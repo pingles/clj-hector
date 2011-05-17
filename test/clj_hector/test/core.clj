@@ -181,3 +181,28 @@
            (apply get-super-columns ks cf "row-key" "SuperCol" ["k2" "v2"] opts)))
     (ddl/drop-keyspace *test-cluster* ks-name)))
 
+(deftest deleting-supercolumns
+  (let [ks-name (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")
+        cf "a"
+        ks (keyspace *test-cluster* ks-name)
+        opts [:v-serializer :string
+              :n-serializer :string
+              :s-serializer :string]]
+    (ddl/add-keyspace *test-cluster* {:name ks-name
+                                      :strategy :local
+                                      :replication 1
+                                      :column-families [{:name cf
+                                                         :type :super}]})
+    (put-row ks cf "row-key" {"SuperCol" {"k" "v"
+                                          "k2" "v2"}
+                              "SuperCol2" {"k" "v"
+                                           "k2" "v2"}})
+    (is (= {"k2" "v2"
+            "k" "v"}
+           (apply get-super-columns ks cf "row-key" "SuperCol" ["k" "k2"] opts)))
+    (apply delete-super-columns ks cf {"row-key" {"SuperCol" ["k2"] "SuperCol2" ["k2"]}} opts)
+    (is (= {"k" "v"}
+           (apply get-super-columns ks cf "row-key" "SuperCol" ["k" "k2"] opts)))
+    (is (= {"k" "v"}
+           (apply get-super-columns ks cf "row-key" "SuperCol2" ["k" "k2"] opts)))
+    (ddl/drop-keyspace *test-cluster* ks-name)))

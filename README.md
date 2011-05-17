@@ -79,6 +79,25 @@ You can also query for a sequence of columns:
     user> (get-super-columns ks "UserRelationships" "paul" "SuperCol" ["a" "k"] :s-serializer :string :n-serializer :string :v-serializer :string)
     {"a" "1", "k" "v"}
 
+### Deleting Rows
+
+It's possible to delete all columns identified by keys with the
+`delete-rows` function. This works with both super-column families and
+regular column families.
+
+To delete the example above:
+
+    user> (delete-rows ks "UserRelationships" ["paul"])
+
+    user> (get-super-columns ks "UserRelationships" "paul" "SuperCol" ["a" "k"] :s-serializer :string :n-serializer :string :v-serializer :string)
+    {}
+
+    user> (get-super-rows ks "UserRelationships" ["paul"] ["SuperCol" "SuperCol2"] :s-serializer :string :n-serializer :string :v-serializer :string)
+    ({:key "paul", :super-columns ()})
+
+TODO: In the above query, a row is returned despite having no results. This
+should probably just return an empty sequence.
+
 ### Query metadata
 
 Hector exposes data about how long queries took to execute (and on which host). This is provided as metadata on the query result maps:

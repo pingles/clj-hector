@@ -23,22 +23,23 @@
   [cluster name]
   (HFactory/createKeyspace name cluster))
 
-(defn- create-column
+(def type-inferring (TypeInferringSerializer/get))
+
+(defnk create-column
   "Creates columns or super-columns"
-  ([n v]
-     (let [s (TypeInferringSerializer/get)]
-       (if (map? v)
-         (let [cols (map (fn [[n v]] (create-column n v)) v)]
-           (HFactory/createSuperColumn n cols s s s))
-         (HFactory/createColumn n v s s)))))
+  [n v :n-serializer type-inferring :v-serializer type-inferring :s-serializer type-inferring]
+  (if (map? v)
+    (let [cols (map (fn [[n v]] (create-column n v :n-serializer n-serializer :v-serializer v-serializer)) v)]
+      (HFactory/createSuperColumn n cols s-serializer n-serializer v-serializer))
+    (HFactory/createColumn n v n-serializer v-serializer)))
 
 (defn put-row
   "Stores values in columns in map m against row key pk"
-  ([ks cf pk m]
-     (let [^Mutator mut (HFactory/createMutator ks (TypeInferringSerializer/get))]
-       (do (doseq [[k v] m]
-             (.addInsertion mut pk cf (create-column k v)))
-           (.execute mut)))))
+  [ks cf pk m]
+  (let [^Mutator mut (HFactory/createMutator ks (TypeInferringSerializer/get))]
+    (do (doseq [[k v] m]
+          (.addInsertion mut pk cf (create-column k v)))
+        (.execute mut))))
 
 (defn- execute-query [^Query query]
   (s/to-clojure (.execute query)))
@@ -98,6 +99,31 @@
   (let [s (TypeInferringSerializer/get)
         mut (HFactory/createMutator ks s)]
     (doseq [c cs] (.addDeletion mut pk cf c s))
+    (.execute mut)))
+
+(defnk delete-super-columns
+  "Coll is a map of keys, super column names and column names
+
+Example: {\"row-key\" {\"SuperCol\" [\"col-name\"]}}"
+  [ks cf coll :s-serializer :bytes :n-serializer :bytes :v-serializer :bytes]
+  (let [mut (HFactory/createMutator ks (TypeInferringSerializer/get))]
+    (doseq [[k nv] coll]
+      (doseq [[sc-name v] nv]
+        (let [c (apply hash-map (interleave v v))
+              col (create-column sc-name
+                                 c
+                                 :s-serializer (s/serializer s-serializer)
+                                 :n-serializer (s/serializer n-serializer)
+                                 :v-serializer (s/serializer v-serializer))]
+          (.addSubDelete mut k cf col))))
+    (.execute mut)))
+
+(defn delete-rows
+  "Deletes all columns for rows identified in pks sequence."
+  [ks cf pks]
+  (let [s (TypeInferringSerializer/get)
+        mut (HFactory/createMutator ks s)]
+    (doseq [k pks] (.addDeletion mut k cf))
     (.execute mut)))
 
 (defnk count-columns
