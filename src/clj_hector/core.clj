@@ -118,8 +118,7 @@ Example: {\"row-key\" {\"SuperCol\" [\"col-name\"]}}"
 (defn delete-rows
   "Deletes all columns for rows identified in pks sequence."
   [ks cf pks]
-  (let [s (TypeInferringSerializer/get)
-        mut (HFactory/createMutator ks s)]
+  (let [mut (HFactory/createMutator ks (TypeInferringSerializer/get))]
     (doseq [k pks] (.addDeletion mut k cf))
     (.execute mut)))
 
