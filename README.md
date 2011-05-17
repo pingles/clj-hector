@@ -31,7 +31,7 @@ Add the following to your `project.clj`
     user> (-> (cluster "Pauls Cluster" "localhost")
               (keyspace "Twitter")
               (get-rows "Users" ["paul"] :n-serializer :string))
-    ({:key "paul", :columns {"age" #<byte[] [B@324a897c>, "login" #<byte[] [B@3b8845af>}})
+    ({"paul" {"age" #<byte[] [B@324a897c>, "login" #<byte[] [B@3b8845af>}})
 
 It's also possible to query for column slices
 
@@ -44,7 +44,7 @@ It's also possible to query for column slices
     user> (put-row ks "Users" "Paul" {"age" 30})
     #<MutationResultImpl MutationResult took (2us) for query (n/a) on host: localhost(127.0.0.1):9160>
     user> (get-rows ks "Users" ["Paul"] :n-serializer :string :v-serializer :integer)
-    ({:key "Paul", :columns {"age" 30}})
+    ({"Paul" {"age" 30}})
 
 The following serializers are supported
 
@@ -68,7 +68,7 @@ Storing super columns works using a nested map structure:
 Retrieving super columns with `get-super-rows`:
 
     user> (get-super-rows ks "UserRelationships" ["paul"] ["SuperCol" "SuperCol2"] :s-serializer :string :n-serializer :string :v-serializer :string)
-    ({:key "paul", :super-columns ({"SuperCol", {"a" "1", "k" "v"}} {"SuperCol2", {"k2" "v2"}})})
+    ({"paul" ({"SuperCol", {"a" "1", "k" "v"}} {"SuperCol2", {"k2" "v2"}})})
 
 In the above example, note the addition of the s-serializer option:
 this controls how super column names should be deserialized.
@@ -92,7 +92,7 @@ To delete the example above:
     {}
 
     user> (get-super-rows ks "UserRelationships" ["paul"] ["SuperCol" "SuperCol2"] :s-serializer :string :n-serializer :string :v-serializer :string)
-    ({:key "paul", :super-columns ()})
+    ({"paul" ()})
 
 TODO: In the above query, a row is returned despite having no results. This
 should probably just return an empty sequence.

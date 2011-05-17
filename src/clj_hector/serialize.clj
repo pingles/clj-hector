@@ -11,19 +11,16 @@
               (map to-clojure (iterator-seq (.iterator s))))
   SuperRowImpl
   (to-clojure [s]
-              {(.getKey s)
-               (map to-clojure (seq (.. s getSuperSlice getSuperColumns)))})
+              {(.getKey s) (map to-clojure (seq (.. s getSuperSlice getSuperColumns)))})
   HSuperColumnImpl
   (to-clojure [s]
-              {(.getName s)
-               (into (sorted-map) (for [c (.getColumns s)] (to-clojure c)))})
+              {(.getName s) (into (sorted-map) (for [c (.getColumns s)] (to-clojure c)))})
   RowsImpl
   (to-clojure [s]
               (map to-clojure (iterator-seq (.iterator s))))
   RowImpl
   (to-clojure [s]
-              {:key (.getKey s)
-               :columns (to-clojure (.getColumnSlice s))})
+              {(.getKey s) (to-clojure (.getColumnSlice s))})
   ColumnSliceImpl
   (to-clojure [s]
               (into (sorted-map) (for [c (.getColumns s)] (to-clojure c))))

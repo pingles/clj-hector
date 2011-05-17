@@ -17,14 +17,12 @@
                                       :replication 1
                                       :column-families [{:name cf}]})
     (put-row ks cf "row-key" {"k" "v"})
-    (is (= '({:key "row-key"
-              :columns {"k" "v"}})
+    (is (= '({"row-key" {"k" "v"}})
            (apply get-rows ks cf ["row-key"] opts)))
     (is (= {"k" "v"}
            (apply get-columns ks cf "row-key" ["k"] opts)))
     (delete-columns ks cf "row-key" ["k"])
-    (is (= '({:key "row-key"
-              :columns {}})
+    (is (= '({"row-key" {}})
            (apply get-rows ks cf ["row-key"] opts)))
     (ddl/drop-keyspace *test-cluster* ks-name)))
 
@@ -39,8 +37,7 @@
                                       :replication 1
                                       :column-families [{:name cf}]})
     (put-row ks cf "row-key" {"k" 1234})
-    (is (= '({:key "row-key"
-              :columns {"k" 1234}})
+    (is (= '({"row-key" {"k" 1234}})
            (apply get-rows ks cf ["row-key"] opts)))
     (is (= {"k" 1234}
            (apply get-columns ks cf "row-key" ["k"] opts)))
@@ -58,8 +55,7 @@
                                       :column-families [{:name cf
                                                          :comparator :long}]})
     (put-row ks cf "row-key" {(long 1) (long 1234)})
-    (is (= {:key "row-key"
-            :columns {(long 1) (long 1234)}}
+    (is (= {"row-key" {(long 1) (long 1234)}}
            (first (apply get-rows ks cf ["row-key"] opts))))
     (is (= {(long 1) (long 1234)}
            (apply get-columns ks cf "row-key" [(long 1)] opts)))
@@ -77,8 +73,7 @@
                                       :column-families [{:name cf
                                                          :comparator :long}]})
     (put-row ks cf (long 101) {(long 1) (long 1234)})
-    (is (= {:key (long 101)
-            :columns {(long 1) (long 1234)}}
+    (is (= {(long 101) {(long 1)(long 1234)}}
            (first (apply get-rows ks cf [(long 101)] opts))))
     (is (= {(long 1) (long 1234)}
            (apply get-columns ks cf (long 101) [(long 1)] opts)))
@@ -98,8 +93,7 @@
                               (long 2) (long 102)
                               (long 3) (long 103)
                               (long 4) (long 104)})
-    (is (= {:key "row-key"
-            :columns (sorted-map (long 2) (long 102)
+    (is (= {"row-key" (sorted-map (long 2) (long 102)
                                  (long 3) (long 103))}
            (first (apply get-rows ks cf ["row-key"] [:n-serializer :long
                                                      :v-serializer :long
@@ -116,23 +110,23 @@
                                       :replication 1
                                       :column-families [{:name cf}]})
     (put-row ks cf "row-key" {"k" "v"})
-    (let [res (first (:columns (first (get-rows ks cf ["row-key"]))))
-          n-bytes (first res)
-          v-bytes (last res)]
+    (let [first-row (get (first (get-rows ks cf ["row-key"])) "row-key")
+          n-bytes (first (keys first-row))
+          v-bytes (first (vals first-row))]
       (is (= "k"
              (String. n-bytes)))
       (is (= "v"
              (String. v-bytes))))
     (let [res (get-columns ks cf "row-key" [(.getBytes "k")])
           n-bytes (first (keys res))
-          v-bytes (last (vals res))]
+          v-bytes (first (vals res))]
       (is (= "k"
              (String. n-bytes)))
       (is (= "v"
              (String. v-bytes))))
     (let [res (apply get-columns ks cf "row-key" ["k"] [:n-serializer :string])
           n (first (keys res))
-          v-bytes (last (vals res))]
+          v-bytes (first (vals res))]
       (is (= "k" n))
       (is (= "v"
              (String. v-bytes))))
