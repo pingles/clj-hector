@@ -11,8 +11,8 @@
               (map to-clojure (iterator-seq (.iterator s))))
   SuperRowImpl
   (to-clojure [s]
-              {:key (.getKey s)
-               :super-columns (map to-clojure (seq (.. s getSuperSlice getSuperColumns)))})
+              {(.getKey s)
+               (map to-clojure (seq (.. s getSuperSlice getSuperColumns)))})
   HSuperColumnImpl
   (to-clojure [s]
               {(.getName s)
