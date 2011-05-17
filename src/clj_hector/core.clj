@@ -35,7 +35,7 @@
 (defn put-row
   "Stores values in columns in map m against row key pk"
   [ks cf pk m]
-  (let [^Mutator mut (HFactory/createMutator ks (TypeInferringSerializer/get))]
+  (let [^Mutator mut (HFactory/createMutator ks type-inferring)]
     (do (doseq [[k v] m] (.addInsertion mut pk cf (create-column k v)))
         (.execute mut))))
 
@@ -68,7 +68,7 @@
 (defnk get-super-columns
   [ks cf pk sc c :s-serializer :bytes :n-serializer :bytes :v-serializer :bytes]
   (execute-query (doto (HFactory/createSubSliceQuery ks
-                                                     (TypeInferringSerializer/get)
+                                                     type-inferring
                                                      (s/serializer s-serializer)
                                                      (s/serializer n-serializer)
                                                      (s/serializer v-serializer))
@@ -103,7 +103,7 @@
 
 Example: {\"row-key\" {\"SuperCol\" [\"col-name\"]}}"
   [ks cf coll :s-serializer :bytes :n-serializer :bytes :v-serializer :bytes]
-  (let [mut (HFactory/createMutator ks (TypeInferringSerializer/get))]
+  (let [mut (HFactory/createMutator ks type-inferring)]
     (doseq [[k nv] coll]
       (doseq [[sc-name v] nv]
         (.addSubDelete mut k cf (create-column sc-name
@@ -116,7 +116,7 @@ Example: {\"row-key\" {\"SuperCol\" [\"col-name\"]}}"
 (defn delete-rows
   "Deletes all columns for rows identified in pks sequence."
   [ks cf pks]
-  (let [mut (HFactory/createMutator ks (TypeInferringSerializer/get))]
+  (let [mut (HFactory/createMutator ks type-inferring)]
     (doseq [k pks] (.addDeletion mut k cf))
     (.execute mut)))
 
@@ -124,7 +124,7 @@ Example: {\"row-key\" {\"SuperCol\" [\"col-name\"]}}"
   "Counts number of columns for pk in column family cf. The method is not O(1). It takes all the columns from disk to calculate the answer. The only benefit of the method is that you do not need to pull all the columns over Thrift interface to count them."
   [ks pk cf :start nil :end nil]
   (execute-query (doto (HFactory/createCountQuery ks
-                                                  (TypeInferringSerializer/get)
+                                                  type-inferring
                                                   (s/serializer :bytes))
                    (.setKey pk)
                    (.setRange start end Integer/MAX_VALUE)
