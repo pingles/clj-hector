@@ -14,9 +14,9 @@
 
 (defn cluster
   "Connects to Cassandra cluster"
-  ([^String cluster-name ^String host]
+  ([cluster-name host]
      (cluster cluster-name host 9160))
-  ([^String cluster-name ^String host ^Integer port]
+  ([cluster-name host port]
      (HFactory/getOrCreateCluster cluster-name
                                   (CassandraHostConfigurator. (str host ":" port)))))
 (defn keyspace
@@ -26,7 +26,6 @@
 (def type-inferring (TypeInferringSerializer/get))
 
 (defnk create-column
-  "Creates columns or super-columns"
   [n v :n-serializer type-inferring :v-serializer type-inferring :s-serializer type-inferring]
   (if (map? v)
     (let [cols (map (fn [[n v]] (create-column n v :n-serializer n-serializer :v-serializer v-serializer)) v)]
