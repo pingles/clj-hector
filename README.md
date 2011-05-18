@@ -108,13 +108,9 @@ Hector exposes data about how long queries took to execute (and on which host). 
 
 * Better support different Hector query types- multimethod dispatch
   based on arity of pk and c args?
-* Super columns
-  * Add suport for `delete-columns`
 * Paging support for queries (somehow wiring into chunked sequences?)
 * Better support of CassandraHostConfigurator
-* Type hints to avoid reflecting
 * Refactoring
-* Plenty more :)
 
 ## License
 
