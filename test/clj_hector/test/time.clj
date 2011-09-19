@@ -1,6 +1,6 @@
 (ns clj-hector.test.time
   (:import [java.util UUID]
-           [org.joda.time Instant])
+           [org.joda.time Instant DateTime])
   (:use [clojure.test]
         [clj-hector.time] :reload))
 
@@ -23,4 +23,6 @@
 (deftest joda-support
   (is (instance? UUID (uuid (epoch (Instant/now)))))
   (is (close-enough? (epoch (Instant/now))
+                     (epoch (get-date (to-bytes (uuid-now))))))
+  (is (close-enough? (epoch (DateTime/now))
                      (epoch (get-date (to-bytes (uuid-now)))))))
