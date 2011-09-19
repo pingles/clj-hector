@@ -1,13 +1,27 @@
 (ns clj-hector.time
-  (:import [me.prettyprint.cassandra.utils TimeUUIDUtils]))
+  (:import [me.prettyprint.cassandra.utils TimeUUIDUtils]
+           [java.util Date]
+           [org.joda.time Instant]))
 
 (defn uuid-now
   []
   (TimeUUIDUtils/getUniqueTimeUUIDinMillis))
 
+(defprotocol ToEpoch
+  (epoch [_] "Returns the milliseconds since epoch"))
+
+(extend-protocol ToEpoch
+  Date (epoch [d] (.getTime d))
+  Instant (epoch [i] (.getMillis i)))
+
 (defn uuid
-  [date]
-  (TimeUUIDUtils/getTimeUUID (.getTime date)))
+  "Creates a UUID from an epoch value"
+  [time]
+  (TimeUUIDUtils/getTimeUUID time))
+
+;; (defn uuid
+;;   [date]
+;;   (TimeUUIDUtils/getTimeUUID (.getTime date)))
 
 (defn to-bytes
   [uuid]
