@@ -19,10 +19,6 @@
   [time]
   (TimeUUIDUtils/getTimeUUID time))
 
-;; (defn uuid
-;;   [date]
-;;   (TimeUUIDUtils/getTimeUUID (.getTime date)))
-
 (defn to-bytes
   [uuid]
   (TimeUUIDUtils/asByteArray uuid))
