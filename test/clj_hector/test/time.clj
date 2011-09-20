@@ -6,7 +6,7 @@
 
 (defn close-enough?
   [a b]
-  (< (- a b)
+  (< (Math/abs (- a b))
      100))
 
 (deftest time-as-uuid
