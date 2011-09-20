@@ -6,9 +6,8 @@
 
 (defn close-enough?
   [a b]
-  (let [diff (- a
-                b)]
-    (< diff 100)))
+  (< (- a b)
+     100))
 
 (deftest time-as-uuid
   (let [now (uuid-now)
