@@ -1,11 +1,30 @@
 (ns clj-hector.serialize
   (:import [me.prettyprint.cassandra.serializers StringSerializer IntegerSerializer LongSerializer TypeInferringSerializer BytesArraySerializer SerializerTypeInferer]
-           [me.prettyprint.cassandra.model QueryResultImpl HColumnImpl ColumnSliceImpl RowImpl RowsImpl SuperRowImpl SuperRowsImpl HSuperColumnImpl]))
+           [me.prettyprint.cassandra.model QueryResultImpl HColumnImpl ColumnSliceImpl RowImpl RowsImpl SuperRowImpl SuperRowsImpl HSuperColumnImpl]
+           [me.prettyprint.hector.api.ddl KeyspaceDefinition ColumnFamilyDefinition ColumnDefinition]))
 
 (defprotocol ToClojure
   (to-clojure [x] "Convert hector types to Clojure data structures"))
 
 (extend-protocol ToClojure
+  ColumnDefinition
+  (to-clojure [c] {:name (.getName c)
+                   :index (.getIndexName c)
+                   :index-type (.getIndexType c)
+                   :validation-class (.getValidationClass c)})
+
+  ColumnFamilyDefinition
+  (to-clojure [c] {:name (.getName c)
+                   :comment (.getComment c)
+                   :column-type (.getColumnType c)
+                   :comparator-type (.getComparatorType c)
+                   :sub-comparator-type (.getSubComparatorType c)
+                   :columns (map to-clojure (.getColumnMetadata c))})
+  
+  KeyspaceDefinition
+  (to-clojure [k] {(.getName k) {:strategy (.getStrategyClass k)
+                                 :replication (.getReplicationFactor k)
+                                 :column-families (map to-clojure (.getCfDefs k))}})
   SuperRowsImpl
   (to-clojure [s]
               (map to-clojure (iterator-seq (.iterator s))))
