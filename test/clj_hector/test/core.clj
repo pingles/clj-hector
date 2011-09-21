@@ -1,8 +1,10 @@
 (ns clj-hector.test.core
   (:use [clj-hector.core] :reload-all)
   (:use [clojure.test])
-  (:require [clj-hector.ddl :as ddl])
-  (:import [me.prettyprint.cassandra.serializers StringSerializer IntegerSerializer LongSerializer]))
+  (:require [clj-hector.ddl :as ddl]
+            [clj-hector.serialize :as ser])
+  (:import [me.prettyprint.cassandra.serializers StringSerializer IntegerSerializer LongSerializer]
+           [me.prettyprint.hector.api Serializer]))
 
 (def *test-cluster* (cluster "test" "localhost"))
 
@@ -24,6 +26,21 @@
     (delete-columns ks cf "row-key" ["k"])
     (is (= '({"row-key" {}})
            (apply get-rows ks cf ["row-key"] opts)))
+    (ddl/drop-keyspace *test-cluster* ks-name)))
+
+(deftest custom-serializer
+  (let [ks-name (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")
+        cf "a"
+        ks (keyspace *test-cluster* ks-name)
+        opts [:v-serializer (StringSerializer/get)
+              :n-serializer :string]]
+    (ddl/add-keyspace *test-cluster* {:name ks-name
+                                      :strategy :local
+                                      :replication 1
+                                      :column-families [{:name cf}]})
+    (put-row ks cf "row-key" {"k" "v"})
+    (is (= {"k" "v"}
+           (apply get-columns ks cf "row-key" ["k"] opts)))
     (ddl/drop-keyspace *test-cluster* ks-name)))
 
 (deftest string-name-int-values

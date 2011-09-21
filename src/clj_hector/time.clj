@@ -1,6 +1,6 @@
 (ns clj-hector.time
   (:import [me.prettyprint.cassandra.utils TimeUUIDUtils]
-           [java.util Date]
+           [java.util Date UUID]
            [org.joda.time ReadableInstant]))
 
 (defn uuid-now
@@ -27,7 +27,12 @@
   [bytes]
   (TimeUUIDUtils/toUUID bytes))
 
-(defn get-date
-  "Retrieves the Date represented by the bytes of a TimeUUID instance."
-  [bytes]
-  (java.util.Date. (TimeUUIDUtils/getTimeFromUUID bytes)))
+(defn- byte-array?
+  [obj]
+  (= Byte/TYPE (.getComponentType (class obj))))
+
+(defmulti get-date (fn [obj] (if (byte-array? obj) :bytes :uuid)))
+(defmethod get-date :uuid [uuid] (get-date (to-bytes uuid)))
+(defmethod get-date :bytes [bytes] (Date. (TimeUUIDUtils/getTimeFromUUID bytes)))
+
+

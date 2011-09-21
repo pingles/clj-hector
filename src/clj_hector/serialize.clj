@@ -1,7 +1,9 @@
 (ns clj-hector.serialize
-  (:import [me.prettyprint.cassandra.serializers StringSerializer IntegerSerializer LongSerializer TypeInferringSerializer BytesArraySerializer SerializerTypeInferer]
+  (:import [me.prettyprint.cassandra.serializers StringSerializer IntegerSerializer LongSerializer TypeInferringSerializer BytesArraySerializer SerializerTypeInferer UUIDSerializer BigIntegerSerializer BooleanSerializer DateSerializer ObjectSerializer]
            [me.prettyprint.cassandra.model QueryResultImpl HColumnImpl ColumnSliceImpl RowImpl RowsImpl SuperRowImpl SuperRowsImpl HSuperColumnImpl]
-           [me.prettyprint.hector.api.ddl KeyspaceDefinition ColumnFamilyDefinition ColumnDefinition]))
+           [me.prettyprint.hector.api.ddl KeyspaceDefinition ColumnFamilyDefinition ColumnDefinition]
+           [me.prettyprint.hector.api Serializer]
+           [java.nio ByteBuffer]))
 
 (defprotocol ToClojure
   (to-clojure [x] "Convert hector types to Clojure data structures"))
@@ -57,11 +59,16 @@
 (def *serializers* {:integer (IntegerSerializer/get)
                     :string (StringSerializer/get)
                     :long (LongSerializer/get)
-                    :bytes (BytesArraySerializer/get)})
+                    :bytes (BytesArraySerializer/get)
+                    :uuid (UUIDSerializer/get)
+                    :bigint (BigIntegerSerializer/get)
+                    :bool (BooleanSerializer/get)
+                    :date (DateSerializer/get)
+                    :object (ObjectSerializer/get)})
 
 (defn serializer
   "Returns serialiser based on type of item"
   [x]
-  (if (keyword? x)
-    (x *serializers*)
-    (SerializerTypeInferer/getSerializer x)))
+  (cond (keyword? x) (x *serializers*)
+        (instance? Serializer x) x
+        :else (SerializerTypeInferer/getSerializer x)))

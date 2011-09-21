@@ -7,12 +7,13 @@
 (defn close-enough?
   [a b]
   (< (Math/abs (- a b))
-     100))
+     500))
 
 (deftest time-as-uuid
   (let [now (uuid-now)
         now-date (java.util.Date. )]
     (is (= now (from-bytes (to-bytes now))))
+    (is (= now-date (get-date now)))
     (is (close-enough? (epoch now-date)
                        (epoch (get-date (to-bytes now)))))
     (is (instance? UUID now))

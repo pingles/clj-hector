@@ -23,9 +23,9 @@
   [cluster name]
   (HFactory/createKeyspace name cluster))
 
-(defn keyspaces
-  [cluster]
-  (apply merge (map s/to-clojure (.describeKeyspaces cluster))))
+; (defn keyspaces
+;   [cluster]
+;   (apply merge (map s/to-clojure (.describeKeyspaces cluster))))
 
 (def type-inferring (TypeInferringSerializer/get))
 
