@@ -1,6 +1,7 @@
 (ns clj-hector.core
   (:require [clj-hector.serialize :as s])
-  (:use [clojure.contrib.def :only (defnk)])
+  (:use [clojure.contrib.java-utils :only (as-str)]
+        [clojure.contrib.def :only (defnk)])
   (:import [java.io Closeable]
            [me.prettyprint.hector.api.mutation Mutator]
            [me.prettyprint.hector.api Cluster]
@@ -8,6 +9,8 @@
            [me.prettyprint.hector.api.query Query]
            [me.prettyprint.cassandra.service CassandraHostConfigurator]
            [me.prettyprint.cassandra.serializers TypeInferringSerializer]))
+
+(def ^:dynamic *schemas* {})
 
 ;; following through sample usages on hector wiki
 ;; https://github.com/rantav/hector/wiki/User-Guide
@@ -46,46 +49,66 @@
 (defn- execute-query [^Query query]
   (s/to-clojure (.execute query)))
 
-(defnk get-super-rows
-  [ks cf pks sc :s-serializer :bytes :n-serializer :bytes :v-serializer :bytes :start nil :end nil :reversed false]
-  (execute-query (doto (HFactory/createMultigetSuperSliceQuery ks
-                                                               (s/serializer (first pks))
-                                                               (s/serializer s-serializer)
-                                                               (s/serializer n-serializer)
-                                                               (s/serializer v-serializer))
-                   (.setColumnFamily cf)
-                   (.setKeys (object-array pks))
-                   (.setColumnNames (object-array sc))
-                   (.setRange start end reversed Integer/MAX_VALUE))))
+(defn- schema-options
+  "Extracts options for the specified column family from the bound
+   *schemas*."
+  [column-family]
+  (get *schemas* column-family))
 
-(defnk get-rows
+(defn- extract-options
+  [opts cf]
+  (let [defaults {:s-serializer :bytes
+                  :n-serializer :bytes
+                  :v-serializer :bytes
+                  :start nil
+                  :end nil
+                  :reversed false}]
+    (merge defaults (apply hash-map opts) (schema-options cf))))
+
+(defn get-super-rows
+  [ks cf pks sc & o]
+  (let [opts (extract-options o cf)]
+    (execute-query (doto (HFactory/createMultigetSuperSliceQuery ks
+                                                                 (s/serializer (first pks))
+                                                                 (s/serializer (:s-serializer opts))
+                                                                 (s/serializer (:n-serializer opts))
+                                                                 (s/serializer (:v-serializer opts)))
+                     (.setColumnFamily cf)
+                     (.setKeys (object-array pks))
+                     (.setColumnNames (object-array sc))
+                     (.setRange (:start opts) (:end opts) (:reversed opts) Integer/MAX_VALUE)))))
+
+(defn get-rows
   "In keyspace ks, retrieve rows for pks within column family cf."
-  [ks cf pks :n-serializer :bytes :v-serializer :bytes :start nil :end nil :reversed false]
-  (execute-query (doto (HFactory/createMultigetSliceQuery ks
-                                                          (s/serializer (first pks))
-                                                          (s/serializer n-serializer)
-                                                          (s/serializer v-serializer))
-                   (.setColumnFamily cf)
-                   (.setKeys (object-array pks))
-                   (.setRange start end reversed Integer/MAX_VALUE))))
+  [ks cf pks & o]
+  (let [opts (extract-options o cf)]
+    (execute-query (doto (HFactory/createMultigetSliceQuery ks
+                                                            (s/serializer (first pks))
+                                                            (s/serializer (:n-serializer opts))
+                                                            (s/serializer (:v-serializer opts)))
+                     (.setColumnFamily cf)
+                     (.setKeys (object-array pks))
+                     (.setRange (:start opts) (:end opts) (:reversed opts) Integer/MAX_VALUE)))))
 
-(defnk get-super-columns
-  [ks cf pk sc c :s-serializer :bytes :n-serializer :bytes :v-serializer :bytes]
-  (execute-query (doto (HFactory/createSubSliceQuery ks
-                                                     type-inferring
-                                                     (s/serializer s-serializer)
-                                                     (s/serializer n-serializer)
-                                                     (s/serializer v-serializer))
-                   (.setColumnFamily cf)
-                   (.setKey pk)
-                   (.setSuperColumn sc)
-                   (.setColumnNames (object-array c)))))
+(defn get-super-columns
+  [ks cf pk sc c & o]
+  (let [opts (extract-options o cf)]
+    (execute-query (doto (HFactory/createSubSliceQuery ks
+                                                       type-inferring
+                                                       (s/serializer (:s-serializer opts))
+                                                       (s/serializer (:n-serializer opts))
+                                                       (s/serializer (:v-serializer opts)))
+                     (.setColumnFamily cf)
+                     (.setKey pk)
+                     (.setSuperColumn sc)
+                     (.setColumnNames (object-array c))))))
 
-(defnk get-columns
+(defn get-columns
   "In keyspace ks, retrieve c columns for row pk from column family cf"
-  [ks cf pk c :n-serializer :bytes :v-serializer :bytes]
-  (let [vs (s/serializer v-serializer)
-        ns (s/serializer n-serializer)]
+  [ks cf pk c & o]
+  (let [opts (extract-options o cf)
+        vs (s/serializer (:v-serializer opts))
+        ns (s/serializer (:n-serializer opts))]
     (if (< 2 (count c))
       (execute-query (doto (HFactory/createColumnQuery ks type-inferring ns vs)
                        (.setColumnFamily cf)
@@ -102,19 +125,20 @@
     (doseq [c cs] (.addDeletion mut pk cf c type-inferring))
     (.execute mut)))
 
-(defnk delete-super-columns
+(defn delete-super-columns
   "Coll is a map of keys, super column names and column names
 
 Example: {\"row-key\" {\"SuperCol\" [\"col-name\"]}}"
-  [ks cf coll :s-serializer :bytes :n-serializer :bytes :v-serializer :bytes]
-  (let [mut (HFactory/createMutator ks type-inferring)]
+  [ks cf coll & o]
+  (let [opts (extract-options o cf)
+        mut (HFactory/createMutator ks type-inferring)]
     (doseq [[k nv] coll]
       (doseq [[sc-name v] nv]
         (.addSubDelete mut k cf (create-column sc-name
                                                (apply hash-map (interleave v v))
-                                               :s-serializer (s/serializer s-serializer)
-                                               :n-serializer (s/serializer n-serializer)
-                                               :v-serializer (s/serializer v-serializer)))))
+                                               :s-serializer (s/serializer (:s-serializer opts))
+                                               :n-serializer (s/serializer (:n-serializer opts))
+                                               :v-serializer (s/serializer (:v-serializer opts))))))
     (.execute mut)))
 
 (defn delete-rows
@@ -135,3 +159,24 @@ Example: {\"row-key\" {\"SuperCol\" [\"col-name\"]}}"
                    (.setColumnFamily cf))))
 
 
+(defmacro defschema
+  "Defines a schema for the named column family. The provided
+   serializers will be used when operations are performed with
+   the with-schemas macro."
+  [cf-name ks]
+  (let [name-str (as-str cf-name)]
+    `(def ~cf-name {:name ~name-str
+                    :serializers (apply hash-map ~ks)})))
+
+(defn associate-schemas
+  [schemas]
+  (->> schemas
+       (map (fn [{:keys [name serializers]}]
+              [name serializers]))
+       (into {})))
+
+(defmacro with-schemas
+  "Binds "
+  [schemas & body]
+  `(binding [*schemas* (associate-schemas ~schemas)]
+     ~@body))

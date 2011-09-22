@@ -104,6 +104,23 @@ Hector exposes data about how long queries took to execute (and on which host). 
     user> (meta (get-rows ks "Users" ["Paul"] {:n-serializer :string :v-serializer :integer}))
     {:exec_us 2, :host #<CassandraHost localhost(127.0.0.1):9160>}
 
+## Experimental Schema Querying
+
+`clj-hector` provides a `defschema` macro to provide default serializers for the specified column family (see `./test/clj_hector/test/schema.clj` for examples).
+
+For example, when operating with the MyColumnFamily column family, you can provide default name and value serializers as follows:
+
+    (defschema MyColumnFamily [:n-serializer :string
+                               :v-serializer :string])
+
+Then, when querying, wrap the functions with the `with-schema` macro:
+
+    (with-schemas [MyColumnFamily]
+      (put-row ks "MyColumnFamily" "row-key" {"k" "v"})
+      (get-rows ks "MyColumnFamily" ["row-key"])))
+
+Note that it's still very early days- all suggestions and forks are welcome!
+
 ## TODO
 
 * Better support different Hector query types- multimethod dispatch
