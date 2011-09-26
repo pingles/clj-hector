@@ -62,7 +62,8 @@
                   :v-serializer :bytes
                   :start nil
                   :end nil
-                  :reversed false}]
+                  :reversed false
+                  :limit Integer/MAX_VALUE}]
     (merge defaults (apply hash-map opts) (schema-options cf))))
 
 (defn get-super-rows
@@ -76,7 +77,7 @@
                      (.setColumnFamily cf)
                      (.setKeys (object-array pks))
                      (.setColumnNames (object-array sc))
-                     (.setRange (:start opts) (:end opts) (:reversed opts) Integer/MAX_VALUE)))))
+                     (.setRange (:start opts) (:end opts) (:reversed opts) (:limit opts))))))
 
 (defn get-rows
   "In keyspace ks, retrieve rows for pks within column family cf."
@@ -88,7 +89,7 @@
                                                             (s/serializer (:v-serializer opts)))
                      (.setColumnFamily cf)
                      (.setKeys (object-array pks))
-                     (.setRange (:start opts) (:end opts) (:reversed opts) Integer/MAX_VALUE)))))
+                     (.setRange (:start opts) (:end opts) (:reversed opts) (:limit opts))))))
 
 (defn get-super-columns
   [ks cf pk sc c & o]
@@ -150,12 +151,12 @@ Example: {\"row-key\" {\"SuperCol\" [\"col-name\"]}}"
 
 (defnk count-columns
   "Counts number of columns for pk in column family cf. The method is not O(1). It takes all the columns from disk to calculate the answer. The only benefit of the method is that you do not need to pull all the columns over Thrift interface to count them."
-  [ks pk cf :start nil :end nil]
+  [ks pk cf :start nil :end nil :limit Integer/MAX_VALUE]
   (execute-query (doto (HFactory/createCountQuery ks
                                                   type-inferring
                                                   (s/serializer :bytes))
                    (.setKey pk)
-                   (.setRange start end Integer/MAX_VALUE)
+                   (.setRange start end limit)
                    (.setColumnFamily cf))))
 
 
