@@ -1,5 +1,5 @@
 (ns clj-hector.serialize
-  (:import [me.prettyprint.cassandra.serializers StringSerializer IntegerSerializer LongSerializer TypeInferringSerializer BytesArraySerializer SerializerTypeInferer UUIDSerializer BigIntegerSerializer BooleanSerializer DateSerializer ObjectSerializer]
+  (:import [me.prettyprint.cassandra.serializers StringSerializer IntegerSerializer LongSerializer TypeInferringSerializer BytesArraySerializer SerializerTypeInferer UUIDSerializer BigIntegerSerializer BooleanSerializer DateSerializer ObjectSerializer AsciiSerializer ByteBufferSerializer FloatSerializer CharSerializer DoubleSerializer ShortSerializer]
            [me.prettyprint.cassandra.model QueryResultImpl HColumnImpl ColumnSliceImpl RowImpl RowsImpl SuperRowImpl SuperRowsImpl HSuperColumnImpl]
            [me.prettyprint.hector.api.ddl KeyspaceDefinition ColumnFamilyDefinition ColumnDefinition]
            [me.prettyprint.hector.api Serializer]
@@ -64,7 +64,13 @@
                     :bigint (BigIntegerSerializer/get)
                     :bool (BooleanSerializer/get)
                     :date (DateSerializer/get)
-                    :object (ObjectSerializer/get)})
+                    :object (ObjectSerializer/get)
+                    :ascii (AsciiSerializer/get)
+                    :byte-buffer (ByteBufferSerializer/get)
+                    :char (CharSerializer/get)
+                    :double (DoubleSerializer/get)
+                    :float (FloatSerializer/get)
+                    :short (ShortSerializer/get)})
 
 (defn serializer
   "Returns serialiser based on type of item"
