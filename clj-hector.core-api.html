@@ -1,0 +1,248 @@
+<html>
+  <head>
+    <title>clj-hector.core - clj-hector nil API documentation</title>
+    <link href="static/favicon.png" rel="icon" />
+    <link href="static/favicon.png" rel="shortcut icon" />
+    <link media="all" type="text/css" href="static/clojure.css" rel="stylesheet" />
+    <link media="all" type="text/css" href="static/wiki.css" rel="stylesheet" />
+    <link media="all" type="text/css" href="static/internal.css" rel="stylesheet" />
+    <style>.menuWrapper{height: 36px;}</style>
+    <!--[if lte IE 6]>
+    <link rel="stylesheet" href="http://www.wikispaces.com/_/2009051601/s/internal_ie.css" type="text/css" />
+    <![endif]-->
+  </head>
+<!--
+This document was auto-generated from the source by the clojure autodoc system.
+To report errors or ask questions about the overall documentation structure, formatting,
+etc., contact Tom Faulhaber (google mail name: tomfaulhaber).
+For errors in the documentation of a particular namespace, contact the author of that
+namespace.
+-->
+  <body>
+    <div id="AllContentContainer">
+      <div id="Header">
+	<a id="Logo" href="index.html"><img alt="Clojure" height="100" width="100" src="static/clojure-icon.gif" /></a>
+	<h1><a title="page header title" id="page-header" href="index.html">clj-hector</a></h1>
+      </div>
+      <div id="leftcolumn"><div style="text-align: center;"></div>
+<div class="menu">
+  <div class="WikiCustomNav WikiElement wiki">
+    <span class="toc-header"><span id="project-name">clj-hector</span> <span id="version"></span> API</span><br />
+    <ul>
+      <li><a class="wiki_link" href="index.html">Overview</a></li>
+      <li><a class="wiki_link" href="api-index.html">API Index</a></li>
+    </ul>
+    <div class="NamespaceTOC">
+      <span class="toc-header">Namespaces</span>
+      <ul id="left-sidebar-list">
+        <li><a href="clj-hector.core-api.html" class="wiki_link">clj-hector.core</a></li><li><a href="clj-hector.ddl-api.html" class="wiki_link">clj-hector.ddl</a></li><li><a href="clj-hector.serialize-api.html" class="wiki_link">clj-hector.serialize</a></li><li><a href="clj-hector.time-api.html" class="wiki_link">clj-hector.time</a></li>
+      </ul>
+    </div>
+    
+    <a href="http://clojure.org" class="wiki_link">Clojure Home</a>
+  </div>
+</div>
+</div>
+      <div id="rightcolumn">
+	<div id="Content">
+	  <div class="contentBox"><div class="innerContentBox">
+              <div id="content_view" class="wiki wikiPage">
+                <div id="right-sidebar"><div id="toc">
+  <h1 class="nopad">Table of Contents</h1>
+  <div style="margin-left: 1em;" class="toc-section">
+    <a href="#toc0">Overview</a>
+    <div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clj-hector.core/cluster">cluster</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clj-hector.core/count-columns">count-columns</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clj-hector.core/create-column">create-column</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clj-hector.core/defschema">defschema</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clj-hector.core/delete-rows">delete-rows</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clj-hector.core/delete-super-columns">delete-super-columns</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clj-hector.core/get-columns">get-columns</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clj-hector.core/get-rows">get-rows</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clj-hector.core/get-super-rows">get-super-rows</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clj-hector.core/put">put</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clj-hector.core/with-schemas">with-schemas</a>
+    </div>
+    <br />
+  </div>
+</div>
+</div>
+                <div id="content-tag"><h1 id="overview">API for <span id="namespace-name">clj-hector.core</span>
+  - <span id="header-project">clj-hector</span> <span id="header-version"></span> (<span id="header-status"></span>)
+  </h1>
+
+<br />Full namespace name: <span id="long-name">clj-hector.core</span>
+<p></p>
+<h2>Overview</h2>
+<pre id="namespace-docstr"></pre>
+
+
+<br />
+<h2>Public Variables and Functions</h2>
+<div id="var-entry">
+  <br />
+  <hr />
+  <h2 id="clj-hector.core/cluster">cluster</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (cluster cluster-name host)
+       (cluster cluster-name host port)
+</pre>
+  <pre id="var-docstr">Connects to Cassandra cluster</pre>
+  
+  
+  
+</div><div id="var-entry">
+  <br />
+  <hr />
+  <h2 id="clj-hector.core/count-columns">count-columns</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (count-columns ks pk cf &amp; options__36__auto__)
+</pre>
+  <pre id="var-docstr">Counts number of columns for pk in column family cf. The method is not O(1).
+It takes all the columns from disk to calculate the answer. The only benefit
+of the method is that you do not need to pull all the columns over Thrift
+interface to count them.</pre>
+  
+  
+  
+</div><div id="var-entry">
+  <br />
+  <hr />
+  <h2 id="clj-hector.core/create-column">create-column</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (create-column name value &amp; options__36__auto__)
+</pre>
+  <pre id="var-docstr">Creates Column and SuperColumns.
+
+Serializers for the super column name, column name, and column value default to an instance of TypeInferringSerializer.
+
+Examples: (create-column "name" "a value")  (create-column "super column name" {"name" "value"})</pre>
+  
+  
+  
+</div><div id="var-entry">
+  <br />
+  <hr />
+  <h2 id="clj-hector.core/defschema">defschema</h2>
+  <span id="var-type">macro</span><br />
+  <pre id="var-usage">Usage: (defschema cf-name ks)
+</pre>
+  <pre id="var-docstr">Defines a schema for the named column family. The provided
+serializers will be used when operations are performed with
+the with-schemas macro.</pre>
+  
+  
+  
+</div><div id="var-entry">
+  <br />
+  <hr />
+  <h2 id="clj-hector.core/delete-rows">delete-rows</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (delete-rows ks cf pks)
+</pre>
+  <pre id="var-docstr">Deletes all columns for rows identified in pks sequence.</pre>
+  
+  
+  
+</div><div id="var-entry">
+  <br />
+  <hr />
+  <h2 id="clj-hector.core/delete-super-columns">delete-super-columns</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (delete-super-columns ks cf coll &amp; o)
+</pre>
+  <pre id="var-docstr">Coll is a map of keys, super column names and column names
+
+Example: (delete-super-columns keyspace "ColumnFamily" {"row-key" {"SuperCol" ["col-name"]}})</pre>
+  
+  
+  
+</div><div id="var-entry">
+  <br />
+  <hr />
+  <h2 id="clj-hector.core/get-columns">get-columns</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (get-columns ks cf pk c &amp; o)
+</pre>
+  <pre id="var-docstr">In keyspace ks, retrieve c columns for row pk from column family cf</pre>
+  
+  
+  
+</div><div id="var-entry">
+  <br />
+  <hr />
+  <h2 id="clj-hector.core/get-rows">get-rows</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (get-rows ks cf pks &amp; o)
+</pre>
+  <pre id="var-docstr">In keyspace ks, retrieve rows for pks within column family cf.</pre>
+  
+  
+  
+</div><div id="var-entry">
+  <br />
+  <hr />
+  <h2 id="clj-hector.core/get-super-rows">get-super-rows</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (get-super-rows ks cf pks scs &amp; o)
+</pre>
+  <pre id="var-docstr">In keyspace ks, from Super Column Family cf, retrieve the rows identified by pks. Executed
+as a slice query. The range of columns to select can be provided through the optional named
+arguments :start and :end.
+
+Optional: scs can be a sequence of super column names to retrieve columns for.</pre>
+  
+  
+  
+</div><div id="var-entry">
+  <br />
+  <hr />
+  <h2 id="clj-hector.core/put">put</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (put ks cf pk m)
+</pre>
+  <pre id="var-docstr">Stores values in columns in map m against row key pk</pre>
+  
+  
+  
+</div><div id="var-entry">
+  <br />
+  <hr />
+  <h2 id="clj-hector.core/with-schemas">with-schemas</h2>
+  <span id="var-type">macro</span><br />
+  <pre id="var-usage">Usage: (with-schemas schemas &amp; body)
+</pre>
+  <pre id="var-docstr">Binds </pre>
+  
+  
+  
+</div>
+
+
+</div>
+              </div>
+            </div>
+          </div>
+	</div>
+	<div id="foot">
+	  <div style="text-align: center;" id="copyright">No copyright info </div>
+	</div>
+      </div>
+      <div id="DesignedBy">Logo &amp; site design by <a title="Visit Tom Hickey's website." href="http://www.tomhickey.com">Tom Hickey</a>.<br />
+      Clojure auto-documentation system by Tom Faulhaber.</div>
+    </div>
+    <!-- /AllContentContainer -->
+  </body>
+
+</html>
