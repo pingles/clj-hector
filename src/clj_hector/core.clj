@@ -24,6 +24,8 @@
      (HFactory/getOrCreateCluster cluster-name
                                   (CassandraHostConfigurator. (str host ":" port)))))
 (defn keyspace
+  "Connects the client to the specified Keyspace. All other interactions
+   with Cassandra are performed against this keyspace."
   [cluster name]
   (HFactory/createKeyspace name cluster))
 
@@ -95,6 +97,7 @@
                      (.setRange (:start opts) (:end opts) (:reversed opts) (:limit opts))))))
 
 (defn get-super-columns
+  "In keyspace ks, for row pk, retrieve columns in c from super column sc."
   [ks cf pk sc c & o]
   (let [opts (extract-options o cf)]
     (execute-query (doto (HFactory/createSubSliceQuery ks
@@ -124,6 +127,7 @@
                        (.setColumnNames (object-array c)))))))
 
 (defn delete-columns
+  "Deletes columns identified in cs for row pk."
   [ks cf pk cs]
   (let [mut (HFactory/createMutator ks type-inferring)]
     (doseq [c cs] (.addDeletion mut pk cf c type-inferring))
