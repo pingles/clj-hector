@@ -153,7 +153,10 @@
     (.execute mut)))
 
 (defnk count-columns
-  "Counts number of columns for pk in column family cf. The method is not O(1). It takes all the columns from disk to calculate the answer. The only benefit of the method is that you do not need to pull all the columns over Thrift interface to count them."
+  "Counts number of columns for pk in column family cf. The method is not O(1).
+   It takes all the columns from disk to calculate the answer. The only benefit
+   of the method is that you do not need to pull all the columns over Thrift
+   interface to count them."
   [ks pk cf :start nil :end nil :limit Integer/MAX_VALUE]
   (execute-query (doto (HFactory/createCountQuery ks
                                                   type-inferring
