@@ -65,7 +65,12 @@
     (merge defaults (apply hash-map opts) (schema-options cf))))
 
 (defn get-super-rows
-  [ks cf pks sc & o]
+  "In keyspace ks, from Super Column Family cf, retrieve the rows identified by pks. Executed
+   as a slice query. The range of columns to select can be provided through the optional named
+   arguments :start and :end.
+
+   Optional: scs can be a sequence of super column names to retrieve columns for."
+  [ks cf pks scs & o]
   (let [opts (extract-options o cf)]
     (execute-query (doto (HFactory/createMultigetSuperSliceQuery ks
                                                                  (s/serializer (first pks))
@@ -74,7 +79,7 @@
                                                                  (s/serializer (:v-serializer opts)))
                      (.setColumnFamily cf)
                      (.setKeys (object-array pks))
-                     (.setColumnNames (object-array sc))
+                     (.setColumnNames (object-array scs))
                      (.setRange (:start opts) (:end opts) (:reversed opts) (:limit opts))))))
 
 (defn get-rows
@@ -127,7 +132,7 @@
 (defn delete-super-columns
   "Coll is a map of keys, super column names and column names
 
-Example: {\"row-key\" {\"SuperCol\" [\"col-name\"]}}"
+   Example: (delete-super-columns keyspace \"ColumnFamily\" {\"row-key\" {\"SuperCol\" [\"col-name\"]}})"
   [ks cf coll & o]
   (let [opts (extract-options o cf)
         mut (HFactory/createMutator ks type-inferring)]
@@ -167,7 +172,7 @@ Example: {\"row-key\" {\"SuperCol\" [\"col-name\"]}}"
     `(def ~cf-name {:name ~name-str
                     :serializers (apply hash-map ~ks)})))
 
-(defn associate-schemas
+(defn schemas-by-name
   [schemas]
   (->> schemas
        (map (fn [{:keys [name serializers]}]
@@ -177,5 +182,5 @@ Example: {\"row-key\" {\"SuperCol\" [\"col-name\"]}}"
 (defmacro with-schemas
   "Binds "
   [schemas & body]
-  `(binding [*schemas* (associate-schemas ~schemas)]
+  `(binding [*schemas* (schemas-by-name ~schemas)]
      ~@body))
