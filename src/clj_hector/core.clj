@@ -50,8 +50,6 @@
   (s/to-clojure (.execute query)))
 
 (defn- schema-options
-  "Extracts options for the specified column family from the bound
-   *schemas*."
   [column-family]
   (get *schemas* column-family))
 
