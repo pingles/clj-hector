@@ -39,7 +39,7 @@
       (HFactory/createSuperColumn name cols s-serializer n-serializer v-serializer))
     (HFactory/createColumn name value n-serializer v-serializer)))
 
-(defn put-row
+(defn put
   "Stores values in columns in map m against row key pk"
   [ks cf pk m]
   (let [^Mutator mut (HFactory/createMutator ks type-inferring)]

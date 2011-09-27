@@ -41,7 +41,7 @@ It's also possible to query for column slices
 
 ### Serializing non-String types
 
-    user> (put-row ks "Users" "Paul" {"age" 30})
+    user> (put ks "Users" "Paul" {"age" 30})
     #<MutationResultImpl MutationResult took (2us) for query (n/a) on host: localhost(127.0.0.1):9160>
     user> (get-rows ks "Users" ["Paul"] :n-serializer :string :v-serializer :integer)
     ({"Paul" {"age" 30}})
@@ -62,7 +62,7 @@ Firstly, the column family will need to support super columns.
 
 Storing super columns works using a nested map structure:
 
-    user> (put-row ks "UserRelationships" "paul" {"SuperCol" {"k" "v"} "SuperCol2" {"k2" "v2"}})
+    user> (put ks "UserRelationships" "paul" {"SuperCol" {"k" "v"} "SuperCol2" {"k2" "v2"}})
     #<MutationResultImpl MutationResult took (6us) for query (n/a) on host: localhost(127.0.0.1):9160>
 
 Retrieving super columns with `get-super-rows`:
@@ -116,7 +116,7 @@ For example, when operating with the MyColumnFamily column family, you can provi
 Then, when querying, wrap the functions with the `with-schema` macro:
 
     (with-schemas [MyColumnFamily]
-      (put-row ks "MyColumnFamily" "row-key" {"k" "v"})
+      (put ks "MyColumnFamily" "row-key" {"k" "v"})
       (get-rows ks "MyColumnFamily" ["row-key"])))
 
 Note that it's still very early days- all suggestions and forks are welcome!

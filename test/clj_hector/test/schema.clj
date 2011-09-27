@@ -17,7 +17,7 @@
                                       :replication 1
                                       :column-families [{:name *column-family*}]})
     (with-schemas [MyColumnFamily]
-      (put-row ks *column-family* "row-key" {"k" "v"})
+      (put ks *column-family* "row-key" {"k" "v"})
       (is (= '({"row-key" {"k" "v"}})
              (get-rows ks *column-family* ["row-key"])))
       (is (= {"k" "v"}
