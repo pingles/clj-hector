@@ -1,6 +1,6 @@
-(ns clj-hector.serialize
-  ^{:author "Paul Ingles"
-    :description "Utilities for serializing and deserializing Clojure and Hector types."}
+(ns ^{:author "Paul Ingles"
+      :description "Utilities for serializing and deserializing Clojure and Hector types."}
+  clj-hector.serialize
   (:import [me.prettyprint.cassandra.serializers StringSerializer IntegerSerializer LongSerializer TypeInferringSerializer BytesArraySerializer SerializerTypeInferer UUIDSerializer BigIntegerSerializer BooleanSerializer DateSerializer ObjectSerializer AsciiSerializer ByteBufferSerializer FloatSerializer CharSerializer DoubleSerializer ShortSerializer]
            [me.prettyprint.cassandra.model QueryResultImpl HColumnImpl ColumnSliceImpl RowImpl RowsImpl SuperRowImpl SuperRowsImpl HSuperColumnImpl]
            [me.prettyprint.hector.api.ddl KeyspaceDefinition ColumnFamilyDefinition ColumnDefinition]
