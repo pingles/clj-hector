@@ -79,11 +79,16 @@
 
    Argument: either a) instance of Serializer.
                     b) a keyword for one of the supported serializers.
+                    c) any object.
+
+   If an object is passed the relevant serializer will be determined by
+   Hector's SerializerTypeInferer. This can be useful when serializing
+   strings or other types where serializers can be determined automatically.
 
    Supported serializers: :integer, :string, :long, :bytes, :uuid
    :bigint, :bool, :date, :object, :ascii, :byte-buffer, :char, :double
    :float, :short."
-  [s]
+  [x]
   (cond (keyword? x) (x *serializers*)
         (instance? Serializer x) x
         :else (SerializerTypeInferer/getSerializer x)))
