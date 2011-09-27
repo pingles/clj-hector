@@ -169,7 +169,7 @@
    :raw-source-url nil,
    :wiki-url "/clj-hector.core-api.html#clj-hector.core/with-schemas",
    :doc
-   "Binds schema information to *schemas*. Allows other get-xxx functions\nto re-use column family information without having to specify directly.",
+   "Binds schema information to *schemas*. Allows other get-xxx functions\nto re-use column family information and provide sensible default serializers\nwithout having to specify every time.",
    :var-type "macro",
    :line 191,
    :file "/Users/paul/Work/clj-hector/src/clj_hector/core.clj"}
