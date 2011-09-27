@@ -58,7 +58,7 @@
    :raw-source-url nil,
    :wiki-url "/clj-hector.core-api.html#clj-hector.core/defschema",
    :doc
-   "Defines a schema for the named column family. The provided\nserializers will be used when operations are performed with\nthe with-schemas macro.",
+   "Defines a schema for the named column family. The provided\nserializers will be used when operations are performed with\nthe with-schemas macro.\n\nExample (defschema ColumnFamily [:n-serializer :string :v-serializer :string])",
    :var-type "macro",
    :line 173,
    :file "/Users/paul/Work/clj-hector/src/clj_hector/core.clj"}
@@ -168,9 +168,10 @@
    :source-url nil,
    :raw-source-url nil,
    :wiki-url "/clj-hector.core-api.html#clj-hector.core/with-schemas",
-   :doc "Binds ",
+   :doc
+   "Binds schema information to *schemas*. Allows other get-xxx functions\nto re-use column family information without having to specify directly.",
    :var-type "macro",
-   :line 189,
+   :line 191,
    :file "/Users/paul/Work/clj-hector/src/clj_hector/core.clj"}
   {:arglists ([cluster keyspace {:keys [name comparator type]}]),
    :name "add-column-family",

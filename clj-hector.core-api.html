@@ -146,7 +146,9 @@ Examples: (create-column "name" "a value")  (create-column "super column name" {
 </pre>
   <pre id="var-docstr">Defines a schema for the named column family. The provided
 serializers will be used when operations are performed with
-the with-schemas macro.</pre>
+the with-schemas macro.
+
+Example (defschema ColumnFamily [:n-serializer :string :v-serializer :string])</pre>
   
   
   
@@ -263,7 +265,8 @@ with Cassandra are performed against this keyspace.</pre>
   <span id="var-type">macro</span><br />
   <pre id="var-usage">Usage: (with-schemas schemas &amp; body)
 </pre>
-  <pre id="var-docstr">Binds </pre>
+  <pre id="var-docstr">Binds schema information to *schemas*. Allows other get-xxx functions
+to re-use column family information without having to specify directly.</pre>
   
   
   
