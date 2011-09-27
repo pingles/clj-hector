@@ -63,7 +63,7 @@ namespace.
                 <div id="content-tag"><h1 id="overview">API for <span id="namespace-name">clj-hector.serialize</span>
   - <span id="header-project">clj-hector</span> <span id="header-version"></span> (<span id="header-status"></span>)
   </h1>
-
+<span id="author-line">by <span id="author-name">Paul Ingles</span><br /></span>
 <br />Full namespace name: <span id="long-name">clj-hector.serialize</span>
 <p></p>
 <h2>Overview</h2>
@@ -79,7 +79,19 @@ namespace.
   <span id="var-type">function</span><br />
   <pre id="var-usage">Usage: (serializer x)
 </pre>
-  <pre id="var-docstr">Returns serialiser based on type of item</pre>
+  <pre id="var-docstr">Returns an instance of the specified serializer.
+
+Argument: either a) instance of Serializer.
+                 b) a keyword for one of the supported serializers.
+                 c) any object.
+
+If an object is passed the relevant serializer will be determined by
+Hector's SerializerTypeInferer. This can be useful when serializing
+strings or other types where serializers can be determined automatically.
+
+Supported serializers: :integer, :string, :long, :bytes, :uuid
+:bigint, :bool, :date, :object, :ascii, :byte-buffer, :char, :double
+:float, :short.</pre>
   
   
   
@@ -88,9 +100,9 @@ namespace.
   <hr />
   <h2 id="clj-hector.serialize/to-clojure">to-clojure</h2>
   <span id="var-type">function</span><br />
-  <pre id="var-usage">Usage: (to-clojure x)
+  <pre id="var-usage">Usage: (to-clojure _)
 </pre>
-  <pre id="var-docstr">Convert hector types to Clojure data structures</pre>
+  <pre id="var-docstr">Convert hector types to Clojure data structures.</pre>
   
   
   

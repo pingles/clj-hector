@@ -60,6 +60,8 @@ namespace.
     </div><div style="margin-left: 1em;" class="toc-entry">
       <a href="#clj-hector.core/defschema">defschema</a>
     </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clj-hector.core/delete-columns">delete-columns</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
       <a href="#clj-hector.core/delete-rows">delete-rows</a>
     </div><div style="margin-left: 1em;" class="toc-entry">
       <a href="#clj-hector.core/delete-super-columns">delete-super-columns</a>
@@ -68,7 +70,11 @@ namespace.
     </div><div style="margin-left: 1em;" class="toc-entry">
       <a href="#clj-hector.core/get-rows">get-rows</a>
     </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clj-hector.core/get-super-columns">get-super-columns</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
       <a href="#clj-hector.core/get-super-rows">get-super-rows</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clj-hector.core/keyspace">keyspace</a>
     </div><div style="margin-left: 1em;" class="toc-entry">
       <a href="#clj-hector.core/put">put</a>
     </div><div style="margin-left: 1em;" class="toc-entry">
@@ -147,6 +153,17 @@ the with-schemas macro.</pre>
 </div><div id="var-entry">
   <br />
   <hr />
+  <h2 id="clj-hector.core/delete-columns">delete-columns</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (delete-columns ks cf pk cs)
+</pre>
+  <pre id="var-docstr">Deletes columns identified in cs for row pk.</pre>
+  
+  
+  
+</div><div id="var-entry">
+  <br />
+  <hr />
   <h2 id="clj-hector.core/delete-rows">delete-rows</h2>
   <span id="var-type">function</span><br />
   <pre id="var-usage">Usage: (delete-rows ks cf pks)
@@ -193,6 +210,17 @@ Example: (delete-super-columns keyspace "ColumnFamily" {"row-key" {"SuperCol" ["
 </div><div id="var-entry">
   <br />
   <hr />
+  <h2 id="clj-hector.core/get-super-columns">get-super-columns</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (get-super-columns ks cf pk sc c &amp; o)
+</pre>
+  <pre id="var-docstr">In keyspace ks, for row pk, retrieve columns in c from super column sc.</pre>
+  
+  
+  
+</div><div id="var-entry">
+  <br />
+  <hr />
   <h2 id="clj-hector.core/get-super-rows">get-super-rows</h2>
   <span id="var-type">function</span><br />
   <pre id="var-usage">Usage: (get-super-rows ks cf pks scs &amp; o)
@@ -202,6 +230,18 @@ as a slice query. The range of columns to select can be provided through the opt
 arguments :start and :end.
 
 Optional: scs can be a sequence of super column names to retrieve columns for.</pre>
+  
+  
+  
+</div><div id="var-entry">
+  <br />
+  <hr />
+  <h2 id="clj-hector.core/keyspace">keyspace</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (keyspace cluster name)
+</pre>
+  <pre id="var-docstr">Connects the client to the specified Keyspace. All other interactions
+with Cassandra are performed against this keyspace.</pre>
   
   
   
