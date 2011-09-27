@@ -1,4 +1,6 @@
-(ns clj-hector.ddl
+(ns ^{:author "Antonio Garrote, Paul Ingles"
+      :description "Functions to define Cassandra schemas: create/delete keyspaces, column families etc."}
+  clj-hector.ddl
   (:import [me.prettyprint.hector.api.factory HFactory]
            [me.prettyprint.hector.api Cluster]
            [me.prettyprint.cassandra.service ThriftCfDef]
