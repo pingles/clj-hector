@@ -1,4 +1,6 @@
 (ns clj-hector.core
+  ^{:author "Paul Ingles"
+    :doc "Hector-based Cassandra client"}
   (:require [clj-hector.serialize :as s])
   (:use [clojure.contrib.java-utils :only (as-str)]
         [clojure.contrib.def :only (defnk)])
@@ -12,8 +14,7 @@
 
 (def ^:dynamic *schemas* {})
 
-;; following through sample usages on hector wiki
-;; https://github.com/rantav/hector/wiki/User-Guide
+(def type-inferring (TypeInferringSerializer/get))
 
 (defn cluster
   "Connects to Cassandra cluster"
@@ -26,18 +27,17 @@
   [cluster name]
   (HFactory/createKeyspace name cluster))
 
-; (defn keyspaces
-;   [cluster]
-;   (apply merge (map s/to-clojure (.describeKeyspaces cluster))))
-
-(def type-inferring (TypeInferringSerializer/get))
-
 (defnk create-column
-  [n v :n-serializer type-inferring :v-serializer type-inferring :s-serializer type-inferring]
-  (if (map? v)
-    (let [cols (map (fn [[n v]] (create-column n v :n-serializer n-serializer :v-serializer v-serializer)) v)]
-      (HFactory/createSuperColumn n cols s-serializer n-serializer v-serializer))
-    (HFactory/createColumn n v n-serializer v-serializer)))
+  "Creates Column and SuperColumns.
+
+   Serializers for the super column name, column name, and column value default to an instance of TypeInferringSerializer.
+
+   Examples: (create-column \"name\" \"a value\")  (create-column \"super column name\" {\"name\" \"value\"})"
+  [name value :n-serializer type-inferring :v-serializer type-inferring :s-serializer type-inferring]
+  (if (map? value)
+    (let [cols (map (fn [[n v]] (create-column n v :n-serializer n-serializer :v-serializer v-serializer)) value)]
+      (HFactory/createSuperColumn name cols s-serializer n-serializer v-serializer))
+    (HFactory/createColumn name value n-serializer v-serializer)))
 
 (defn put-row
   "Stores values in columns in map m against row key pk"
