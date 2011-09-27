@@ -1,4 +1,6 @@
-(ns clj-hector.time
+(ns ^{:author "Paul Ingles"
+      :description "Utility functions for dealing with time values, such as TimeUUID instances."}
+  clj-hector.time
   (:import [me.prettyprint.cassandra.utils TimeUUIDUtils]
            [java.util Date UUID]
            [org.joda.time ReadableInstant]))
