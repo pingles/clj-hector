@@ -190,7 +190,8 @@
 
 (defmacro with-schemas
   "Binds schema information to *schemas*. Allows other get-xxx functions
-   to re-use column family information without having to specify directly."
+   to re-use column family information and provide sensible default serializers
+   without having to specify every time."
   [schemas & body]
   `(binding [*schemas* (schemas-by-name ~schemas)]
      ~@body))
