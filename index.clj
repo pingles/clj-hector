@@ -225,8 +225,41 @@
    :namespace "clj-hector.time",
    :var-type "function",
    :arglists ([_]),
-   :doc "Returns the milliseconds since epoch",
+   :doc
+   "Returns the milliseconds since epoch. Epoch can be either\na java.util.Date instance, or an org.joda.time.ReadableInstant",
    :name "epoch"}
+  {:arglists ([bytes]),
+   :name "from-bytes",
+   :namespace "clj-hector.time",
+   :source-url nil,
+   :raw-source-url nil,
+   :wiki-url "/clj-hector.time-api.html#clj-hector.time/from-bytes",
+   :doc "Deserializes a TimeUUID object from a byte array.",
+   :var-type "function",
+   :line 29,
+   :file "/Users/paul/Work/clj-hector/src/clj_hector/time.clj"}
+  {:arglists ([object]),
+   :name "get-date",
+   :namespace "clj-hector.time",
+   :source-url nil,
+   :raw-source-url nil,
+   :wiki-url "/clj-hector.time-api.html#clj-hector.time/get-date",
+   :doc
+   "Retrieves the date from a TimeUUID object. TimeUUID can be provided as either\na UUID instance, or serialized as a byte array.",
+   :var-type "multimethod",
+   :line 38,
+   :file "/Users/paul/Work/clj-hector/src/clj_hector/time.clj"}
+  {:arglists ([uuid]),
+   :name "to-bytes",
+   :namespace "clj-hector.time",
+   :source-url nil,
+   :raw-source-url nil,
+   :wiki-url "/clj-hector.time-api.html#clj-hector.time/to-bytes",
+   :doc
+   "Converts a TimeUUID object to a byte array suitable for serializing.",
+   :var-type "function",
+   :line 24,
+   :file "/Users/paul/Work/clj-hector/src/clj_hector/time.clj"}
   {:arglists ([time]),
    :name "uuid",
    :namespace "clj-hector.time",
@@ -235,5 +268,5 @@
    :wiki-url "/clj-hector.time-api.html#clj-hector.time/uuid",
    :doc "Creates a UUID from an epoch value",
    :var-type "function",
-   :line 17,
+   :line 19,
    :file "/Users/paul/Work/clj-hector/src/clj_hector/time.clj"})}

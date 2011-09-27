@@ -54,6 +54,12 @@ namespace.
     <div style="margin-left: 1em;" class="toc-entry">
       <a href="#clj-hector.time/epoch">epoch</a>
     </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clj-hector.time/from-bytes">from-bytes</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clj-hector.time/get-date">get-date</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clj-hector.time/to-bytes">to-bytes</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
       <a href="#clj-hector.time/uuid">uuid</a>
     </div>
     <br />
@@ -79,7 +85,42 @@ namespace.
   <span id="var-type">function</span><br />
   <pre id="var-usage">Usage: (epoch _)
 </pre>
-  <pre id="var-docstr">Returns the milliseconds since epoch</pre>
+  <pre id="var-docstr">Returns the milliseconds since epoch. Epoch can be either
+a java.util.Date instance, or an org.joda.time.ReadableInstant</pre>
+  
+  
+  
+</div><div id="var-entry">
+  <br />
+  <hr />
+  <h2 id="clj-hector.time/from-bytes">from-bytes</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (from-bytes bytes)
+</pre>
+  <pre id="var-docstr">Deserializes a TimeUUID object from a byte array.</pre>
+  
+  
+  
+</div><div id="var-entry">
+  <br />
+  <hr />
+  <h2 id="clj-hector.time/get-date">get-date</h2>
+  <span id="var-type">multimethod</span><br />
+  <pre id="var-usage">Usage: (get-date object)
+</pre>
+  <pre id="var-docstr">Retrieves the date from a TimeUUID object. TimeUUID can be provided as either
+a UUID instance, or serialized as a byte array.</pre>
+  
+  
+  
+</div><div id="var-entry">
+  <br />
+  <hr />
+  <h2 id="clj-hector.time/to-bytes">to-bytes</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (to-bytes uuid)
+</pre>
+  <pre id="var-docstr">Converts a TimeUUID object to a byte array suitable for serializing.</pre>
   
   
   
