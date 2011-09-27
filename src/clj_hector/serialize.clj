@@ -6,7 +6,7 @@
            [java.nio ByteBuffer]))
 
 (defprotocol ToClojure
-  (to-clojure [x] "Convert hector types to Clojure data structures"))
+  (to-clojure [_] "Convert hector types to Clojure data structures."))
 
 (extend-protocol ToClojure
   ColumnDefinition
@@ -73,8 +73,15 @@
                     :short (ShortSerializer/get)})
 
 (defn serializer
-  "Returns serialiser based on type of item"
-  [x]
+  "Returns an instance of the specified serializer.
+
+   Argument: either a) instance of Serializer.
+                    b) a keyword for one of the supported serializers.
+
+   Supported serializers: :integer, :string, :long, :bytes, :uuid
+   :bigint, :bool, :date, :object, :ascii, :byte-buffer, :char, :double
+   :float, :short."
+  [s]
   (cond (keyword? x) (x *serializers*)
         (instance? Serializer x) x
         :else (SerializerTypeInferer/getSerializer x)))
