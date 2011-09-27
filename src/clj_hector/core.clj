@@ -173,7 +173,9 @@
 (defmacro defschema
   "Defines a schema for the named column family. The provided
    serializers will be used when operations are performed with
-   the with-schemas macro."
+   the with-schemas macro.
+
+   Example (defschema ColumnFamily [:n-serializer :string :v-serializer :string])"
   [cf-name ks]
   (let [name-str (as-str cf-name)]
     `(def ~cf-name {:name ~name-str
@@ -187,7 +189,8 @@
        (into {})))
 
 (defmacro with-schemas
-  "Binds "
+  "Binds schema information to *schemas*. Allows other get-xxx functions
+   to re-use column family information without having to specify directly."
   [schemas & body]
   `(binding [*schemas* (schemas-by-name ~schemas)]
      ~@body))
