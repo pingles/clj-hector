@@ -14,6 +14,14 @@
                        :time-uuid     ComparatorType/TIMEUUIDTYPE
                        :utf-8         ComparatorType/UTF8TYPE})
 
+(def validator-types {:ascii        "AsciiType"
+                      :bytes        "BytesType"
+                      :counter      "CounterColumnType"
+                      :integer      "IntegerType"
+                      :lexical-uuid "LeixcalUUIDType"
+                      :long         "LongType"
+                      :utf-8        "UTF8Type"})
+
 (defn- make-column-family
   "Returns an object defining a new column family"
   ([keyspace column-family-name]
@@ -88,16 +96,17 @@
     :super
     :standard))
 
+(def types {"org.apache.cassandra.db.marshal.UTF8Type"        :utf-8
+            "org.apache.cassandra.db.marshal.AsciiType"       :ascii
+            "org.apache.cassandra.db.marshal.BytesType"       :bytes
+            "org.apache.cassandra.db.marshal.IntegerType"     :integer
+            "org.apache.cassandra.db.marshal.LexicalUUIDType" :lexical-uuid
+            "org.apache.cassandra.db.marshal.LongType"        :long
+            "org.apache.cassandra.db.marshal.TimeUUIDType"    :time-uuid})
+
 (defn- parse-comparator
-  ([^ComparatorType comparator-type]
-     (condp = (.getClassName comparator-type)
-       "org.apache.cassandra.db.marshal.UTF8Type"        :utf-8
-       "org.apache.cassandra.db.marshal.AsciiType"       :ascii
-       "org.apache.cassandra.db.marshal.BytesType"       :byte
-       "org.apache.cassandra.db.marshal.IntegerType"     :integer
-       "org.apache.cassandra.db.marshal.LexicalUUIDType" :lexical-uuid
-       "org.apache.cassandra.db.marshal.LongType"        :long
-       "org.apache.cassandra.db.marshal.TimeUUIDType"    :time-uuid)))
+  [^ComparatorType comparator-type]
+  (get types (.getClassName comparator-type)))
 
 (defn column-families
   "Returns all the column families for a certain keyspace"
@@ -108,5 +117,6 @@
        (map (fn [^ColumnFamilyDefinition cf-def]
               {:name (.getName cf-def)
                :comparator (parse-comparator (.getComparatorType cf-def))
-               :type (parse-type (.getColumnType cf-def))})
+               :type (parse-type (.getColumnType cf-def))
+               :validator (get types (.getDefaultValidationClass cf-def))})
             cf-defs))))

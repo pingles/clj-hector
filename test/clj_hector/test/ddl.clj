@@ -51,11 +51,12 @@
                    :strategy :local
                    :replication 1
                    :column-families [{:name "a"
-                                      :validator :counter}]})
+                                      :validator :long}]})
     (add-column-family *test-cassandra-cluster* random-ks {:name "b" :comparator :long :type :super})
     (is (= {:name "b"
             :comparator :long
-            :type :super}
+            :type :super
+            :validator :bytes}
            (first (filter #(= (:name %) "b")
                           (column-families *test-cassandra-cluster* random-ks)))))
     (drop-keyspace *test-cassandra-cluster* random-ks)))
@@ -71,8 +72,23 @@
     (add-column-family *test-cassandra-cluster* random-ks {:name "b" :comparator :long :type :super})
     (is (= {:name "b"
             :comparator :long
-            :type :super}
+            :type :super
+            :validator :bytes}
            (first (filter #(= (:name %) "b")
                           (column-families *test-cassandra-cluster* random-ks)))))
     (drop-keyspace *test-cassandra-cluster* random-ks)))
 
+(deftest should-create-counter-column
+  (let [random-ks (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")]
+    (add-keyspace *test-cassandra-cluster*
+                  {:name random-ks
+                   :strategy :local
+                   :replication 1
+                   :column-families [{:name "a"
+                                      :validator :counter}]})
+    (is (= {:name "a"
+            :comparator :bytes
+            :type :standard
+            :validator :bytes}
+           (first (column-families *test-cassandra-cluster* random-ks))))
+    (drop-keyspace *test-cassandra-cluster* random-ks)))

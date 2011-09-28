@@ -225,5 +225,6 @@
     (ddl/add-keyspace *test-cluster* {:name ks-name
                                       :strategy :local
                                       :replication 1
-                                      :column-families [{:name cf}]})
+                                      :column-families [{:name cf
+                                                         :validator :counter}]})
     (ddl/drop-keyspace *test-cluster* ks-name)))
