@@ -219,12 +219,18 @@
   (let [ks-name (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")
         cf "a"
         ks (keyspace *test-cluster* ks-name)
-        opts [:v-serializer :string
-              :n-serializer :string
-              :s-serializer :string]]
+        opts [:v-serializer :long
+              :n-serializer :string]
+        pk "row-key"]
     (ddl/add-keyspace *test-cluster* {:name ks-name
                                       :strategy :local
                                       :replication 1
                                       :column-families [{:name cf
                                                          :validator :counter}]})
+    (put-counter ks cf pk {"name" 1 "other" 2})
+    (is (= {"name" 1}
+           (apply get-counter-columns ks cf pk ["name"] opts)))
+    (is (= {"name" 1
+            "other" 2}
+           (apply get-counter-columns ks cf pk ["name" "other"] opts)))
     (ddl/drop-keyspace *test-cluster* ks-name)))

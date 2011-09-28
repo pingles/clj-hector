@@ -45,8 +45,19 @@
   "Stores values in columns in map m against row key pk"
   [ks cf pk m]
   (let [^Mutator mut (HFactory/createMutator ks type-inferring)]
-    (do (doseq [[k v] m] (.addInsertion mut pk cf (create-column k v)))
-        (.execute mut))))
+    (doseq [[k v] m] (.addInsertion mut pk cf (create-column k v)))
+    (.execute mut)))
+
+(defnk create-counter-column
+  [name value :n-serializer type-inferring]
+  (HFactory/createCounterColumn name value n-serializer))
+
+(defn put-counter
+  [ks cf pk m]
+  (let [^Mutator mut (HFactory/createMutator ks type-inferring)]
+    (doseq [[n v] m]
+      (.addCounter mut pk cf (create-counter-column n v)))
+    (.execute mut)))
 
 (defn- execute-query [^Query query]
   (s/to-clojure (.execute query)))
@@ -125,6 +136,21 @@
                        (.setColumnFamily cf)
                        (.setKey pk)
                        (.setColumnNames (object-array c)))))))
+
+(defn get-counter-columns
+  [ks cf pk c & opts]
+  (let [o (extract-options opts cf)
+        ns (s/serializer (:n-serializer o))]
+    (if (< 2 (count c))
+      (execute-query (doto (HFactory/createCounterColumnQuery ks type-inferring ns)
+                       (.setColumnFamily cf)
+                       (.setKey pk)
+                       (.setName (object-array c))))
+      (execute-query (doto (HFactory/createCounterSliceQuery ks type-inferring ns)
+                       (.setColumnFamily cf)
+                       (.setKey pk)
+                       (.setColumnNames (object-array c)))))))
+
 
 (defn delete-columns
   "Deletes columns identified in cs for row pk."

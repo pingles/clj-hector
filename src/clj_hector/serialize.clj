@@ -2,7 +2,7 @@
       :description "Utilities for serializing and deserializing Clojure and Hector types."}
   clj-hector.serialize
   (:import [me.prettyprint.cassandra.serializers StringSerializer IntegerSerializer LongSerializer TypeInferringSerializer BytesArraySerializer SerializerTypeInferer UUIDSerializer BigIntegerSerializer BooleanSerializer DateSerializer ObjectSerializer AsciiSerializer ByteBufferSerializer FloatSerializer CharSerializer DoubleSerializer ShortSerializer]
-           [me.prettyprint.cassandra.model QueryResultImpl HColumnImpl ColumnSliceImpl RowImpl RowsImpl SuperRowImpl SuperRowsImpl HSuperColumnImpl]
+           [me.prettyprint.cassandra.model QueryResultImpl HColumnImpl ColumnSliceImpl RowImpl RowsImpl SuperRowImpl SuperRowsImpl HSuperColumnImpl CounterSliceImpl HCounterColumnImpl]
            [me.prettyprint.hector.api.ddl KeyspaceDefinition ColumnFamilyDefinition ColumnDefinition]
            [me.prettyprint.hector.api Serializer]
            [java.nio ByteBuffer]))
@@ -31,32 +31,38 @@
                                  :column-families (map to-clojure (.getCfDefs k))}})
   SuperRowsImpl
   (to-clojure [s]
-              (map to-clojure (iterator-seq (.iterator s))))
+    (map to-clojure (iterator-seq (.iterator s))))
   SuperRowImpl
   (to-clojure [s]
-              {(.getKey s) (map to-clojure (seq (.. s getSuperSlice getSuperColumns)))})
+    {(.getKey s) (map to-clojure (seq (.. s getSuperSlice getSuperColumns)))})
   HSuperColumnImpl
   (to-clojure [s]
-              {(.getName s) (into (hash-map) (for [c (.getColumns s)] (to-clojure c)))})
+    {(.getName s) (into (hash-map) (for [c (.getColumns s)] (to-clojure c)))})
   RowsImpl
   (to-clojure [s]
-              (map to-clojure (iterator-seq (.iterator s))))
+    (map to-clojure (iterator-seq (.iterator s))))
   RowImpl
   (to-clojure [s]
-              {(.getKey s) (to-clojure (.getColumnSlice s))})
+    {(.getKey s) (to-clojure (.getColumnSlice s))})
   ColumnSliceImpl
   (to-clojure [s]
-              (into (hash-map) (for [c (.getColumns s)] (to-clojure c))))
+    (into (hash-map) (for [c (.getColumns s)] (to-clojure c))))
   HColumnImpl
   (to-clojure [s]
-              {(.getName s) (.getValue s)})
+    {(.getName s) (.getValue s)})
+  HCounterColumnImpl
+  (to-clojure [s]
+    {(.getName s) (.getValue s)})
+  CounterSliceImpl
+  (to-clojure [s]
+    (into {} (map to-clojure (.getColumns s))))
   Integer
   (to-clojure [s]
-              {:count s})
+    {:count s})
   QueryResultImpl
   (to-clojure [s]
-              (with-meta (to-clojure (.get s)) {:exec_us (.getExecutionTimeMicro s)
-                                                :host (.getHostUsed s)})))
+    (with-meta (to-clojure (.get s)) {:exec_us (.getExecutionTimeMicro s)
+                                      :host (.getHostUsed s)})))
 
 (def *serializers* {:integer (IntegerSerializer/get)
                     :string (StringSerializer/get)
