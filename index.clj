@@ -38,7 +38,7 @@
    :doc
    "Counts number of columns for pk in column family cf. The method is not O(1).\nIt takes all the columns from disk to calculate the answer. The only benefit\nof the method is that you do not need to pull all the columns over Thrift\ninterface to count them.",
    :var-type "function",
-   :line 194,
+   :line 208,
    :file "/Users/paul/Work/clj-hector/src/clj_hector/core.clj"}
   {:arglists ([name value & options__36__auto__]),
    :name "create-column",
@@ -60,7 +60,7 @@
    :doc
    "Defines a schema for the named column family. The provided\nserializers will be used when operations are performed with\nthe with-schemas macro.\n\nExample (defschema ColumnFamily [:n-serializer :string :v-serializer :string])",
    :var-type "macro",
-   :line 208,
+   :line 222,
    :file "/Users/paul/Work/clj-hector/src/clj_hector/core.clj"}
   {:arglists ([ks cf pk cs]),
    :name "delete-columns",
@@ -71,7 +71,7 @@
    "/clj-hector.core-api.html#clj-hector.core/delete-columns",
    :doc "Deletes columns identified in cs for row pk.",
    :var-type "function",
-   :line 164,
+   :line 178,
    :file "/Users/paul/Work/clj-hector/src/clj_hector/core.clj"}
   {:arglists ([ks cf pks]),
    :name "delete-rows",
@@ -81,7 +81,7 @@
    :wiki-url "/clj-hector.core-api.html#clj-hector.core/delete-rows",
    :doc "Deletes all columns for rows identified in pks sequence.",
    :var-type "function",
-   :line 187,
+   :line 201,
    :file "/Users/paul/Work/clj-hector/src/clj_hector/core.clj"}
   {:arglists ([ks cf coll & o]),
    :name "delete-super-columns",
@@ -93,7 +93,7 @@
    :doc
    "Coll is a map of keys, super column names and column names\n\nExample: (delete-super-columns keyspace \"ColumnFamily\" {\"row-key\" {\"SuperCol\" [\"col-name\"]}})",
    :var-type "function",
-   :line 171,
+   :line 185,
    :file "/Users/paul/Work/clj-hector/src/clj_hector/core.clj"}
   {:arglists ([ks cf pk c & o]),
    :name "get-columns",
@@ -104,7 +104,7 @@
    :doc
    "In keyspace ks, retrieve c columns for row pk from column family cf",
    :var-type "function",
-   :line 131,
+   :line 134,
    :file "/Users/paul/Work/clj-hector/src/clj_hector/core.clj"}
   {:arglists ([ks cf pk c & opts]),
    :name "get-counter-columns",
@@ -116,7 +116,18 @@
    :doc
    "Queries counter column values. c is a sequence of column names to\nretrieve the values for.",
    :var-type "function",
-   :line 147,
+   :line 150,
+   :file "/Users/paul/Work/clj-hector/src/clj_hector/core.clj"}
+  {:arglists ([ks cf pk sc c & opts]),
+   :name "get-counter-super-columns",
+   :namespace "clj-hector.core",
+   :source-url nil,
+   :raw-source-url nil,
+   :wiki-url
+   "/clj-hector.core-api.html#clj-hector.core/get-counter-super-columns",
+   :doc "Queries for counter values in a super column column family.",
+   :var-type "function",
+   :line 166,
    :file "/Users/paul/Work/clj-hector/src/clj_hector/core.clj"}
   {:arglists ([ks cf pks & o]),
    :name "get-rows",
@@ -127,7 +138,7 @@
    :doc
    "In keyspace ks, retrieve rows for pks within column family cf.",
    :var-type "function",
-   :line 105,
+   :line 108,
    :file "/Users/paul/Work/clj-hector/src/clj_hector/core.clj"}
   {:arglists ([ks cf pk sc c & o]),
    :name "get-super-columns",
@@ -139,7 +150,7 @@
    :doc
    "In keyspace ks, for row pk, retrieve columns in c from super column sc.",
    :var-type "function",
-   :line 117,
+   :line 120,
    :file "/Users/paul/Work/clj-hector/src/clj_hector/core.clj"}
   {:arglists ([ks cf pks scs & o]),
    :name "get-super-rows",
@@ -151,7 +162,7 @@
    :doc
    "In keyspace ks, from Super Column Family cf, retrieve the rows identified by pks. Executed\nas a slice query. The range of columns to select can be provided through the optional named\narguments :start and :end.\n\nOptional: scs can be a sequence of super column names to retrieve columns for.",
    :var-type "function",
-   :line 87,
+   :line 90,
    :file "/Users/paul/Work/clj-hector/src/clj_hector/core.clj"}
   {:arglists ([cluster name]),
    :name "keyspace",
@@ -183,7 +194,7 @@
    :doc
    "Stores a counter value. Column Family must have the name validator\ntype set to :counter (CounterColumnType).\n\npk is the row key. m is a map of column names and the (long) counter\nvalue to store.\n\nCounter columns allow atomic increment/decrement.",
    :var-type "function",
-   :line 55,
+   :line 58,
    :file "/Users/paul/Work/clj-hector/src/clj_hector/core.clj"}
   {:arglists ([schemas & body]),
    :name "with-schemas",
@@ -194,7 +205,7 @@
    :doc
    "Binds schema information to *schemas*. Allows other get-xxx functions\nto re-use column family information and provide sensible default serializers\nwithout having to specify every time.",
    :var-type "macro",
-   :line 226,
+   :line 240,
    :file "/Users/paul/Work/clj-hector/src/clj_hector/core.clj"}
   {:arglists ([cluster keyspace {:keys [name comparator type]}]),
    :name "add-column-family",
@@ -270,7 +281,7 @@
    :doc
    "Returns an instance of the specified serializer.\n\nArgument: either a) instance of Serializer.\n                 b) a keyword for one of the supported serializers.\n                 c) any object.\n\nIf an object is passed the relevant serializer will be determined by\nHector's SerializerTypeInferer. This can be useful when serializing\nstrings or other types where serializers can be determined automatically.\n\nSupported serializers: :integer, :string, :long, :bytes, :uuid\n:bigint, :bool, :date, :object, :ascii, :byte-buffer, :char, :double\n:float, :short.",
    :var-type "function",
-   :line 83,
+   :line 89,
    :file "/Users/paul/Work/clj-hector/src/clj_hector/serialize.clj"}
   {:raw-source-url nil,
    :source-url nil,

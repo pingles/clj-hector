@@ -70,6 +70,8 @@ namespace.
     </div><div style="margin-left: 1em;" class="toc-entry">
       <a href="#clj-hector.core/get-counter-columns">get-counter-columns</a>
     </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clj-hector.core/get-counter-super-columns">get-counter-super-columns</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
       <a href="#clj-hector.core/get-rows">get-rows</a>
     </div><div style="margin-left: 1em;" class="toc-entry">
       <a href="#clj-hector.core/get-super-columns">get-super-columns</a>
@@ -211,6 +213,17 @@ Example: (delete-super-columns keyspace "ColumnFamily" {"row-key" {"SuperCol" ["
 </pre>
   <pre id="var-docstr">Queries counter column values. c is a sequence of column names to
 retrieve the values for.</pre>
+  
+  
+  
+</div><div id="var-entry">
+  <br />
+  <hr />
+  <h2 id="clj-hector.core/get-counter-super-columns">get-counter-super-columns</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (get-counter-super-columns ks cf pk sc c &amp; opts)
+</pre>
+  <pre id="var-docstr">Queries for counter values in a super column column family.</pre>
   
   
   
