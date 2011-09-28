@@ -53,6 +53,13 @@
   (HFactory/createCounterColumn name value n-serializer))
 
 (defn put-counter
+  "Stores a counter value. Column Family must have the name validator
+   type set to :counter (CounterColumnType).
+
+   pk is the row key. m is a map of column names and the (long) counter
+   value to store.
+
+   Counter columns allow atomic increment/decrement."
   [ks cf pk m]
   (let [^Mutator mut (HFactory/createMutator ks type-inferring)]
     (doseq [[n v] m]
