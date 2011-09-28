@@ -251,7 +251,9 @@
                                                          :validator :counter}]})
     (put-counter ks cf pk {"SuperCol" {"name" 1
                                        "other" 2}})
-    (is (= {"SuperCol" {"name" 1
-                        "other" 2}}
+    (put-counter ks cf pk {"SuperCol" {"name" 1
+                                       "other" 2}})
+    (is (= {"SuperCol" {"name" 2
+                        "other" 4}}
            (apply get-counter-super-columns ks cf "row-key" "SuperCol" ["name" "other"] opts)))
     (ddl/drop-keyspace *test-cluster* ks-name)))
