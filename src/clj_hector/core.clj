@@ -49,8 +49,11 @@
     (.execute mut)))
 
 (defnk create-counter-column
-  [name value :n-serializer type-inferring]
-  (HFactory/createCounterColumn name value n-serializer))
+  [name value :n-serializer type-inferring :v-serializer type-inferring :s-serializer type-inferring]
+  (if (map? value)
+    (let [cols (map (fn [[n v]] (create-counter-column n v :n-serializer n-serializer :v-serializer v-serializer)) value)]
+      (HFactory/createCounterSuperColumn name cols s-serializer n-serializer))
+    (HFactory/createCounterColumn name value n-serializer)))
 
 (defn put-counter
   "Stores a counter value. Column Family must have the name validator
@@ -160,6 +163,17 @@
                        (.setKey pk)
                        (.setColumnNames (object-array c)))))))
 
+(defn get-counter-super-columns
+  "Queries for counter values in a super column column family."
+  [ks cf pk sc c & opts]
+  (let [o (extract-options opts cf)
+        ss (s/serializer (:s-serializer o))
+        ns (s/serializer (:n-serializer o))]
+    (execute-query (doto (HFactory/createSuperSliceCounterQuery ks type-inferring ss ns)
+                     (.setKey pk)
+                     (.setColumnFamily cf)
+                     (.setColumnNames (object-array c))
+                     (.setRange (:start o) (:end o) (:reversed o) (:limit o))))))
 
 (defn delete-columns
   "Deletes columns identified in cs for row pk."

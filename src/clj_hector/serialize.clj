@@ -2,7 +2,7 @@
       :description "Utilities for serializing and deserializing Clojure and Hector types."}
   clj-hector.serialize
   (:import [me.prettyprint.cassandra.serializers StringSerializer IntegerSerializer LongSerializer TypeInferringSerializer BytesArraySerializer SerializerTypeInferer UUIDSerializer BigIntegerSerializer BooleanSerializer DateSerializer ObjectSerializer AsciiSerializer ByteBufferSerializer FloatSerializer CharSerializer DoubleSerializer ShortSerializer]
-           [me.prettyprint.cassandra.model QueryResultImpl HColumnImpl ColumnSliceImpl RowImpl RowsImpl SuperRowImpl SuperRowsImpl HSuperColumnImpl CounterSliceImpl HCounterColumnImpl]
+           [me.prettyprint.cassandra.model QueryResultImpl HColumnImpl ColumnSliceImpl RowImpl RowsImpl SuperRowImpl SuperRowsImpl HSuperColumnImpl CounterSliceImpl HCounterColumnImpl CounterSuperSliceImpl HCounterSuperColumnImpl]
            [me.prettyprint.hector.api.ddl KeyspaceDefinition ColumnFamilyDefinition ColumnDefinition]
            [me.prettyprint.hector.api Serializer]
            [java.nio ByteBuffer]))
@@ -37,7 +37,7 @@
     {(.getKey s) (map to-clojure (seq (.. s getSuperSlice getSuperColumns)))})
   HSuperColumnImpl
   (to-clojure [s]
-    {(.getName s) (into (hash-map) (for [c (.getColumns s)] (to-clojure c)))})
+    {(.getName s) (into {} (map to-clojure (.getColumns s)))})
   RowsImpl
   (to-clojure [s]
     (map to-clojure (iterator-seq (.iterator s))))
@@ -53,6 +53,12 @@
   HCounterColumnImpl
   (to-clojure [s]
     {(.getName s) (.getValue s)})
+  CounterSuperSliceImpl
+  (to-clojure [s]
+    (into {} (map to-clojure (.getSuperColumns s))))
+  HCounterSuperColumnImpl
+  (to-clojure [s]
+    {(.getName s) (into {} (map to-clojure (.getColumns s)))})
   CounterSliceImpl
   (to-clojure [s]
     (into {} (map to-clojure (.getColumns s))))
