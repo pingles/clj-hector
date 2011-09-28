@@ -30,18 +30,25 @@
      (let [cmp (comparator-type comparator-types)]
        (HFactory/createColumnFamilyDefinition keyspace column-family-name cmp))))
 
+(defn- column-type
+  [type]
+  (if (= :super type)
+    ColumnType/SUPER
+    ColumnType/STANDARD))
+
+(defn- default-validation-class
+  [validator]
+  (get validator-types (or validator :bytes)))
+
 (defn- make-keyspace-definition
   ([keyspace strategy-class replication-factor column-families]
-     (let [column-families (map (fn [{:keys [name comparator type]}]
+     (let [column-families (map (fn [{:keys [name comparator type validator]}]
                                   (let [cf-def (if (nil? comparator)
                                                  (make-column-family keyspace name)
                                                  (make-column-family keyspace name comparator))]
-                                    (if (nil? type)
-                                      cf-def
-                                      (doto ^ThriftCfDef cf-def
-                                            (.setColumnType (if (= :super type)
-                                                              ColumnType/SUPER
-                                                              ColumnType/STANDARD))))))
+                                    (doto ^ThriftCfDef cf-def
+                                          (.setColumnType (column-type type))
+                                          (.setDefaultValidationClass (default-validation-class validator)))))
                                 column-families)]
        (HFactory/createKeyspaceDefinition keyspace
                                           strategy-class
@@ -55,9 +62,7 @@
                 (make-column-family keyspace name)
                 (make-column-family keyspace name comparator))]
        (.addColumnFamily cluster (doto ^ThriftCfDef cf
-                                   (.setColumnType (if (= :super type)
-                                                     ColumnType/SUPER
-                                                     ColumnType/STANDARD)))))))
+                                       (.setColumnType (column-type type)))))))
 
 (defn drop-column-family
   "Removes a column family from a keyspace"
@@ -96,13 +101,14 @@
     :super
     :standard))
 
-(def types {"org.apache.cassandra.db.marshal.UTF8Type"        :utf-8
-            "org.apache.cassandra.db.marshal.AsciiType"       :ascii
-            "org.apache.cassandra.db.marshal.BytesType"       :bytes
-            "org.apache.cassandra.db.marshal.IntegerType"     :integer
-            "org.apache.cassandra.db.marshal.LexicalUUIDType" :lexical-uuid
-            "org.apache.cassandra.db.marshal.LongType"        :long
-            "org.apache.cassandra.db.marshal.TimeUUIDType"    :time-uuid})
+(def types {"org.apache.cassandra.db.marshal.UTF8Type"          :utf-8
+            "org.apache.cassandra.db.marshal.AsciiType"         :ascii
+            "org.apache.cassandra.db.marshal.BytesType"         :bytes
+            "org.apache.cassandra.db.marshal.IntegerType"       :integer
+            "org.apache.cassandra.db.marshal.LexicalUUIDType"   :lexical-uuid
+            "org.apache.cassandra.db.marshal.LongType"          :long
+            "org.apache.cassandra.db.marshal.TimeUUIDType"      :time-uuid
+            "org.apache.cassandra.db.marshal.CounterColumnType" :counter})
 
 (defn- parse-comparator
   [^ComparatorType comparator-type]

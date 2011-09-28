@@ -89,6 +89,6 @@
     (is (= {:name "a"
             :comparator :bytes
             :type :standard
-            :validator :bytes}
+            :validator :counter}
            (first (column-families *test-cassandra-cluster* random-ks))))
     (drop-keyspace *test-cassandra-cluster* random-ks)))
