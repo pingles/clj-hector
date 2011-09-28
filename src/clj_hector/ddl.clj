@@ -6,20 +6,20 @@
            [me.prettyprint.cassandra.service ThriftCfDef]
            [me.prettyprint.hector.api.ddl ComparatorType ColumnFamilyDefinition ColumnType KeyspaceDefinition]))
 
+(def comparator-types {:ascii         ComparatorType/ASCIITYPE
+                       :bytes         ComparatorType/BYTESTYPE
+                       :integer       ComparatorType/INTEGERTYPE
+                       :lexical-uuid  ComparatorType/LEXICALUUIDTYPE
+                       :long          ComparatorType/LONGTYPE
+                       :time-uuid     ComparatorType/TIMEUUIDTYPE
+                       :utf-8         ComparatorType/UTF8TYPE})
+
 (defn- make-column-family
   "Returns an object defining a new column family"
   ([keyspace column-family-name]
      (HFactory/createColumnFamilyDefinition keyspace column-family-name))
   ([keyspace column-family-name comparator-type]
-     (let [cmp (condp = comparator-type
-                   :ascii         ComparatorType/ASCIITYPE
-                   :byte          ComparatorType/BYTESTYPE
-                   :integer       ComparatorType/INTEGERTYPE
-                   :lexical-uuid  ComparatorType/LEXICALUUIDTYPE
-                   :long          ComparatorType/LONGTYPE
-                   :time-uuid     ComparatorType/TIMEUUIDTYPE
-                   :utf-8         ComparatorType/UTF8TYPE
-                   (throw (Exception. "Unknown comparator type passed in column family definition")))]
+     (let [cmp (comparator-type comparator-types)]
        (HFactory/createColumnFamilyDefinition keyspace column-family-name cmp))))
 
 (defn- make-keyspace-definition

@@ -107,11 +107,11 @@
                                       :column-families [{:name cf
                                                          :comparator :long}]})
     (put ks cf "row-key" {(long 1) (long 101)
-                              (long 2) (long 102)
-                              (long 3) (long 103)
-                              (long 4) (long 104)})
+                          (long 2) (long 102)
+                          (long 3) (long 103)
+                          (long 4) (long 104)})
     (is (= {"row-key" (sorted-map (long 2) (long 102)
-                                 (long 3) (long 103))}
+                                  (long 3) (long 103))}
            (first (apply get-rows ks cf ["row-key"] [:n-serializer :long
                                                      :v-serializer :long
                                                      :start (long 2)
@@ -175,9 +175,9 @@
                                       :column-families [{:name cf
                                                          :type :super}]})
     (put ks cf "row-key" {"SuperCol" {"k" "v"
-                                          "k2" "v2"}
-                              "SuperCol2" {"k" "v"
-                                           "k2" "v2"}})
+                                      "k2" "v2"}
+                          "SuperCol2" {"k" "v"
+                                       "k2" "v2"}})
     (is (= :super
            (:type (first (ddl/column-families *test-cluster* ks-name)))))
     (is (= {"row-key" [{"SuperCol" {"k" "v"
@@ -202,9 +202,9 @@
                                       :column-families [{:name cf
                                                          :type :super}]})
     (put ks cf "row-key" {"SuperCol" {"k" "v"
-                                          "k2" "v2"}
-                              "SuperCol2" {"k" "v"
-                                           "k2" "v2"}})
+                                      "k2" "v2"}
+                          "SuperCol2" {"k" "v"
+                                       "k2" "v2"}})
     (is (= {"k2" "v2"
             "k" "v"}
            (apply get-super-columns ks cf "row-key" "SuperCol" ["k" "k2"] opts)))
@@ -213,4 +213,17 @@
            (apply get-super-columns ks cf "row-key" "SuperCol" ["k" "k2"] opts)))
     (is (= {"k" "v"}
            (apply get-super-columns ks cf "row-key" "SuperCol2" ["k" "k2"] opts)))
+    (ddl/drop-keyspace *test-cluster* ks-name)))
+
+(deftest counter-columns
+  (let [ks-name (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")
+        cf "a"
+        ks (keyspace *test-cluster* ks-name)
+        opts [:v-serializer :string
+              :n-serializer :string
+              :s-serializer :string]]
+    (ddl/add-keyspace *test-cluster* {:name ks-name
+                                      :strategy :local
+                                      :replication 1
+                                      :column-families [{:name cf}]})
     (ddl/drop-keyspace *test-cluster* ks-name)))
