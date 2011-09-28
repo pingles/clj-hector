@@ -145,6 +145,8 @@
                        (.setColumnNames (object-array c)))))))
 
 (defn get-counter-columns
+  "Queries counter column values. c is a sequence of column names to
+   retrieve the values for."
   [ks cf pk c & opts]
   (let [o (extract-options opts cf)
         ns (s/serializer (:n-serializer o))]
