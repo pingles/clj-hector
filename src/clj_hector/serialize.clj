@@ -70,21 +70,21 @@
     (with-meta (to-clojure (.get s)) {:exec_us (.getExecutionTimeMicro s)
                                       :host (.getHostUsed s)})))
 
-(def *serializers* {:integer (IntegerSerializer/get)
-                    :string (StringSerializer/get)
-                    :long (LongSerializer/get)
-                    :bytes (BytesArraySerializer/get)
-                    :uuid (UUIDSerializer/get)
-                    :bigint (BigIntegerSerializer/get)
-                    :bool (BooleanSerializer/get)
-                    :date (DateSerializer/get)
-                    :object (ObjectSerializer/get)
-                    :ascii (AsciiSerializer/get)
-                    :byte-buffer (ByteBufferSerializer/get)
-                    :char (CharSerializer/get)
-                    :double (DoubleSerializer/get)
-                    :float (FloatSerializer/get)
-                    :short (ShortSerializer/get)})
+(def serializers {:integer (IntegerSerializer/get)
+                  :string (StringSerializer/get)
+                  :long (LongSerializer/get)
+                  :bytes (BytesArraySerializer/get)
+                  :uuid (UUIDSerializer/get)
+                  :bigint (BigIntegerSerializer/get)
+                  :bool (BooleanSerializer/get)
+                  :date (DateSerializer/get)
+                  :object (ObjectSerializer/get)
+                  :ascii (AsciiSerializer/get)
+                  :byte-buffer (ByteBufferSerializer/get)
+                  :char (CharSerializer/get)
+                  :double (DoubleSerializer/get)
+                  :float (FloatSerializer/get)
+                  :short (ShortSerializer/get)})
 
 (defn serializer
   "Returns an instance of the specified serializer.
@@ -101,6 +101,6 @@
    :bigint, :bool, :date, :object, :ascii, :byte-buffer, :char, :double
    :float, :short."
   [x]
-  (cond (keyword? x) (x *serializers*)
+  (cond (keyword? x) (x serializers)
         (instance? Serializer x) x
         :else (SerializerTypeInferer/getSerializer x)))
