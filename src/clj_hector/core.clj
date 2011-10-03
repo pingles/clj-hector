@@ -2,8 +2,6 @@
   ^{:author "Paul Ingles"
     :doc "Hector-based Cassandra client"}
   (:require [clj-hector.serialize :as s])
-  (:use [clojure.contrib.java-utils :only (as-str)]
-        [clojure.contrib.def :only (defnk)])
   (:import [java.io Closeable]
            [me.prettyprint.hector.api.mutation Mutator]
            [me.prettyprint.hector.api Cluster]
@@ -29,13 +27,16 @@
   [cluster name]
   (HFactory/createKeyspace name cluster))
 
-(defnk create-column
+(defn create-column
   "Creates Column and SuperColumns.
 
    Serializers for the super column name, column name, and column value default to an instance of TypeInferringSerializer.
 
    Examples: (create-column \"name\" \"a value\")  (create-column \"super column name\" {\"name\" \"value\"})"
-  [name value :n-serializer type-inferring :v-serializer type-inferring :s-serializer type-inferring]
+  [name value & {:keys [n-serializer v-serializer s-serializer]
+                 :or {n-serializer type-inferring
+                      v-serializer type-inferring
+                      s-serializer type-inferring}}]
   (if (map? value)
     (let [cols (map (fn [[n v]] (create-column n v :n-serializer n-serializer :v-serializer v-serializer)) value)]
       (HFactory/createSuperColumn name cols s-serializer n-serializer v-serializer))
@@ -48,8 +49,11 @@
     (doseq [[k v] m] (.addInsertion mut pk cf (create-column k v)))
     (.execute mut)))
 
-(defnk create-counter-column
-  [name value :n-serializer type-inferring :v-serializer type-inferring :s-serializer type-inferring]
+(defn create-counter-column
+  [name value & {:keys [n-serializer v-serializer s-serializer]
+                 :or {n-serializer type-inferring
+                      v-serializer type-inferring
+                      s-serializer type-inferring}}]
   (if (map? value)
     (let [cols (map (fn [[n v]] (create-counter-column n v :n-serializer n-serializer :v-serializer v-serializer)) value)]
       (HFactory/createCounterSuperColumn name cols s-serializer n-serializer))
@@ -205,12 +209,14 @@
     (doseq [k pks] (.addDeletion mut k cf))
     (.execute mut)))
 
-(defnk count-columns
+(defn count-columns
   "Counts number of columns for pk in column family cf. The method is not O(1).
    It takes all the columns from disk to calculate the answer. The only benefit
    of the method is that you do not need to pull all the columns over Thrift
    interface to count them."
-  [ks pk cf :start nil :end nil :limit Integer/MAX_VALUE]
+  [ks pk cf & {:keys [start end limit] :or {start nil
+                                            end nil
+                                            limit Integer/MAX_VALUE}}]
   (execute-query (doto (HFactory/createCountQuery ks
                                                   type-inferring
                                                   (s/serializer :bytes))
@@ -226,7 +232,7 @@
 
    Example (defschema ColumnFamily [:n-serializer :string :v-serializer :string])"
   [cf-name ks]
-  (let [name-str (as-str cf-name)]
+  (let [name-str (name cf-name)]
     `(def ~cf-name {:name ~name-str
                     :serializers (apply hash-map ~ks)})))
 
