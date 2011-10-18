@@ -6,7 +6,7 @@ A simple Clojure client for Cassandra that wraps Hector
 
 Add the following to your `project.clj`
 
-    :dev-dependencies [[org.clojars.paul/clj-hector "1.0.0-SNAPSHOT"]]
+    :dev-dependencies [[org.clojars.paul/clj-hector "0.0.1"]]
 
 ## Usage
 
