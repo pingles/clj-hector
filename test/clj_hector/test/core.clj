@@ -227,12 +227,14 @@
                                       :replication 1
                                       :column-families [{:name cf
                                                          :validator :counter}]})
-    (put-counter ks cf pk {"name" 1 "other" 2})
+    (put-counter ks cf pk {"name" 1 "other" 2 "another" 1 "and" 3})
     (is (= {"name" 1}
            (apply get-counter-columns ks cf pk ["name"] opts)))
     (is (= {"name" 1
-            "other" 2}
-           (apply get-counter-columns ks cf pk ["name" "other"] opts)))
+            "other" 2
+            "another" 1
+            "and" 3}
+           (apply get-counter-columns ks cf pk ["name" "other" "another" "and"] opts)))
     (ddl/drop-keyspace test-cluster ks-name)))
 
 (deftest counter-super-columns
