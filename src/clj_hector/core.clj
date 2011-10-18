@@ -141,15 +141,15 @@
   (let [opts (extract-options o cf)
         vs (s/serializer (:v-serializer opts))
         ns (s/serializer (:n-serializer opts))]
-    (if (< 2 (count c))
-      (execute-query (doto (HFactory/createColumnQuery ks type-inferring ns vs)
-                       (.setColumnFamily cf)
-                       (.setKey pk)
-                       (.setName c)))
+    (if (coll? c)
       (execute-query (doto (HFactory/createSliceQuery ks type-inferring ns vs)
                        (.setColumnFamily cf)
                        (.setKey pk)
-                       (.setColumnNames (into-array c)))))))
+                       (.setColumnNames (into-array c))))
+      (execute-query (doto (HFactory/createColumnQuery ks type-inferring ns vs)
+                       (.setColumnFamily cf)
+                       (.setKey pk)
+                       (.setName c))))))
 
 (defn get-counter-columns
   "Queries counter column values. c is a sequence of column names to
@@ -157,15 +157,15 @@
   [ks cf pk c & opts]
   (let [o (extract-options opts cf)
         ns (s/serializer (:n-serializer o))]
-    (if (not (coll? c))
-      (execute-query (doto (HFactory/createCounterColumnQuery ks type-inferring ns)
-                       (.setColumnFamily cf)
-                       (.setKey pk)
-                       (.setName (into-array c))))
+    (if (coll? c)
       (execute-query (doto (HFactory/createCounterSliceQuery ks type-inferring ns)
                        (.setColumnFamily cf)
                        (.setKey pk)
-                       (.setColumnNames (into-array c)))))))
+                       (.setColumnNames (into-array c))))
+      (execute-query (doto (HFactory/createCounterColumnQuery ks type-inferring ns)
+                       (.setColumnFamily cf)
+                       (.setKey pk)
+                       (.setName (into-array c)))))))
 
 (defn get-counter-super-columns
   "Queries for counter values in a super column column family."
