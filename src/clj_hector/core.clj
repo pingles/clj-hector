@@ -135,6 +135,17 @@
                      (.setSuperColumn sc)
                      (.setColumnNames (into-array c))))))
 
+(defn get-column-range
+  "In keyspace ks, retrieve columns between start and end from column family cf."
+  [ks cf pk start end & o]
+  (let [opts (extract-options o cf)
+        vs (s/serializer (:v-serializer opts))
+        ns (s/serializer (:n-serializer opts))]
+    (execute-query (doto (HFactory/createSliceQuery ks type-inferring ns vs)
+                     (.setColumnFamily cf)
+                     (.setKey pk)
+                     (.setRange start end (:reversed opts) (:limit opts))))))
+
 (defn get-columns
   "In keyspace ks, retrieve c columns for row pk from column family cf"
   [ks cf pk c & o]
