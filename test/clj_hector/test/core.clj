@@ -55,9 +55,9 @@
         opts [:v-serializer (StringSerializer/get)
               :n-serializer :string]]
     (ddl/add-keyspace test-cluster {:name ks-name
-                                      :strategy :local
-                                      :replication 1
-                                      :column-families [{:name cf}]})
+                                    :strategy :local
+                                    :replication 1
+                                    :column-families [{:name cf}]})
     (put ks cf "row-key" {"k" "v"})
     (is (= {"k" "v"}
            (apply get-columns ks cf "row-key" ["k"] opts)))
@@ -70,9 +70,9 @@
         opts [:v-serializer :integer
               :n-serializer :string]]
     (ddl/add-keyspace test-cluster {:name ks-name
-                                      :strategy :local
-                                      :replication 1
-                                      :column-families [{:name cf}]})
+                                    :strategy :local
+                                    :replication 1
+                                    :column-families [{:name cf}]})
     (put ks cf "row-key" {"k" (Integer/valueOf 1234)})
     (is (= '({"row-key" {"k" 1234}})
            (apply get-rows ks cf ["row-key"] opts)))
@@ -87,10 +87,10 @@
         opts [:n-serializer :long
               :v-serializer :long]]
     (ddl/add-keyspace test-cluster {:name ks-name
-                                      :strategy :local
-                                      :replication 1
-                                      :column-families [{:name cf
-                                                         :comparator :long}]})
+                                    :strategy :local
+                                    :replication 1
+                                    :column-families [{:name cf
+                                                       :comparator :long}]})
     (put ks cf "row-key" {(long 1) (long 1234)})
     (is (= {"row-key" {(long 1) (long 1234)}}
            (first (apply get-rows ks cf ["row-key"] opts))))
@@ -105,10 +105,10 @@
         opts [:n-serializer :long
               :v-serializer :long]]
     (ddl/add-keyspace test-cluster {:name ks-name
-                                      :strategy :local
-                                      :replication 1
-                                      :column-families [{:name cf
-                                                         :comparator :long}]})
+                                    :strategy :local
+                                    :replication 1
+                                    :column-families [{:name cf
+                                                       :comparator :long}]})
     (put ks cf (long 101) {(long 1) (long 1234)})
     (is (= {(long 101) {(long 1)(long 1234)}}
            (first (apply get-rows ks cf [(long 101)] opts))))
@@ -143,9 +143,9 @@
         cf "a"
         ks (keyspace test-cluster ks-name)]
     (ddl/add-keyspace test-cluster {:name ks-name
-                                      :strategy :local
-                                      :replication 1
-                                      :column-families [{:name cf}]})
+                                    :strategy :local
+                                    :replication 1
+                                    :column-families [{:name cf}]})
     (put ks cf "row-key" {"k" "v"})
     (let [first-row (get (first (get-rows ks cf ["row-key"])) "row-key")
           n-bytes (first (keys first-row))
@@ -190,10 +190,10 @@
               :n-serializer :string
               :s-serializer :string]]
     (ddl/add-keyspace test-cluster {:name ks-name
-                                      :strategy :local
-                                      :replication 1
-                                      :column-families [{:name cf
-                                                         :type :super}]})
+                                    :strategy :local
+                                    :replication 1
+                                    :column-families [{:name cf
+                                                       :type :super}]})
     (put ks cf "row-key" {"SuperCol" {"k" "v"
                                       "k2" "v2"}
                           "SuperCol2" {"k" "v"
@@ -243,10 +243,10 @@
               :n-serializer :string]
         pk "row-key"]
     (ddl/add-keyspace test-cluster {:name ks-name
-                                      :strategy :local
-                                      :replication 1
-                                      :column-families [{:name cf
-                                                         :validator :counter}]})
+                                    :strategy :local
+                                    :replication 1
+                                    :column-families [{:name cf
+                                                       :validator :counter}]})
     (put-counter ks cf pk {"name" 1 "other" 2 "another" 1 "and" 3})
     (is (= {"name" 1}
            (apply get-counter-columns ks cf pk ["name"] opts)))
@@ -266,11 +266,11 @@
               :s-serializer :string]
         pk "row-key"]
     (ddl/add-keyspace test-cluster {:name ks-name
-                                      :strategy :local
-                                      :replication 1
-                                      :column-families [{:name cf
-                                                         :type :super
-                                                         :validator :counter}]})
+                                    :strategy :local
+                                    :replication 1
+                                    :column-families [{:name cf
+                                                       :type :super
+                                                       :validator :counter}]})
     (put-counter ks cf pk {"SuperCol" {"name" 1
                                        "other" 2}})
     (put-counter ks cf pk {"SuperCol" {"name" 1
@@ -278,4 +278,22 @@
     (is (= {"SuperCol" {"name" 2
                         "other" 4}}
            (apply get-counter-super-columns ks cf "row-key" "SuperCol" ["name" "other"] opts)))
+    (ddl/drop-keyspace test-cluster ks-name)))
+
+(deftest counter-column-range
+  (let [ks-name (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")
+        cf "a"
+        ks (keyspace test-cluster ks-name)
+        opts [:n-serializer :string]
+        pk "row-key"]
+    (ddl/add-keyspace test-cluster {:name ks-name
+                                    :strategy :local
+                                    :replication 1
+                                    :column-families [{:name cf
+                                                       :validator :counter}]})
+    (put-counter ks cf pk {"a" 1 "b" 2 "c" 1 "d" 3})
+    (is (= {"a" 1
+            "b" 2
+            "c" 1}
+           (apply get-counter-column-range ks cf pk "a" "c" opts)))
     (ddl/drop-keyspace test-cluster ks-name)))

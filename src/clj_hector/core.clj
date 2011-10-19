@@ -178,6 +178,16 @@
                        (.setKey pk)
                        (.setName (into-array c)))))))
 
+(defn get-counter-column-range
+  "Queries for a range of counter columns."
+  [ks cf pk start end & o]
+  (let [opts (extract-options o cf)
+        ns (s/serializer (:n-serializer opts))]
+    (execute-query (doto (HFactory/createCounterSliceQuery ks type-inferring ns)
+                     (.setColumnFamily cf)
+                     (.setKey pk)
+                     (.setRange start end (:reversed opts) (:limit opts))))))
+
 (defn get-counter-super-columns
   "Queries for counter values in a super column column family."
   [ks cf pk sc c & opts]
