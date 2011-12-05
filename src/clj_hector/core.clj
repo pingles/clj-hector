@@ -178,6 +178,17 @@
                        (.setKey pk)
                        (.setName (into-array c)))))))
 
+(defn get-counter-rows
+  "Load data for specified keys, using a column range"
+  [ks cf pks start end & o]
+  (let [opts (extract-options o cf)
+        ns (s/serializer (:n-serializer opts))
+        kser (s/serializer (:k-serializer opts))]
+    (execute-query (doto (HFactory/createMultigetSliceCounterQuery ks kser ns)
+                     (.setKeys pks)
+                     (.setColumnFamily cf)
+                     (.setRange start end (:reversed opts) (:limit opts))))))
+
 (defn get-counter-column-range
   "Queries for a range of counter columns."
   [ks cf pk start end & o]

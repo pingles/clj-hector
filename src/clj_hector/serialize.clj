@@ -2,7 +2,7 @@
       :description "Utilities for serializing and deserializing Clojure and Hector types."}
   clj-hector.serialize
   (:import [me.prettyprint.cassandra.serializers StringSerializer IntegerSerializer LongSerializer TypeInferringSerializer BytesArraySerializer SerializerTypeInferer UUIDSerializer BigIntegerSerializer BooleanSerializer DateSerializer ObjectSerializer AsciiSerializer ByteBufferSerializer FloatSerializer CharSerializer DoubleSerializer ShortSerializer]
-           [me.prettyprint.cassandra.model QueryResultImpl HColumnImpl ColumnSliceImpl RowImpl RowsImpl SuperRowImpl SuperRowsImpl HSuperColumnImpl CounterSliceImpl HCounterColumnImpl CounterSuperSliceImpl HCounterSuperColumnImpl]
+           [me.prettyprint.cassandra.model QueryResultImpl HColumnImpl ColumnSliceImpl RowImpl RowsImpl SuperRowImpl SuperRowsImpl HSuperColumnImpl CounterSliceImpl HCounterColumnImpl CounterSuperSliceImpl HCounterSuperColumnImpl CounterRowsImpl CounterRowImpl]
            [me.prettyprint.hector.api.ddl KeyspaceDefinition ColumnFamilyDefinition ColumnDefinition]
            [me.prettyprint.hector.api Serializer]
            [java.nio ByteBuffer]))
@@ -29,6 +29,11 @@
   (to-clojure [k] {(.getName k) {:strategy (.getStrategyClass k)
                                  :replication (.getReplicationFactor k)
                                  :column-families (map to-clojure (.getCfDefs k))}})
+  CounterRowsImpl
+  (to-clojure [s] (into {} (map to-clojure (iterator-seq (.iterator s)))))
+  CounterRowImpl
+  (to-clojure [s] {(.getKey s) (to-clojure (.getColumnSlice s))})
+  
   SuperRowsImpl
   (to-clojure [s]
     (map to-clojure (iterator-seq (.iterator s))))
