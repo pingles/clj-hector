@@ -13,4 +13,4 @@
 
 (deftest long-serializer
   (let [s (serializer :long)]
-    (is (= 5 (.fromBytes s (.toBytes s 5))))))
+    (is (= (long 5) (.fromBytes s (.toBytes s (long 5)))))))
