@@ -20,7 +20,7 @@ Add the following to your `project.clj`
                                      {:name "b"
                                       :comparator :long}]})
     (add-column-family cluster "Keyspace Name" {:name "c"})
-    (drop-keyspace cluster "Keyspace Name)
+    (drop-keyspace cluster "Keyspace Name")
 
 ### Basic retrieval of rows
 
