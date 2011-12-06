@@ -15,7 +15,7 @@
         opts [:v-serializer :string
               :n-serializer :string]]
     (ddl/add-keyspace test-cluster {:name ks-name
-                                    :strategy :local
+                                    :strategy :simple
                                     :replication 1
                                     :column-families [{:name cf}]})
     (put ks cf "row-key" {"k" "v"})
@@ -35,7 +35,7 @@
         opts [:v-serializer :string
               :n-serializer :string]]
     (ddl/add-keyspace test-cluster {:name ks-name
-                                    :strategy :local
+                                    :strategy :simple
                                     :replication 1
                                     :column-families [{:name cf}]})
     (put ks cf "row-key" {"a" "v"
@@ -55,7 +55,7 @@
         opts [:v-serializer (StringSerializer/get)
               :n-serializer :string]]
     (ddl/add-keyspace test-cluster {:name ks-name
-                                    :strategy :local
+                                    :strategy :simple
                                     :replication 1
                                     :column-families [{:name cf}]})
     (put ks cf "row-key" {"k" "v"})
@@ -70,7 +70,7 @@
         opts [:v-serializer :integer
               :n-serializer :string]]
     (ddl/add-keyspace test-cluster {:name ks-name
-                                    :strategy :local
+                                    :strategy :simple
                                     :replication 1
                                     :column-families [{:name cf}]})
     (put ks cf "row-key" {"k" (Integer/valueOf 1234)})
@@ -87,7 +87,7 @@
         opts [:n-serializer :long
               :v-serializer :long]]
     (ddl/add-keyspace test-cluster {:name ks-name
-                                    :strategy :local
+                                    :strategy :simple
                                     :replication 1
                                     :column-families [{:name cf
                                                        :comparator :long}]})
@@ -105,7 +105,7 @@
         opts [:n-serializer :long
               :v-serializer :long]]
     (ddl/add-keyspace test-cluster {:name ks-name
-                                    :strategy :local
+                                    :strategy :simple
                                     :replication 1
                                     :column-families [{:name cf
                                                        :comparator :long}]})
@@ -122,7 +122,7 @@
         cf "a"
         ks (keyspace test-cluster ks-name)]
     (ddl/add-keyspace test-cluster {:name ks-name
-                                      :strategy :local
+                                      :strategy :simple
                                       :replication 1
                                       :column-families [{:name cf
                                                          :comparator :long}]})
@@ -143,7 +143,7 @@
         cf "a"
         ks (keyspace test-cluster ks-name)]
     (ddl/add-keyspace test-cluster {:name ks-name
-                                    :strategy :local
+                                    :strategy :simple
                                     :replication 1
                                     :column-families [{:name cf}]})
     (put ks cf "row-key" {"k" "v"})
@@ -174,7 +174,7 @@
         cf "a"
         ks (keyspace test-cluster ks-name)]
     (ddl/add-keyspace test-cluster {:name ks-name
-                                      :strategy :local
+                                      :strategy :simple
                                       :replication 1
                                       :column-families [{:name cf}]})
     (put ks cf "row-key" {"k" "v" "k2" "v2"})
@@ -190,7 +190,7 @@
               :n-serializer :string
               :s-serializer :string]]
     (ddl/add-keyspace test-cluster {:name ks-name
-                                    :strategy :local
+                                    :strategy :simple
                                     :replication 1
                                     :column-families [{:name cf
                                                        :type :super}]})
@@ -217,7 +217,7 @@
               :n-serializer :string
               :s-serializer :string]]
     (ddl/add-keyspace test-cluster {:name ks-name
-                                      :strategy :local
+                                      :strategy :simple
                                       :replication 1
                                       :column-families [{:name cf
                                                          :type :super}]})
@@ -243,7 +243,7 @@
               :n-serializer :string]
         pk "row-key"]
     (ddl/add-keyspace test-cluster {:name ks-name
-                                    :strategy :local
+                                    :strategy :simple
                                     :replication 1
                                     :column-families [{:name cf
                                                        :validator :counter}]})
@@ -266,7 +266,7 @@
               :s-serializer :string]
         pk "row-key"]
     (ddl/add-keyspace test-cluster {:name ks-name
-                                    :strategy :local
+                                    :strategy :simple
                                     :replication 1
                                     :column-families [{:name cf
                                                        :type :super
@@ -287,7 +287,7 @@
         opts [:n-serializer :string]
         pk "row-key"]
     (ddl/add-keyspace test-cluster {:name ks-name
-                                    :strategy :local
+                                    :strategy :simple
                                     :replication 1
                                     :column-families [{:name cf
                                                        :validator :counter}]})

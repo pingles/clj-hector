@@ -13,7 +13,7 @@
   (let [ks-name (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")
         ks (keyspace test-cluster ks-name)]
     (ddl/add-keyspace test-cluster {:name ks-name
-                                      :strategy :local
+                                      :strategy :simple
                                       :replication 1
                                       :column-families [{:name column-family}]})
     (with-schemas [MyColumnFamily]

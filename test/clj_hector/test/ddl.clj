@@ -9,7 +9,7 @@
   (let [random-ks (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")]
     (add-keyspace test-cassandra-cluster
                   {:name random-ks
-                   :strategy :local
+                   :strategy :simple
                    :replication 1
                    :column-families [{:name "a"}
                                      {:name "b"
@@ -24,7 +24,7 @@
   (let [random-ks (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")]
     (add-keyspace test-cassandra-cluster
                   {:name random-ks
-                   :strategy :local
+                   :strategy :simple
                    :replication 1
                    :column-families [{:name "a"}
                                      {:name "b"
@@ -48,7 +48,7 @@
   (let [random-ks (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")]
     (add-keyspace test-cassandra-cluster
                   {:name random-ks
-                   :strategy :local
+                   :strategy :simple
                    :replication 1
                    :column-families [{:name "a"
                                       :validator :long}]})
@@ -65,7 +65,7 @@
   (let [random-ks (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")]
     (add-keyspace test-cassandra-cluster
                   {:name random-ks
-                   :strategy :local
+                   :strategy :simple
                    :replication 1
                    :column-families [{:name "a"
                                       :comparator :long}]})
@@ -82,7 +82,7 @@
   (let [random-ks (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")]
     (add-keyspace test-cassandra-cluster
                   {:name random-ks
-                   :strategy :local
+                   :strategy :simple
                    :replication 1
                    :column-families [{:name "a"
                                       :validator :counter}]})
