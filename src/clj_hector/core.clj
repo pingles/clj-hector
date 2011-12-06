@@ -21,6 +21,7 @@
   ([cluster-name host port]
      (HFactory/getOrCreateCluster cluster-name
                                   (CassandraHostConfigurator. (str host ":" port)))))
+
 (defn keyspace
   "Connects the client to the specified Keyspace. All other interactions
    with Cassandra are performed against this keyspace."
@@ -179,15 +180,15 @@
                        (.setName (into-array c)))))))
 
 (defn get-counter-rows
-  "Load data for specified keys, using a column range"
-  [ks cf pks start end & o]
+  "Load data for specified keys and columns"
+  [ks cf pks cs & o]
   (let [opts (extract-options o cf)
         ns (s/serializer (:n-serializer opts))
         kser (s/serializer (:k-serializer opts))]
     (execute-query (doto (HFactory/createMultigetSliceCounterQuery ks kser ns)
                      (.setKeys pks)
                      (.setColumnFamily cf)
-                     (.setRange start end (:reversed opts) (:limit opts))))))
+                     (.setColumnNames (into-array cs))))))
 
 (defn get-counter-column-range
   "Queries for a range of counter columns."
