@@ -3,8 +3,7 @@
            [java.util UUID])
   (:use [clojure.test]
         [clj-hector.core :only (cluster keyspace)]
-        [clj-hector.ddl :only (add-keyspace drop-keyspace)]
-        [clojure.contrib.singleton :only (global-singleton)]))
+        [clj-hector.ddl :only (add-keyspace drop-keyspace)]))
 
 ;; use an in-process cassandra daemon
 ;; make tests easier to specify and work
