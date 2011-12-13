@@ -4,3 +4,4 @@ lib
 classes
 autodoc/**
 .lein-*
+tmp/
