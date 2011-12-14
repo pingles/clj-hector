@@ -1,4 +1,4 @@
-(ns clj-hector.test.new-core
+(ns clj-hector.test.core
   (:import [me.prettyprint.cassandra.serializers StringSerializer])
   (:use [clojure.test]
         [clj-hector.test.cassandra-helper :only (with-test-keyspace)]
