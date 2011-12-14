@@ -21,7 +21,7 @@
   ([cluster-name host port]
     (cluster cluster-name host port (new CassandraHostConfigurator)))
   ([cluster-name host port configurator]
-    (cluster cluster-name host port (new CassandraHostConfigurator)) {})
+    (cluster cluster-name host port (new CassandraHostConfigurator) {}))
   ([cluster-name host port configurator credentials]
      (HFactory/createCluster cluster-name
                              (doto configurator (.setHosts (str host ":" port)))
