@@ -17,10 +17,20 @@
 (defn cluster
   "Connects to Cassandra cluster"
   ([cluster-name host]
-     (cluster cluster-name host 9160))
+    (cluster cluster-name host 9160))
   ([cluster-name host port]
-     (HFactory/getOrCreateCluster cluster-name
-                                  (CassandraHostConfigurator. (str host ":" port)))))
+    (cluster cluster-name host port (new CassandraHostConfigurator)))
+  ([cluster-name host port configurator]
+    (cluster cluster-name host port (new CassandraHostConfigurator) {}))
+  ([cluster-name host port configurator credentials]
+     (HFactory/createCluster cluster-name
+                             (doto configurator (.setHosts (str host ":" port)))
+                             credentials)))
+
+(defn shutdown-cluster! [c] (HFactory/shutdownCluster c))
+
+(defn cluster-name [c] (.describeClusterName c))
+(defn partitioner [c] (.describePartitioner c))
 
 (defn keyspace
   "Connects the client to the specified Keyspace. All other interactions
