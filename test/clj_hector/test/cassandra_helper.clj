@@ -16,12 +16,16 @@
 
 (defonce daemon (create-daemon))
 
+(defn embedded-cluster
+  []
+  (cluster "Embedded Test Cluster" "127.0.0.1" 9960))
+
 (defmacro with-test-keyspace
   "Creates a test keyspace which is dropped after the
    tests are executed."
   [name column-families & body]
   `(let [ks-name# (.replace (str "ks" (UUID/randomUUID)) "-" "")
-         cluster# (cluster "Embedded Test Cluster" "127.0.0.1" 9960)]
+         cluster# (embedded-cluster)]
      (add-keyspace cluster# {:name ks-name#
                              :strategy :simple
                              :replication 1
@@ -29,3 +33,10 @@
      (let [~name (keyspace cluster# ks-name#)]
        (try ~@body
             (finally (drop-keyspace cluster# ks-name#))))))
+
+(defmacro with-test-cluster
+  "Creates a connection to the embedded daemon and initializes
+   a cluster."
+  [name & body]
+  `(let [~name (embedded-cluster)]
+     ~@body))
