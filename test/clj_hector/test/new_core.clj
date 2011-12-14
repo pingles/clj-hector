@@ -2,7 +2,7 @@
   (:import [me.prettyprint.cassandra.serializers StringSerializer])
   (:use [clojure.test]
         [clj-hector.test.cassandra-helper :only (with-test-keyspace)]
-        [clj-hector.core :only (put get-columns get-column-range get-rows)] :reload))
+        [clj-hector.core] :reload))
 
 (deftest serializers
   (let [column-family "A"]
@@ -64,3 +64,64 @@
               "b" "v"
               "c" "v"}
              (apply get-column-range keyspace column-family "row-key" "a" "c" opts))))))
+
+;; count-columns is different to counter columns, it's not
+;; an O(1) operation.
+(deftest counting-with-count-columns
+  (let [column-family "A"]
+    (with-test-keyspace keyspace [{:name column-family}]
+      (put keyspace column-family "row-key" {"n" "v" "n2" "v2"})
+      (is (= {:count 2}
+             (count-columns keyspace "row-key" column-family))))))
+
+(deftest super-columns
+  (let [column-family "A"
+        opts [:s-serializer :string :n-serializer :string :v-serializer :string]]
+    (with-test-keyspace keyspace [{:name column-family :type :super}]
+      (put keyspace column-family "row-key" {"SuperCol" {"n" "v" "n2" "v2"}
+                                             "SuperCol2" {"n" "v" "n2" "v2"}})
+      (testing "querying"
+        (is (= {"row-key" [{"SuperCol" {"n" "v"
+                                        "n2" "v2"}}
+                           {"SuperCol2" {"n" "v"
+                                         "n2" "v2"}}]} 
+               (first (apply get-super-rows keyspace column-family ["row-key"] ["SuperCol" "SuperCol2"] opts))))
+        (is (= {"n" "v" "n2" "v2"}
+               (apply get-super-columns keyspace column-family "row-key" "SuperCol" ["n" "n2"] opts))))
+      (testing "deletion"
+        (put keyspace column-family "row-key" {"SuperCol" {"n" "v" "n2" "v2"}
+                                               "SuperCol2" {"n" "v"}})
+        (apply delete-super-columns keyspace column-family {"row-key" {"SuperCol" ["n2"]}} opts)
+        (is (= {"n" "v"}
+               (apply get-super-columns keyspace column-family "row-key" "SuperCol" ["n" "n2"] opts)))))))
+
+(deftest counter-columns
+  (testing "regular column families"
+    (let [column-family "A"
+          opts [:n-serializer :string :v-serializer :long]
+          pk "row-key"]
+      (with-test-keyspace keyspace [{:name column-family
+                                     :validator :counter}]
+        (put-counter keyspace column-family pk {"n" 1 "n2" 2})
+        (is (= {"n" 1
+                "n2" 2}
+               (apply get-counter-columns keyspace column-family pk ["n" "n2"] opts))))))
+  (testing "super column families"
+    (let [column-family "A"
+          opts [:s-serializer :string :n-serializer :string :v-serializer :long]
+          pk "row-key"]
+      (with-test-keyspace keyspace [{:name column-family
+                                     :validator :counter
+                                     :type :super}]
+        (put-counter keyspace column-family pk {"SuperCol" {"n" 1 "n2" 2}})
+        (is (= {"SuperCol" {"n" 1 "n2" 2}}
+               (apply get-counter-super-columns keyspace column-family pk "SuperCol" ["n" "n2"] opts))))))
+  (testing "counter column range query"
+    (let [column-family "A"
+          opts [:n-serializer :string :v-serializer :long]
+          pk "row-key"]
+      (with-test-keyspace keyspace [{:name column-family
+                                     :validator :counter}]
+        (put-counter keyspace column-family "row-key" {"a" 1 "b" 2 "c" 1 "d" 3})
+        (is (= {"a" 1 "b" 2 "c" 1}
+               (apply get-counter-column-range keyspace column-family pk "a" "c" opts)))))))
