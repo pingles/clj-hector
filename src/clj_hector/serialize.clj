@@ -24,7 +24,7 @@
                    :comparator-type (.getComparatorType c)
                    :sub-comparator-type (.getSubComparatorType c)
                    :columns (map to-clojure (.getColumnMetadata c))})
-  
+
   KeyspaceDefinition
   (to-clojure [k] {(.getName k) {:strategy (.getStrategyClass k)
                                  :replication (.getReplicationFactor k)
@@ -33,7 +33,7 @@
   (to-clojure [s] (into {} (map to-clojure (iterator-seq (.iterator s)))))
   CounterRowImpl
   (to-clojure [s] {(.getKey s) (to-clojure (.getColumnSlice s))})
-  
+
   SuperRowsImpl
   (to-clojure [s]
     (map to-clojure (iterator-seq (.iterator s))))
