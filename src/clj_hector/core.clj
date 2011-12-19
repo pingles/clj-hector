@@ -35,7 +35,14 @@
 
 (defn keyspace
   "Connects the client to the specified Keyspace. All other interactions
-   with Cassandra are performed against this keyspace."
+   with Cassandra are performed against this keyspace.
+
+   cluster is the hector cluster object, name is the string name of the keyspace
+
+   An optional consistency map can be passed indicating the desired consistency levels
+   for each cf/operation type combination. The default is a consistency level of ONE
+   and a default across all cfs can be defined/overridden by using the keyspace name '*'.
+  "
   ([cluster name] (keyspace cluster name {"*" {:read :one :write :one}}))
   ([cluster name consistency-map]
    (HFactory/createKeyspace name cluster (c/policy consistency-map))))
