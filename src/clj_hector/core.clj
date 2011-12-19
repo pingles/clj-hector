@@ -1,12 +1,14 @@
 (ns clj-hector.core
   ^{:author "Paul Ingles"
     :doc "Hector-based Cassandra client"}
-  (:require [clj-hector.serialize :as s])
+  (:require [clj-hector.serialize :as s]
+            [clj-hector.ddl :as ddl])
   (:import [java.io Closeable]
            [me.prettyprint.hector.api.mutation Mutator]
            [me.prettyprint.hector.api Cluster]
            [me.prettyprint.hector.api.factory HFactory]
            [me.prettyprint.hector.api.query Query]
+           [me.prettyprint.hector.api.beans Composite]
            [me.prettyprint.cassandra.service CassandraHostConfigurator]
            [me.prettyprint.cassandra.serializers TypeInferringSerializer]))
 
@@ -38,6 +40,30 @@
   [cluster name]
   (HFactory/createKeyspace name cluster))
 
+(defn create-composite
+  "Given a list create a Composite
+
+  Supply a list of hashes to specify Component options for each element in the composite
+
+  ex: [\"col\" \"name\"]
+  ex: [{:value \"col\" :n-serializer :string :comparator :utf-8 :equality :equal}
+       {:value 2 :n-serializer :string :comparator :integer :equality :less_than_equal}]"
+
+  [& components]
+  (let [^Composite composite (new Composite)]
+    (doseq [c components]
+      (if (map? c)
+        (let [opts (merge {:n-serializer :bytes
+                           :comparator :bytes
+                           :equality :equal} c)]
+          (.addComponent composite
+                         (:value opts)
+                         (s/serializer (:n-serializer opts))
+                         (.getTypeName (ddl/comparator-types (:comparator opts)))
+                         (ddl/component-equality-type (:equality opts))))
+        (.add composite -1 c)))
+    composite))
+
 (defn create-column
   "Creates Column and SuperColumns.
 
@@ -55,9 +81,11 @@
 
 (defn put
   "Stores values in columns in map m against row key pk"
-  [ks cf pk m]
+  [ks cf pk m & {:keys [n-serializer]
+                 :or {n-serializer type-inferring}}]
+
   (let [^Mutator mut (HFactory/createMutator ks type-inferring)]
-    (doseq [[k v] m] (.addInsertion mut pk cf (create-column k v)))
+    (doseq [[k v] m] (.addInsertion mut pk cf (create-column k v :n-serializer (s/serializer n-serializer))))
     (.execute mut)))
 
 (defn create-counter-column

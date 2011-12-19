@@ -4,7 +4,12 @@
   (:import [me.prettyprint.hector.api.factory HFactory]
            [me.prettyprint.hector.api Cluster]
            [me.prettyprint.cassandra.service ThriftCfDef]
+           [me.prettyprint.hector.api.beans Composite AbstractComposite$ComponentEquality]
            [me.prettyprint.hector.api.ddl ComparatorType ColumnFamilyDefinition ColumnType KeyspaceDefinition]))
+
+(def component-equality-type {:less_than_equal    AbstractComposite$ComponentEquality/LESS_THAN_EQUAL
+                              :equal              AbstractComposite$ComponentEquality/EQUAL
+                              :greater_than_equal AbstractComposite$ComponentEquality/GREATER_THAN_EQUAL})
 
 (def comparator-types {:ascii         ComparatorType/ASCIITYPE
                        :bytes         ComparatorType/BYTESTYPE
@@ -12,6 +17,7 @@
                        :lexical-uuid  ComparatorType/LEXICALUUIDTYPE
                        :long          ComparatorType/LONGTYPE
                        :time-uuid     ComparatorType/TIMEUUIDTYPE
+                       :composite     ComparatorType/COMPOSITETYPE
                        :utf-8         ComparatorType/UTF8TYPE})
 
 (def validator-types {:ascii        "AsciiType"

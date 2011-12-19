@@ -1,9 +1,10 @@
 (ns ^{:author "Paul Ingles"
       :description "Utilities for serializing and deserializing Clojure and Hector types."}
   clj-hector.serialize
-  (:import [me.prettyprint.cassandra.serializers StringSerializer IntegerSerializer LongSerializer TypeInferringSerializer BytesArraySerializer SerializerTypeInferer UUIDSerializer BigIntegerSerializer BooleanSerializer DateSerializer ObjectSerializer AsciiSerializer ByteBufferSerializer FloatSerializer CharSerializer DoubleSerializer ShortSerializer]
+  (:import [me.prettyprint.cassandra.serializers StringSerializer IntegerSerializer LongSerializer TypeInferringSerializer BytesArraySerializer SerializerTypeInferer UUIDSerializer BigIntegerSerializer BooleanSerializer DateSerializer ObjectSerializer AsciiSerializer ByteBufferSerializer FloatSerializer CharSerializer DoubleSerializer ShortSerializer CompositeSerializer]
            [me.prettyprint.cassandra.model QueryResultImpl HColumnImpl ColumnSliceImpl RowImpl RowsImpl SuperRowImpl SuperRowsImpl HSuperColumnImpl CounterSliceImpl HCounterColumnImpl CounterSuperSliceImpl HCounterSuperColumnImpl CounterRowsImpl CounterRowImpl]
            [me.prettyprint.hector.api.ddl KeyspaceDefinition ColumnFamilyDefinition ColumnDefinition]
+           [me.prettyprint.hector.api.beans Composite AbstractComposite$Component]
            [me.prettyprint.hector.api Serializer]
            [java.nio ByteBuffer]))
 
@@ -24,7 +25,7 @@
                    :comparator-type (.getComparatorType c)
                    :sub-comparator-type (.getSubComparatorType c)
                    :columns (map to-clojure (.getColumnMetadata c))})
-  
+
   KeyspaceDefinition
   (to-clojure [k] {(.getName k) {:strategy (.getStrategyClass k)
                                  :replication (.getReplicationFactor k)
@@ -33,7 +34,7 @@
   (to-clojure [s] (into {} (map to-clojure (iterator-seq (.iterator s)))))
   CounterRowImpl
   (to-clojure [s] {(.getKey s) (to-clojure (.getColumnSlice s))})
-  
+
   SuperRowsImpl
   (to-clojure [s]
     (map to-clojure (iterator-seq (.iterator s))))
@@ -54,7 +55,7 @@
     (into (hash-map) (for [c (.getColumns s)] (to-clojure c))))
   HColumnImpl
   (to-clojure [s]
-    {(.getName s) (.getValue s)})
+    {(let [col (.getName s)] (if (instance? Composite col) (to-clojure col) col)) (.getValue s)})
   HCounterColumnImpl
   (to-clojure [s]
     {(.getName s) (.getValue s)})
@@ -70,6 +71,12 @@
   Integer
   (to-clojure [s]
     {:count s})
+  Composite
+  (to-clojure [s]
+    (into [] (map to-clojure (.getComponents s))))
+  AbstractComposite$Component
+  (to-clojure [s]
+    (.getValue s))
   QueryResultImpl
   (to-clojure [s]
     (with-meta (to-clojure (.get s)) {:exec_us (.getExecutionTimeMicro s)
@@ -89,7 +96,8 @@
                   :char (CharSerializer/get)
                   :double (DoubleSerializer/get)
                   :float (FloatSerializer/get)
-                  :short (ShortSerializer/get)})
+                  :short (ShortSerializer/get)
+                  :composite (new CompositeSerializer)})
 
 (defn serializer
   "Returns an instance of the specified serializer.

@@ -1,11 +1,37 @@
 (ns clj-hector.test.core
   (:import [me.prettyprint.cassandra.serializers StringSerializer])
+  (:require [clj-hector.serialize :as s])
   (:use [clojure.test]
         [clj-hector.test.cassandra-helper :only (with-test-keyspace)]
         [clj-hector.core] :reload))
 
 (deftest serializers
   (let [column-family "A"]
+
+    (with-test-keyspace keyspace [{:name column-family}]
+      (testing ":composite serializer"
+        (let [opts [:v-serializer :string
+                    :n-serializer :composite]
+              comp (create-composite {:value "col"
+                                      :n-serializer :ascii
+                                      :comparator :ascii}
+                                     {:value "name"
+                                      :n-serializer :ascii
+                                      :comparator :ascii})]
+
+          (put keyspace column-family "row-key" {comp "v"} :n-serializer :composite)
+          (printf "%s\n" (.toString comp))
+          (printf "%s\n" (first
+                          (keys
+                           (get
+                            (first
+                             (apply get-rows keyspace column-family ["row-key"] opts)) "row-key"))))
+
+          (is (= [{"row-key" {["col" "name"] "v"}}]
+                 (apply get-rows keyspace column-family ["row-key"] opts))
+              (= {["col" "name"] "v"}
+                 (apply get-columns keyspace column-family "row-key" [comp] opts))))))
+
     (with-test-keyspace keyspace [{:name column-family}]
       (testing ":string serializer"
         (let [opts [:v-serializer :string
@@ -84,7 +110,7 @@
         (is (= {"row-key" [{"SuperCol" {"n" "v"
                                         "n2" "v2"}}
                            {"SuperCol2" {"n" "v"
-                                         "n2" "v2"}}]} 
+                                         "n2" "v2"}}]}
                (first (apply get-super-rows keyspace column-family ["row-key"] ["SuperCol" "SuperCol2"] opts))))
         (is (= {"n" "v" "n2" "v2"}
                (apply get-super-columns keyspace column-family "row-key" "SuperCol" ["n" "n2"] opts))))
