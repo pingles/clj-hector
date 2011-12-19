@@ -1,6 +1,7 @@
 (ns clj-hector.core
   ^{:author "Paul Ingles"
     :doc "Hector-based Cassandra client"}
+  (:require [clj-hector.consistency :as c])
   (:require [clj-hector.serialize :as s])
   (:import [java.io Closeable]
            [me.prettyprint.hector.api.mutation Mutator]
@@ -35,40 +36,35 @@
 (defn keyspace
   "Connects the client to the specified Keyspace. All other interactions
    with Cassandra are performed against this keyspace."
-  [cluster name]
-  (HFactory/createKeyspace name cluster))
+  ([cluster name] (keyspace cluster name {"*" {:read :one :write :one}}))
+  ([cluster name consistency-map]
+   (HFactory/createKeyspace name cluster (c/policy consistency-map))))
 
-(defn create-column
+(defn- create-column
   "Creates Column and SuperColumns.
 
    Serializers for the super column name, column name, and column value default to an instance of TypeInferringSerializer.
 
    Examples: (create-column \"name\" \"a value\")  (create-column \"super column name\" {\"name\" \"value\"})"
-  [name value & {:keys [n-serializer v-serializer s-serializer]
+  [name value counter? & {:keys [n-serializer v-serializer s-serializer]
                  :or {n-serializer type-inferring
                       v-serializer type-inferring
                       s-serializer type-inferring}}]
   (if (map? value)
-    (let [cols (map (fn [[n v]] (create-column n v :n-serializer n-serializer :v-serializer v-serializer)) value)]
-      (HFactory/createSuperColumn name cols s-serializer n-serializer v-serializer))
-    (HFactory/createColumn name value n-serializer v-serializer)))
+    (let [cols (map (fn [[n v]] (create-column n v counter? :n-serializer n-serializer :v-serializer v-serializer)) value)]
+      (if counter?
+        (HFactory/createCounterSuperColumn name cols s-serializer n-serializer)
+        (HFactory/createSuperColumn name cols s-serializer n-serializer v-serializer)))
+    (if counter?
+      (HFactory/createCounterColumn name value n-serializer)
+      (HFactory/createColumn name value n-serializer v-serializer))))
 
 (defn put
   "Stores values in columns in map m against row key pk"
   [ks cf pk m]
   (let [^Mutator mut (HFactory/createMutator ks type-inferring)]
-    (doseq [[k v] m] (.addInsertion mut pk cf (create-column k v)))
+    (doseq [[k v] m] (.addInsertion mut pk cf (create-column k v false)))
     (.execute mut)))
-
-(defn create-counter-column
-  [name value & {:keys [n-serializer v-serializer s-serializer]
-                 :or {n-serializer type-inferring
-                      v-serializer type-inferring
-                      s-serializer type-inferring}}]
-  (if (map? value)
-    (let [cols (map (fn [[n v]] (create-counter-column n v :n-serializer n-serializer :v-serializer v-serializer)) value)]
-      (HFactory/createCounterSuperColumn name cols s-serializer n-serializer))
-    (HFactory/createCounterColumn name value n-serializer)))
 
 (defn put-counter
   "Stores a counter value. Column Family must have the name validator
@@ -81,7 +77,7 @@
   [ks cf pk m]
   (let [^Mutator mut (HFactory/createMutator ks type-inferring)]
     (doseq [[n v] m]
-      (.addCounter mut pk cf (create-counter-column n v)))
+      (.addCounter mut pk cf (create-column n v true)))
     (.execute mut)))
 
 (defn- execute-query [^Query query]
@@ -240,6 +236,7 @@
       (doseq [[sc-name v] nv]
         (.addSubDelete mut k cf (create-column sc-name
                                                (apply hash-map (interleave v v))
+                                               false
                                                :s-serializer (s/serializer (:s-serializer opts))
                                                :n-serializer (s/serializer (:n-serializer opts))
                                                :v-serializer (s/serializer (:v-serializer opts))))))
