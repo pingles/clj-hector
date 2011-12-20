@@ -108,6 +108,32 @@
               "c" "v"}
              (apply get-column-range keyspace column-family "row-key" "a" "c" opts))))))
 
+(deftest dynamic-composite-column-ranges
+  (with-test-keyspace keyspace [{:name "A"}]
+    (let [column-family "A"
+          opts [:v-serializer :string
+                :n-serializer :dynamic-composite]]
+
+      (let [cols (into {}
+                       (interleave
+                        (doseq [i (range 0 3)]
+                          (create-dynamic-composite {:value "col"
+                                                     :n-serializer :string
+                                                     :comparator :utf-8}
+                                                    {:value i
+                                                     :n-serializer :integer
+                                                     :comparator :integer}))
+                        (cycle "v")))]
+      (put keyspace column-family "row-key" cols)
+      (is (= cols
+             (apply get-column-range
+                    keyspace
+                    column-family
+                    "row-key"
+                    (first (keys cols))
+                    (last (keys cols))
+                    opts)))))))
+
 ;; count-columns is different to counter columns, it's not
 ;; an O(1) operation.
 (deftest counting-with-count-columns
