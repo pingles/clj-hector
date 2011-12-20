@@ -33,6 +33,23 @@
                  (apply get-columns keyspace column-family "row-key" [comp] opts))))))
 
     (with-test-keyspace keyspace [{:name column-family}]
+      (testing ":dynamic-composite serializer"
+        (let [opts [:v-serializer :string
+                    :n-serializer :dynamic-composite]
+              comp (create-dynamic-composite {:value "col"
+                                              :n-serializer :ascii
+                                              :comparator :ascii}
+                                             {:value "name"
+                                              :n-serializer :ascii
+                                              :comparator :ascii})]
+
+          (put keyspace column-family "row-key" {comp "v"} :n-serializer :dynamic-composite)
+          (is (= [{"row-key" {["col" "name"] "v"}}]
+                 (apply get-rows keyspace column-family ["row-key"] opts))
+              (= {["col" "name"] "v"}
+                 (apply get-columns keyspace column-family "row-key" [comp] opts))))))
+
+    (with-test-keyspace keyspace [{:name column-family}]
       (testing ":string serializer"
         (let [opts [:v-serializer :string
                     :n-serializer :string]]

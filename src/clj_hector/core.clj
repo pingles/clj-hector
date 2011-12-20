@@ -8,7 +8,7 @@
            [me.prettyprint.hector.api Cluster]
            [me.prettyprint.hector.api.factory HFactory]
            [me.prettyprint.hector.api.query Query]
-           [me.prettyprint.hector.api.beans Composite]
+           [me.prettyprint.hector.api.beans Composite DynamicComposite]
            [me.prettyprint.cassandra.service CassandraHostConfigurator]
            [me.prettyprint.cassandra.serializers TypeInferringSerializer]))
 
@@ -40,6 +40,22 @@
   [cluster name]
   (HFactory/createKeyspace name cluster))
 
+(defn- populate-composite
+  "populate the component values of a DynamicComposite or Composite"
+  [composite components]
+  (doseq [c components]
+    (if (map? c)
+      (let [opts (merge {:n-serializer :bytes
+                         :comparator :bytes
+                         :equality :equal} c)]
+        (.addComponent composite
+                       (:value opts)
+                       (s/serializer (:n-serializer opts))
+                       (.getTypeName (ddl/comparator-types (:comparator opts)))
+                       (ddl/component-equality-type (:equality opts))))
+      (.add composite -1 c)))
+  composite)
+
 (defn create-composite
   "Given a list create a Composite
 
@@ -51,18 +67,20 @@
 
   [& components]
   (let [^Composite composite (new Composite)]
-    (doseq [c components]
-      (if (map? c)
-        (let [opts (merge {:n-serializer :bytes
-                           :comparator :bytes
-                           :equality :equal} c)]
-          (.addComponent composite
-                         (:value opts)
-                         (s/serializer (:n-serializer opts))
-                         (.getTypeName (ddl/comparator-types (:comparator opts)))
-                         (ddl/component-equality-type (:equality opts))))
-        (.add composite -1 c)))
-    composite))
+    (populate-composite composite components)))
+
+(defn create-dynamic-composite
+  "Given a list create a DynamicComposite
+
+  Supply a list of hashes to specify Component options for each element in the composite
+
+  ex: [\"col\" \"name\"]
+  ex: [{:value \"col\" :n-serializer :string :comparator :utf-8 :equality :equal}
+       {:value 2 :n-serializer :string :comparator :integer :equality :less_than_equal}]"
+
+  [& components]
+  (let [^DynamicComposite composite (new DynamicComposite)]
+    (populate-composite composite components)))
 
 (defn create-column
   "Creates Column and SuperColumns.
