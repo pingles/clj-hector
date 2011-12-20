@@ -1,10 +1,10 @@
 (ns ^{:author "Paul Ingles"
       :description "Utilities for serializing and deserializing Clojure and Hector types."}
   clj-hector.serialize
-  (:import [me.prettyprint.cassandra.serializers StringSerializer IntegerSerializer LongSerializer TypeInferringSerializer BytesArraySerializer SerializerTypeInferer UUIDSerializer BigIntegerSerializer BooleanSerializer DateSerializer ObjectSerializer AsciiSerializer ByteBufferSerializer FloatSerializer CharSerializer DoubleSerializer ShortSerializer CompositeSerializer]
+  (:import [me.prettyprint.cassandra.serializers StringSerializer IntegerSerializer LongSerializer TypeInferringSerializer BytesArraySerializer SerializerTypeInferer UUIDSerializer BigIntegerSerializer BooleanSerializer DateSerializer ObjectSerializer AsciiSerializer ByteBufferSerializer FloatSerializer CharSerializer DoubleSerializer ShortSerializer CompositeSerializer DynamicCompositeSerializer]
            [me.prettyprint.cassandra.model QueryResultImpl HColumnImpl ColumnSliceImpl RowImpl RowsImpl SuperRowImpl SuperRowsImpl HSuperColumnImpl CounterSliceImpl HCounterColumnImpl CounterSuperSliceImpl HCounterSuperColumnImpl CounterRowsImpl CounterRowImpl]
            [me.prettyprint.hector.api.ddl KeyspaceDefinition ColumnFamilyDefinition ColumnDefinition]
-           [me.prettyprint.hector.api.beans Composite AbstractComposite$Component]
+           [me.prettyprint.hector.api.beans Composite DynamicComposite AbstractComposite AbstractComposite$Component]
            [me.prettyprint.hector.api Serializer]
            [java.nio ByteBuffer]))
 
@@ -55,7 +55,8 @@
     (into (hash-map) (for [c (.getColumns s)] (to-clojure c))))
   HColumnImpl
   (to-clojure [s]
-    {(let [col (.getName s)] (if (instance? Composite col) (to-clojure col) col)) (.getValue s)})
+    {(let [col (.getName s)] (if (instance? AbstractComposite col)
+                               (to-clojure col) col)) (.getValue s)})
   HCounterColumnImpl
   (to-clojure [s]
     {(.getName s) (.getValue s)})
@@ -71,7 +72,7 @@
   Integer
   (to-clojure [s]
     {:count s})
-  Composite
+  AbstractComposite
   (to-clojure [s]
     (into [] (map to-clojure (.getComponents s))))
   AbstractComposite$Component
