@@ -4,7 +4,7 @@
   (:import [me.prettyprint.cassandra.serializers StringSerializer IntegerSerializer LongSerializer TypeInferringSerializer BytesArraySerializer SerializerTypeInferer UUIDSerializer BigIntegerSerializer BooleanSerializer DateSerializer ObjectSerializer AsciiSerializer ByteBufferSerializer FloatSerializer CharSerializer DoubleSerializer ShortSerializer CompositeSerializer DynamicCompositeSerializer]
            [me.prettyprint.cassandra.model QueryResultImpl HColumnImpl ColumnSliceImpl RowImpl RowsImpl SuperRowImpl SuperRowsImpl HSuperColumnImpl CounterSliceImpl HCounterColumnImpl CounterSuperSliceImpl HCounterSuperColumnImpl CounterRowsImpl CounterRowImpl]
            [me.prettyprint.hector.api.ddl KeyspaceDefinition ColumnFamilyDefinition ColumnDefinition]
-           [me.prettyprint.hector.api.beans Composite DynamicComposite AbstractComposite AbstractComposite$Component]
+           [me.prettyprint.hector.api.beans AbstractComposite AbstractComposite$Component]
            [me.prettyprint.hector.api Serializer]
            [java.nio ByteBuffer]))
 
@@ -98,6 +98,7 @@
                   :double (DoubleSerializer/get)
                   :float (FloatSerializer/get)
                   :short (ShortSerializer/get)
+                  :dynamic-composite (new DynamicCompositeSerializer)
                   :composite (new CompositeSerializer)})
 
 (defn serializer
