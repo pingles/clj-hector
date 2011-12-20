@@ -53,42 +53,20 @@
    Serializers for the super column name, column name, and column value default to an instance of TypeInferringSerializer.
 
    Examples: (create-column \"name\" \"a value\")  (create-column \"super column name\" {\"name\" \"value\"})"
-  [name value counter? & {:keys [n-serializer v-serializer s-serializer]
+  [name value ttl counter? & {:keys [n-serializer v-serializer s-serializer]
                  :or {n-serializer type-inferring
                       v-serializer type-inferring
                       s-serializer type-inferring}}]
   (if (map? value)
-    (let [cols (map (fn [[n v]] (create-column n v counter? :n-serializer n-serializer :v-serializer v-serializer)) value)]
+    (let [cols (map (fn [[n v]] (create-column n v ttl counter? :n-serializer n-serializer :v-serializer v-serializer)) value)]
       (if counter?
         (HFactory/createCounterSuperColumn name cols s-serializer n-serializer)
         (HFactory/createSuperColumn name cols s-serializer n-serializer v-serializer)))
     (if counter?
       (HFactory/createCounterColumn name value n-serializer)
-      (HFactory/createColumn name value n-serializer v-serializer))))
-
-(defn put
-  "Stores values in columns in map m against row key pk"
-  [ks cf pk m]
-  (let [^Mutator mut (HFactory/createMutator ks type-inferring)]
-    (doseq [[k v] m] (.addInsertion mut pk cf (create-column k v false)))
-    (.execute mut)))
-
-(defn put-counter
-  "Stores a counter value. Column Family must have the name validator
-   type set to :counter (CounterColumnType).
-
-   pk is the row key. m is a map of column names and the (long) counter
-   value to store.
-
-   Counter columns allow atomic increment/decrement."
-  [ks cf pk m]
-  (let [^Mutator mut (HFactory/createMutator ks type-inferring)]
-    (doseq [[n v] m]
-      (.addCounter mut pk cf (create-column n v true)))
-    (.execute mut)))
-
-(defn- execute-query [^Query query]
-  (s/to-clojure (.execute query)))
+      (if ttl
+        (HFactory/createColumn name value (int ttl) n-serializer v-serializer)
+        (HFactory/createColumn name value n-serializer v-serializer)))))
 
 (defn- schema-options
   [column-family]
@@ -104,6 +82,31 @@
                   :reversed false
                   :limit Integer/MAX_VALUE}]
     (merge defaults (apply hash-map opts) (schema-options cf))))
+
+(defn put
+  "Stores values in columns in map m against row key pk"
+  ([ks cf pk m] (put ks cf pk m nil))
+  ([ks cf pk m ttl]
+    (let [^Mutator mut (HFactory/createMutator ks type-inferring)]
+      (doseq [[k v] m] (.addInsertion mut pk cf (create-column k v ttl false)))
+      (.execute mut))))
+
+(defn put-counter
+  "Stores a counter value. Column Family must have the name validator
+   type set to :counter (CounterColumnType).
+
+   pk is the row key. m is a map of column names and the (long) counter
+   value to store.
+
+   Counter columns allow atomic increment/decrement."
+  [ks cf pk m]
+  (let [^Mutator mut (HFactory/createMutator ks type-inferring)]
+    (doseq [[n v] m]
+      (.addCounter mut pk cf (create-column n v nil true)))
+    (.execute mut)))
+
+(defn- execute-query [^Query query]
+  (s/to-clojure (.execute query)))
 
 (defn get-super-rows
   "In keyspace ks, from Super Column Family cf, retrieve the rows identified by pks. Executed
@@ -243,6 +246,7 @@
       (doseq [[sc-name v] nv]
         (.addSubDelete mut k cf (create-column sc-name
                                                (apply hash-map (interleave v v))
+                                               nil
                                                false
                                                :s-serializer (s/serializer (:s-serializer opts))
                                                :n-serializer (s/serializer (:n-serializer opts))
