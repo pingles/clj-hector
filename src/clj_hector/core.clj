@@ -47,62 +47,73 @@
   ([cluster name consistency-map]
    (HFactory/createKeyspace name cluster (c/policy consistency-map))))
 
+(defn- schema-options
+  [opts column-family]
+  (let [defaults {:type :standard
+                  :counter false
+                  :ttl nil
+                  :s-serializer :bytes
+                  :n-serializer :bytes
+                  :v-serializer :bytes}]
+   (merge defaults (apply hash-map opts) (get *schemas* column-family))))
+
+(defn- query-options
+  [opts]
+  (let [defaults {:start nil
+                  :end nil
+                  :reversed false
+                  :limit Integer/MAX_VALUE}]
+    (merge defaults (apply hash-map opts))))
+
+(defn- extract-options
+  [opts cf]
+  (merge (query-options opts) (schema-options opts cf)))
+
+(def serializer-keys [:n-serializer :v-serializer :s-serializer])
+(defn convert-serializers [opts]
+  (merge opts (reduce (fn [m [k v]] (into m {k (s/serializer v)})) {} (select-keys opts serializer-keys))))
+
+(defn- super? [opts]
+  (= (opts :type :standard) :super))
+(defn- counter? [opts]
+  (get opts :counter false))
+
 (defn- create-column
   "Creates Column and SuperColumns.
 
    Serializers for the super column name, column name, and column value default to an instance of TypeInferringSerializer.
 
    Examples: (create-column \"name\" \"a value\")  (create-column \"super column name\" {\"name\" \"value\"})"
-  [name value ttl counter? & {:keys [n-serializer v-serializer s-serializer]
-                 :or {n-serializer type-inferring
-                      v-serializer type-inferring
-                      s-serializer type-inferring}}]
-  (if (map? value)
-    (let [cols (map (fn [[n v]] (create-column n v ttl counter? :n-serializer n-serializer :v-serializer v-serializer)) value)]
-      (if counter?
-        (HFactory/createCounterSuperColumn name cols s-serializer n-serializer)
-        (HFactory/createSuperColumn name cols s-serializer n-serializer v-serializer)))
-    (if counter?
-      (HFactory/createCounterColumn name value n-serializer)
-      (if ttl
-        (HFactory/createColumn name value (int ttl) n-serializer v-serializer)
-        (HFactory/createColumn name value n-serializer v-serializer)))))
-
-(defn- schema-options
-  [column-family]
-  (get *schemas* column-family))
-
-(defn- extract-options
-  [opts cf]
-  (let [defaults {:s-serializer :bytes
-                  :n-serializer :bytes
-                  :v-serializer :bytes
-                  :start nil
-                  :end nil
-                  :reversed false
-                  :limit Integer/MAX_VALUE}]
-    (merge defaults (apply hash-map opts) (schema-options cf))))
+  [name value options]
+  (let [opts (convert-serializers options)
+        n-serializer (opts :n-serializer)
+        s-serializer (opts :s-serializer)
+        v-serializer (opts :v-serializer)
+        ttl (opts :ttl)]
+    (if (super? opts)
+      (let [cols (map (fn [[n v]] (create-column n v (dissoc options :type))) value)]
+        (if (counter? opts)
+          (HFactory/createCounterSuperColumn name cols s-serializer n-serializer)
+          (HFactory/createSuperColumn name cols s-serializer n-serializer v-serializer)))
+      (if (counter? opts)
+        (HFactory/createCounterColumn name value n-serializer)
+        (if ttl
+          (HFactory/createColumn name value (int ttl) n-serializer v-serializer)
+          (HFactory/createColumn name value n-serializer v-serializer))))))
 
 (defn put
   "Stores values in columns in map m against row key pk"
-  ([ks cf pk m] (put ks cf pk m nil))
-  ([ks cf pk m ttl]
-    (let [^Mutator mut (HFactory/createMutator ks type-inferring)]
-      (doseq [[k v] m] (.addInsertion mut pk cf (create-column k v ttl false)))
-      (.execute mut))))
-
-(defn put-counter
-  "Stores a counter value. Column Family must have the name validator
-   type set to :counter (CounterColumnType).
-
-   pk is the row key. m is a map of column names and the (long) counter
-   value to store.
-
-   Counter columns allow atomic increment/decrement."
-  [ks cf pk m]
-  (let [^Mutator mut (HFactory/createMutator ks type-inferring)]
-    (doseq [[n v] m]
-      (.addCounter mut pk cf (create-column n v nil true)))
+  [ks cf pk m & opts]
+  (let [^Mutator mut (HFactory/createMutator ks type-inferring)
+        defaults (merge {:n-serializer :type-inferring
+                         :v-serializer :type-inferring
+                         :s-serializer :type-inferring}
+                        (apply hash-map opts))
+        opts (extract-options (apply concat (seq defaults)) cf)]
+        ;opts (dissoc (extract-options opts cf) :n-serializer :v-serializer :s-serializer)]
+    (if (counter? opts)
+      (doseq [[n v] m] (.addCounter mut pk cf (create-column n v opts)))
+      (doseq [[k v] m] (.addInsertion mut pk cf (create-column k v opts))))
     (.execute mut)))
 
 (defn- execute-query [^Query query]
@@ -246,11 +257,7 @@
       (doseq [[sc-name v] nv]
         (.addSubDelete mut k cf (create-column sc-name
                                                (apply hash-map (interleave v v))
-                                               nil
-                                               false
-                                               :s-serializer (s/serializer (:s-serializer opts))
-                                               :n-serializer (s/serializer (:n-serializer opts))
-                                               :v-serializer (s/serializer (:v-serializer opts))))))
+                                               opts))))
     (.execute mut)))
 
 (defn delete-rows
@@ -275,23 +282,11 @@
                    (.setRange start end limit)
                    (.setColumnFamily cf))))
 
-
-(defmacro defschema
-  "Defines a schema for the named column family. The provided
-   serializers will be used when operations are performed with
-   the with-schemas macro.
-
-   Example (defschema ColumnFamily [:n-serializer :string :v-serializer :string])"
-  [cf-name ks]
-  (let [name-str (name cf-name)]
-    `(def ~cf-name {:name ~name-str
-                    :serializers (apply hash-map ~ks)})))
-
 (defn schemas-by-name
   [schemas]
   (->> schemas
-       (map (fn [{:keys [name serializers]}]
-              [name serializers]))
+       (map (fn [{:keys [name] :as opts}]
+              [name opts]))
        (into {})))
 
 (defmacro with-schemas

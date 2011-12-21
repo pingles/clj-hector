@@ -89,7 +89,8 @@
                   :char (CharSerializer/get)
                   :double (DoubleSerializer/get)
                   :float (FloatSerializer/get)
-                  :short (ShortSerializer/get)})
+                  :short (ShortSerializer/get)
+                  :type-inferring (TypeInferringSerializer/get)})
 
 (defn serializer
   "Returns an instance of the specified serializer.

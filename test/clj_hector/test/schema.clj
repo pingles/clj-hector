@@ -5,9 +5,9 @@
         [clj-hector.core] :reload))
 
 (def column-family "MyColumnFamily")
-
-(defschema MyColumnFamily [:n-serializer :string
-                           :v-serializer :string])
+(def MyColumnFamily {:name column-family
+                     :n-serializer :string
+                     :v-serializer :string})
 
 (deftest string-key-values
   (with-test-keyspace ks [{:name column-family}]
