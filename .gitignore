@@ -5,3 +5,9 @@ classes
 autodoc/**
 .lein-*
 tmp/
+*.swp
+*~
+.DS_Store
+.#*
+#*
+/checkouts
