@@ -2,12 +2,12 @@
   (:import [me.prettyprint.cassandra.serializers StringSerializer])
   (:require [clj-hector.serialize :as s])
   (:use [clojure.test]
+        [clj-hector.test.test-helper]
         [clj-hector.test.cassandra-helper :only (with-test-keyspace)]
         [clj-hector.core] :reload))
 
-(deftest serializers
+(deftest-pending composite-serializer
   (let [column-family "A"]
-
     (with-test-keyspace keyspace [{:name column-family}]
       (testing ":composite serializer"
         (let [opts [:v-serializer :string
@@ -20,18 +20,13 @@
                                       :comparator :ascii})]
 
           (put keyspace column-family "row-key" {comp "v"} :n-serializer :composite)
-          (printf "%s\n" (.toString comp))
-          (printf "%s\n" (first
-                          (keys
-                           (get
-                            (first
-                             (apply get-rows keyspace column-family ["row-key"] opts)) "row-key"))))
-
           (is (= [{"row-key" {["col" "name"] "v"}}]
                  (apply get-rows keyspace column-family ["row-key"] opts))
               (= {["col" "name"] "v"}
-                 (apply get-columns keyspace column-family "row-key" [comp] opts))))))
+                 (apply get-columns keyspace column-family "row-key" [comp] opts))))))))
 
+(deftest serializers
+  (let [column-family "A"]
     (with-test-keyspace keyspace [{:name column-family}]
       (testing ":dynamic-composite serializer"
         (let [opts [:v-serializer :string
@@ -107,6 +102,32 @@
               "b" "v"
               "c" "v"}
              (apply get-column-range keyspace column-family "row-key" "a" "c" opts))))))
+
+(deftest dynamic-composite-column-ranges
+  (with-test-keyspace keyspace [{:name "A"}]
+    (let [column-family "A"
+          opts [:v-serializer :string
+                :n-serializer :dynamic-composite]]
+
+      (let [cols (into {}
+                       (interleave
+                        (doseq [i (range 0 3)]
+                          (create-dynamic-composite {:value "col"
+                                                     :n-serializer :string
+                                                     :comparator :utf-8}
+                                                    {:value i
+                                                     :n-serializer :integer
+                                                     :comparator :integer}))
+                        (cycle "v")))]
+        (put keyspace column-family "row-key" cols)
+        (is (= cols
+               (apply get-column-range
+                      keyspace
+                      column-family
+                      "row-key"
+                      (first (keys cols))
+                      (last (keys cols))
+                      opts)))))))
 
 ;; count-columns is different to counter columns, it's not
 ;; an O(1) operation.
