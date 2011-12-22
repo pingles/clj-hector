@@ -110,9 +110,9 @@ Hector exposes data about how long queries took to execute (and on which host). 
 
 For example, when operating with the MyColumnFamily column family, you can provide default name and value serializers as follows:
 
-    (defschema MyColumnFamily [:name "MyColumnFamily"
-                               :n-serializer :string
-                               :v-serializer :string])
+    (def MyColumnFamily [:name "MyColumnFamily"
+                         :n-serializer :string
+                         :v-serializer :string])
 
 Then, when querying, wrap the functions with the `with-schema` macro:
 
