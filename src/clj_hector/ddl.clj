@@ -11,22 +11,31 @@
                               :equal              AbstractComposite$ComponentEquality/EQUAL
                               :greater_than_equal AbstractComposite$ComponentEquality/GREATER_THAN_EQUAL})
 
-(def comparator-types {:ascii         ComparatorType/ASCIITYPE
-                       :bytes         ComparatorType/BYTESTYPE
-                       :integer       ComparatorType/INTEGERTYPE
-                       :lexical-uuid  ComparatorType/LEXICALUUIDTYPE
-                       :long          ComparatorType/LONGTYPE
-                       :time-uuid     ComparatorType/TIMEUUIDTYPE
-                       :composite     ComparatorType/COMPOSITETYPE
-                       :utf-8         ComparatorType/UTF8TYPE})
+(def comparator-types {:ascii             ComparatorType/ASCIITYPE
+                       :bytes             ComparatorType/BYTESTYPE
+                       :integer           ComparatorType/INTEGERTYPE
+                       :lexical-uuid      ComparatorType/LEXICALUUIDTYPE
+                       :local-partitioner ComparatorType/LOCALBYPARTITIONERTYPE
+                       :long              ComparatorType/LONGTYPE
+                       :time-uuid         ComparatorType/TIMEUUIDTYPE
+                       :utf-8             ComparatorType/UTF8TYPE
+                       :composite         ComparatorType/COMPOSITETYPE
+                       :dynamic-composite ComparatorType/DYNAMICCOMPOSITETYPE
+                       :uuid              ComparatorType/UUIDTYPE
+                       :counter           ComparatorType/COUNTERTYPE})
 
-(def validator-types {:ascii        "AsciiType"
-                      :bytes        "BytesType"
-                      :counter      "CounterColumnType"
-                      :integer      "IntegerType"
-                      :lexical-uuid "LeixcalUUIDType"
-                      :long         "LongType"
-                      :utf-8        "UTF8Type"})
+(def validator-types {:ascii             "AsciiType"
+                      :bytes             "BytesType"
+                      :integer           "IntegerType"
+                      :lexical-uuid      "LeixcalUUIDType"
+                      :local-partitioner "LocalByPartionerType"
+                      :long              "LongType"
+                      :time-uuid         "TimeUUIDType"
+                      :utf-8             "UTF8Type"
+                      :composite         "CompositeType"
+                      :dynamic-composite "DynamicCompositeTYpe"
+                      :uuid              "UUIDType"
+                      :counter           "CounterColumnType"})
 
 (defn- make-column-family
   "Returns an object defining a new column family"
@@ -107,14 +116,18 @@
     :super
     :standard))
 
-(def types {"org.apache.cassandra.db.marshal.UTF8Type"          :utf-8
-            "org.apache.cassandra.db.marshal.AsciiType"         :ascii
-            "org.apache.cassandra.db.marshal.BytesType"         :bytes
-            "org.apache.cassandra.db.marshal.IntegerType"       :integer
-            "org.apache.cassandra.db.marshal.LexicalUUIDType"   :lexical-uuid
-            "org.apache.cassandra.db.marshal.LongType"          :long
-            "org.apache.cassandra.db.marshal.TimeUUIDType"      :time-uuid
-            "org.apache.cassandra.db.marshal.CounterColumnType" :counter})
+(def types {"org.apache.cassandra.db.marshal.AsciiType"            :ascii
+            "org.apache.cassandra.db.marshal.BytesType"            :bytes
+            "org.apache.cassandra.db.marshal.IntegerType"          :integer
+            "org.apache.cassandra.db.marshal.LexicalUUIDType"      :lexical-uuid
+            "org.apache.cassandra.db.marshal.LocalByPartionerType" :local-partitioner
+            "org.apache.cassandra.db.marshal.LongType"             :long
+            "org.apache.cassandra.db.marshal.TimeUUIDType"         :time-uuid
+            "org.apache.cassandra.db.marshal.UTF8Type"             :utf-8
+            "org.apache.cassandra.db.marshal.CompositeType"        :composite
+            "org.apache.cassandra.db.marshal.DynamicCompositeType" :dynamic-composite
+            "org.apache.cassandra.db.marshal.UUIDType"             :uuid
+            "org.apache.cassandra.db.marshal.CounterColumnType"    :counter})
 
 (defn- parse-comparator
   [^ComparatorType comparator-type]
