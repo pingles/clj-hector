@@ -57,14 +57,19 @@
 
 (defn- make-keyspace-definition
   ([keyspace strategy-class replication-factor column-families]
-     (let [column-families (map (fn [{:keys [name comparator type validator]}]
+     (let [column-families (map (fn [{:keys [name comparator type validator comparator-alias]}]
                                   (let [cf-def (if (nil? comparator)
                                                  (make-column-family keyspace name)
                                                  (make-column-family keyspace name comparator))]
                                     (doto ^ThriftCfDef cf-def
                                           (.setColumnType (column-type type))
-                                          (.setDefaultValidationClass (default-validation-class validator)))))
+                                          (.setDefaultValidationClass (default-validation-class validator)))
+                                    (if (not (nil? comparator-alias))
+                                      (.setComparatorTypeAlias cf-def comparator-alias))
+                                    cf-def
+                                    ))
                                 column-families)]
+
        (HFactory/createKeyspaceDefinition keyspace
                                           strategy-class
                                           replication-factor

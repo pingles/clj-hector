@@ -8,7 +8,9 @@
 
 (deftest-pending composite-serializer
   (let [column-family "A"]
-    (with-test-keyspace keyspace [{:name column-family}]
+    (with-test-keyspace keyspace [{:name column-family
+                                   :comparator :composite
+                                   :comparator-alias "(AsciiType, AsciiType)"}]
       (testing ":composite serializer"
         (let [opts [:v-serializer :string
                     :n-serializer :composite]
