@@ -71,7 +71,9 @@
 
 (def serializer-keys [:n-serializer :v-serializer :s-serializer])
 (defn convert-serializers [opts]
-  (merge opts (reduce (fn [m [k v]] (into m {k (s/serializer v)})) {} (select-keys opts serializer-keys))))
+  (reduce (fn [m [k v]] (assoc m k (s/serializer v)))
+          opts
+          (select-keys opts serializer-keys)))
 
 (defn- super? [opts]
   (= (opts :type :standard) :super))
