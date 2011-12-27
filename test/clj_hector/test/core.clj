@@ -142,10 +142,10 @@
 
 (deftest super-columns
   (let [column-family "A"
-        opts [:s-serializer :string :n-serializer :string :v-serializer :string]]
+        opts [:s-serializer :string :n-serializer :string :v-serializer :string :type :super]]
     (with-test-keyspace keyspace [{:name column-family :type :super}]
       (put keyspace column-family "row-key" {"SuperCol" {"n" "v" "n2" "v2"}
-                                             "SuperCol2" {"n" "v" "n2" "v2"}})
+                                             "SuperCol2" {"n" "v" "n2" "v2"}} :type :super)
       (testing "querying"
         (is (= {"row-key" [{"SuperCol" {"n" "v"
                                         "n2" "v2"}}
@@ -156,7 +156,7 @@
                (apply get-super-columns keyspace column-family "row-key" "SuperCol" ["n" "n2"] opts))))
       (testing "deletion"
         (put keyspace column-family "row-key" {"SuperCol" {"n" "v" "n2" "v2"}
-                                               "SuperCol2" {"n" "v"}})
+                                               "SuperCol2" {"n" "v"}} :type :super)
         (apply delete-super-columns keyspace column-family {"row-key" {"SuperCol" ["n2"]}} opts)
         (is (= {"n" "v"}
                (apply get-super-columns keyspace column-family "row-key" "SuperCol" ["n" "n2"] opts)))))))
@@ -168,7 +168,7 @@
           pk "row-key"]
       (with-test-keyspace keyspace [{:name column-family
                                      :validator :counter}]
-        (put-counter keyspace column-family pk {"n" 1 "n2" 2})
+        (put keyspace column-family pk {"n" 1 "n2" 2} :counter true)
         (is (= {"n" 1
                 "n2" 2}
                (apply get-counter-columns keyspace column-family pk ["n" "n2"] opts))))))
@@ -179,7 +179,7 @@
       (with-test-keyspace keyspace [{:name column-family
                                      :validator :counter
                                      :type :super}]
-        (put-counter keyspace column-family pk {"SuperCol" {"n" 1 "n2" 2}})
+        (put keyspace column-family pk {"SuperCol" {"n" 1 "n2" 2}} :type :super :counter true)
         (is (= {"SuperCol" {"n" 1 "n2" 2}}
                (apply get-counter-super-columns keyspace column-family pk "SuperCol" ["n" "n2"] opts))))))
   (testing "counter column range query"
@@ -188,6 +188,31 @@
           pk "row-key"]
       (with-test-keyspace keyspace [{:name column-family
                                      :validator :counter}]
-        (put-counter keyspace column-family "row-key" {"a" 1 "b" 2 "c" 1 "d" 3})
+        (put keyspace column-family "row-key" {"a" 1 "b" 2 "c" 1 "d" 3} :counter true)
         (is (= {"a" 1 "b" 2 "c" 1}
                (apply get-counter-column-range keyspace column-family pk "a" "c" opts)))))))
+
+(deftest ttl-columns
+  (testing "regular column ttl"
+    (let [column-family "A"
+          opts [:n-serializer :string :v-serializer :integer]
+          pk "row-key1"]
+      (with-test-keyspace keyspace [{:name column-family}]
+        (put keyspace column-family pk {"n" 1 "n2" 2} :ttl 1)
+        (is (= {"n" 1 "n2" 2}
+               (apply get-columns keyspace column-family pk ["n" "n2"] opts)))
+        (Thread/sleep 2000)
+        (is (= {}
+               (apply get-columns keyspace column-family pk ["n" "n2"] opts))))))
+  (testing "super column ttl"
+    (let [column-family "A"
+          opts [:s-serializer :string :n-serializer :string :v-serializer :integer]
+          pk "row-key"]
+      (with-test-keyspace keyspace [{:name column-family
+                                     :type :super}]
+        (put keyspace column-family pk {"SuperCol" {"n" 1 "n2" 2}} :ttl 1 :type :super)
+        (is (= {"n" 1 "n2" 2}
+               (apply get-super-columns keyspace column-family pk "SuperCol" ["n" "n2"] opts)))
+        (Thread/sleep 2000)
+        (is (= {}
+               (apply get-super-columns keyspace column-family pk "SuperCol" ["n" "n2"] opts)))))))

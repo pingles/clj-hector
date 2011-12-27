@@ -99,7 +99,8 @@
                   :float (FloatSerializer/get)
                   :short (ShortSerializer/get)
                   :dynamic-composite (new DynamicCompositeSerializer)
-                  :composite (new CompositeSerializer)})
+                  :composite (new CompositeSerializer)
+                  :type-inferring (TypeInferringSerializer/get)})
 
 (defn serializer
   "Returns an instance of the specified serializer.
