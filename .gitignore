@@ -11,3 +11,6 @@ tmp/
 .#*
 #*
 /checkouts
+.project
+.settings/
+bin/
