@@ -57,7 +57,8 @@
                   :ttl nil
                   :s-serializer :bytes
                   :n-serializer :bytes
-                  :v-serializer :bytes}]
+                  :v-serializer :bytes
+                  :c-serializer nil}]
    (merge defaults (apply hash-map opts) (get *schemas* column-family))))
 
 (defn- query-options
@@ -68,7 +69,7 @@
                   :limit Integer/MAX_VALUE}]
     (merge defaults (apply hash-map opts))))
 
-(defn- extract-options
+(defn extract-options
   [opts cf]
   (merge (query-options opts) (schema-options opts cf)))
 
@@ -175,8 +176,8 @@
       (HFactory/createCounterSuperColumn name cols s-serializer n-serializer))
     (HFactory/createCounterColumn name value n-serializer)))
 
-(defn- execute-query [^Query query]
-  (s/to-clojure (.execute query)))
+(defn- execute-query [^Query query & [opts]]
+  (s/to-clojure (.execute query) opts))
 
 (defn get-super-rows
   "In keyspace ks, from Super Column Family cf, retrieve the rows identified by pks. Executed
@@ -194,7 +195,8 @@
                      (.setColumnFamily cf)
                      (.setKeys (into-array pks))
                      (.setColumnNames (into-array scs))
-                     (.setRange (:start opts) (:end opts) (:reversed opts) (:limit opts))))))
+                     (.setRange (:start opts) (:end opts) (:reversed opts) (:limit opts)))
+                   opts)))
 
 (defn get-rows
   "In keyspace ks, retrieve rows for pks within column family cf."
@@ -206,7 +208,8 @@
                                                             (s/serializer (:v-serializer opts)))
                      (.setColumnFamily cf)
                      (.setKeys (into-array pks))
-                     (.setRange (:start opts) (:end opts) (:reversed opts) (:limit opts))))))
+                     (.setRange (:start opts) (:end opts) (:reversed opts) (:limit opts)))
+                   opts)))
 
 (defn get-super-columns
   "In keyspace ks, for row pk, retrieve columns in c from super column sc."
@@ -220,7 +223,8 @@
                      (.setColumnFamily cf)
                      (.setKey pk)
                      (.setSuperColumn sc)
-                     (.setColumnNames (into-array c))))))
+                     (.setColumnNames (into-array c)))
+                   opts)))
 
 (defn get-column-range
   "In keyspace ks, retrieve columns between start and end from column family cf."
@@ -231,7 +235,8 @@
     (execute-query (doto (HFactory/createSliceQuery ks type-inferring ns vs)
                      (.setColumnFamily cf)
                      (.setKey pk)
-                     (.setRange start end (:reversed opts) (:limit opts))))))
+                     (.setRange start end (:reversed opts) (:limit opts)))
+                   opts)))
 
 (defn get-columns
   "In keyspace ks, retrieve c columns for row pk from column family cf"
@@ -243,11 +248,13 @@
       (execute-query (doto (HFactory/createSliceQuery ks type-inferring ns vs)
                        (.setColumnFamily cf)
                        (.setKey pk)
-                       (.setColumnNames (into-array c))))
+                       (.setColumnNames (into-array c)))
+                     opts)
       (execute-query (doto (HFactory/createColumnQuery ks type-inferring ns vs)
                        (.setColumnFamily cf)
                        (.setKey pk)
-                       (.setName c))))))
+                       (.setName c))
+                     opts))))
 
 (defn get-counter-columns
   "Queries counter column values. c is a sequence of column names to
@@ -259,11 +266,13 @@
       (execute-query (doto (HFactory/createCounterSliceQuery ks type-inferring ns)
                        (.setColumnFamily cf)
                        (.setKey pk)
-                       (.setColumnNames (into-array c))))
+                       (.setColumnNames (into-array c)))
+                     opts)
       (execute-query (doto (HFactory/createCounterColumnQuery ks type-inferring ns)
                        (.setColumnFamily cf)
                        (.setKey pk)
-                       (.setName (into-array c)))))))
+                       (.setName (into-array c)))
+                     opts))))
 
 (defn get-counter-rows
   "Load data for specified keys and columns"
@@ -274,7 +283,8 @@
     (execute-query (doto (HFactory/createMultigetSliceCounterQuery ks kser ns)
                      (.setKeys pks)
                      (.setColumnFamily cf)
-                     (.setColumnNames (into-array cs))))))
+                     (.setColumnNames (into-array cs)))
+                   opts)))
 
 (defn get-counter-column-range
   "Queries for a range of counter columns."
@@ -284,7 +294,8 @@
     (execute-query (doto (HFactory/createCounterSliceQuery ks type-inferring ns)
                      (.setColumnFamily cf)
                      (.setKey pk)
-                     (.setRange start end (:reversed opts) (:limit opts))))))
+                     (.setRange start end (:reversed opts) (:limit opts)))
+                   opts)))
 
 (defn get-counter-super-columns
   "Queries for counter values in a super column column family."
@@ -296,7 +307,8 @@
                      (.setKey pk)
                      (.setColumnFamily cf)
                      (.setColumnNames (into-array c))
-                     (.setRange (:start o) (:end o) (:reversed o) (:limit o))))))
+                     (.setRange (:start o) (:end o) (:reversed o) (:limit o)))
+                   opts)))
 
 (defn delete-columns
   "Deletes columns identified in cs for row pk."

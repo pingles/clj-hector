@@ -6,20 +6,21 @@
         [clj-hector.test.cassandra-helper :only (with-test-keyspace)]
         [clj-hector.core] :reload))
 
-(deftest-pending composite-serializer
+(deftest composite-serializer
   (let [column-family "A"]
     (with-test-keyspace keyspace [{:name column-family
                                    :comparator :composite
-                                   :comparator-alias "(AsciiType, AsciiType)"}]
+                                   :comparator-alias "(UTF8Type, UTF8Type)"}]
       (testing ":composite serializer"
         (let [opts [:v-serializer :string
-                    :n-serializer :composite]
+                    :n-serializer :composite
+                    :c-serializer [:string :string]]
               comp (create-composite {:value "col"
-                                      :n-serializer :ascii
-                                      :comparator :ascii}
+                                      :n-serializer :string
+                                      :comparator :utf-8}
                                      {:value "name"
-                                      :n-serializer :ascii
-                                      :comparator :ascii})]
+                                      :n-serializer :string
+                                      :comparator :utf-8})]
 
           (put keyspace column-family "row-key" {comp "v"} :n-serializer :composite)
           (is (= [{"row-key" {["col" "name"] "v"}}]
