@@ -1,6 +1,6 @@
 <html>
   <head>
-    <title>clj-hector.serialize - clj-hector nil API documentation</title>
+    <title>clj-hector.consistency - clj-hector nil API documentation</title>
     <link href="static/favicon.png" rel="icon" />
     <link href="static/favicon.png" rel="shortcut icon" />
     <link media="all" type="text/css" href="static/clojure.css" rel="stylesheet" />
@@ -51,20 +51,16 @@ namespace.
   <h1 class="nopad">Table of Contents</h1>
   <div style="margin-left: 1em;" class="toc-section">
     <a href="#toc0">Overview</a>
-    <div style="margin-left: 1em;" class="toc-entry">
-      <a href="#clj-hector.serialize/serializer">serializer</a>
-    </div><div style="margin-left: 1em;" class="toc-entry">
-      <a href="#clj-hector.serialize/to-clojure">to-clojure</a>
-    </div>
+    
     <br />
   </div>
 </div>
 </div>
-                <div id="content-tag"><h1 id="overview">API for <span id="namespace-name">clj-hector.serialize</span>
+                <div id="content-tag"><h1 id="overview">API for <span id="namespace-name">clj-hector.consistency</span>
   - <span id="header-project">clj-hector</span> <span id="header-version"></span> (<span id="header-status"></span>)
   </h1>
 
-<br />Full namespace name: <span id="long-name">clj-hector.serialize</span>
+<br />Full namespace name: <span id="long-name">clj-hector.consistency</span>
 <p></p>
 <h2>Overview</h2>
 <pre id="namespace-docstr"></pre>
@@ -72,41 +68,7 @@ namespace.
 
 <br />
 <h2>Public Variables and Functions</h2>
-<div id="var-entry">
-  <br />
-  <hr />
-  <h2 id="clj-hector.serialize/serializer">serializer</h2>
-  <span id="var-type">function</span><br />
-  <pre id="var-usage">Usage: (serializer x)
-</pre>
-  <pre id="var-docstr">Returns an instance of the specified serializer.
 
-Argument: either a) instance of Serializer.
-                 b) a keyword for one of the supported serializers.
-                 c) any object.
-
-If an object is passed the relevant serializer will be determined by
-Hector's SerializerTypeInferer. This can be useful when serializing
-strings or other types where serializers can be determined automatically.
-
-Supported serializers: :integer, :string, :long, :bytes, :uuid
-:bigint, :bool, :date, :object, :ascii, :byte-buffer, :char, :double
-:float, :short.</pre>
-  
-  
-  
-</div><div id="var-entry">
-  <br />
-  <hr />
-  <h2 id="clj-hector.serialize/to-clojure">to-clojure</h2>
-  <span id="var-type">function</span><br />
-  <pre id="var-usage">Usage: (to-clojure _ _)
-</pre>
-  <pre id="var-docstr">Convert hector types to Clojure data structures.</pre>
-  
-  
-  
-</div>
 
 
 </div>

@@ -35,7 +35,7 @@ namespace.
     <div class="NamespaceTOC">
       <span class="toc-header">Namespaces</span>
       <ul id="left-sidebar-list">
-        <li><a href="clj-hector.core-api.html" class="wiki_link">clj-hector.core</a></li><li><a href="clj-hector.ddl-api.html" class="wiki_link">clj-hector.ddl</a></li><li><a href="clj-hector.serialize-api.html" class="wiki_link">clj-hector.serialize</a></li><li><a href="clj-hector.time-api.html" class="wiki_link">clj-hector.time</a></li>
+        <li><a href="clj-hector.consistency-api.html" class="wiki_link">clj-hector.consistency</a></li><li><a href="clj-hector.core-api.html" class="wiki_link">clj-hector.core</a></li><li><a href="clj-hector.ddl-api.html" class="wiki_link">clj-hector.ddl</a></li><li><a href="clj-hector.serialize-api.html" class="wiki_link">clj-hector.serialize</a></li><li><a href="clj-hector.time-api.html" class="wiki_link">clj-hector.time</a></li>
       </ul>
     </div>
     
@@ -56,9 +56,9 @@ namespace.
     </div><div style="margin-left: 1em;" class="toc-entry">
       <a href="#clj-hector.core/count-columns">count-columns</a>
     </div><div style="margin-left: 1em;" class="toc-entry">
-      <a href="#clj-hector.core/create-column">create-column</a>
+      <a href="#clj-hector.core/create-composite">create-composite</a>
     </div><div style="margin-left: 1em;" class="toc-entry">
-      <a href="#clj-hector.core/defschema">defschema</a>
+      <a href="#clj-hector.core/create-dynamic-composite">create-dynamic-composite</a>
     </div><div style="margin-left: 1em;" class="toc-entry">
       <a href="#clj-hector.core/delete-columns">delete-columns</a>
     </div><div style="margin-left: 1em;" class="toc-entry">
@@ -66,9 +66,15 @@ namespace.
     </div><div style="margin-left: 1em;" class="toc-entry">
       <a href="#clj-hector.core/delete-super-columns">delete-super-columns</a>
     </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clj-hector.core/get-column-range">get-column-range</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
       <a href="#clj-hector.core/get-columns">get-columns</a>
     </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clj-hector.core/get-counter-column-range">get-counter-column-range</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
       <a href="#clj-hector.core/get-counter-columns">get-counter-columns</a>
+    </div><div style="margin-left: 1em;" class="toc-entry">
+      <a href="#clj-hector.core/get-counter-rows">get-counter-rows</a>
     </div><div style="margin-left: 1em;" class="toc-entry">
       <a href="#clj-hector.core/get-counter-super-columns">get-counter-super-columns</a>
     </div><div style="margin-left: 1em;" class="toc-entry">
@@ -81,8 +87,6 @@ namespace.
       <a href="#clj-hector.core/keyspace">keyspace</a>
     </div><div style="margin-left: 1em;" class="toc-entry">
       <a href="#clj-hector.core/put">put</a>
-    </div><div style="margin-left: 1em;" class="toc-entry">
-      <a href="#clj-hector.core/put-counter">put-counter</a>
     </div><div style="margin-left: 1em;" class="toc-entry">
       <a href="#clj-hector.core/with-schemas">with-schemas</a>
     </div>
@@ -109,6 +113,8 @@ namespace.
   <span id="var-type">function</span><br />
   <pre id="var-usage">Usage: (cluster cluster-name host)
        (cluster cluster-name host port)
+       (cluster cluster-name host port configurator)
+       (cluster cluster-name host port configurator credentials)
 </pre>
   <pre id="var-docstr">Connects to Cassandra cluster</pre>
   
@@ -119,7 +125,7 @@ namespace.
   <hr />
   <h2 id="clj-hector.core/count-columns">count-columns</h2>
   <span id="var-type">function</span><br />
-  <pre id="var-usage">Usage: (count-columns ks pk cf &amp; options__36__auto__)
+  <pre id="var-usage">Usage: (count-columns ks pk cf &amp; {:keys [start end limit], :or {start nil, end nil, limit Integer/MAX_VALUE}})
 </pre>
   <pre id="var-docstr">Counts number of columns for pk in column family cf. The method is not O(1).
 It takes all the columns from disk to calculate the answer. The only benefit
@@ -131,30 +137,34 @@ interface to count them.</pre>
 </div><div id="var-entry">
   <br />
   <hr />
-  <h2 id="clj-hector.core/create-column">create-column</h2>
+  <h2 id="clj-hector.core/create-composite">create-composite</h2>
   <span id="var-type">function</span><br />
-  <pre id="var-usage">Usage: (create-column name value &amp; options__36__auto__)
+  <pre id="var-usage">Usage: (create-composite &amp; components)
 </pre>
-  <pre id="var-docstr">Creates Column and SuperColumns.
+  <pre id="var-docstr">Given a list create a Composite
 
-Serializers for the super column name, column name, and column value default to an instance of TypeInferringSerializer.
+Supply a list of hashes to specify Component options for each element in the composite
 
-Examples: (create-column "name" "a value")  (create-column "super column name" {"name" "value"})</pre>
+ex: ["col" "name"]
+ex: [{:value "col" :n-serializer :string :comparator :utf-8 :equality :equal}
+     {:value 2 :n-serializer :string :comparator :integer :equality :less_than_equal}]</pre>
   
   
   
 </div><div id="var-entry">
   <br />
   <hr />
-  <h2 id="clj-hector.core/defschema">defschema</h2>
-  <span id="var-type">macro</span><br />
-  <pre id="var-usage">Usage: (defschema cf-name ks)
+  <h2 id="clj-hector.core/create-dynamic-composite">create-dynamic-composite</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (create-dynamic-composite &amp; components)
 </pre>
-  <pre id="var-docstr">Defines a schema for the named column family. The provided
-serializers will be used when operations are performed with
-the with-schemas macro.
+  <pre id="var-docstr">Given a list create a DynamicComposite
 
-Example (defschema ColumnFamily [:n-serializer :string :v-serializer :string])</pre>
+Supply a list of hashes to specify Component options for each element in the composite
+
+ex: ["col" "name"]
+ex: [{:value "col" :n-serializer :string :comparator :utf-8 :equality :equal}
+     {:value 2 :n-serializer :string :comparator :integer :equality :less_than_equal}]</pre>
   
   
   
@@ -196,11 +206,33 @@ Example: (delete-super-columns keyspace "ColumnFamily" {"row-key" {"SuperCol" ["
 </div><div id="var-entry">
   <br />
   <hr />
+  <h2 id="clj-hector.core/get-column-range">get-column-range</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (get-column-range ks cf pk start end &amp; o)
+</pre>
+  <pre id="var-docstr">In keyspace ks, retrieve columns between start and end from column family cf.</pre>
+  
+  
+  
+</div><div id="var-entry">
+  <br />
+  <hr />
   <h2 id="clj-hector.core/get-columns">get-columns</h2>
   <span id="var-type">function</span><br />
   <pre id="var-usage">Usage: (get-columns ks cf pk c &amp; o)
 </pre>
   <pre id="var-docstr">In keyspace ks, retrieve c columns for row pk from column family cf</pre>
+  
+  
+  
+</div><div id="var-entry">
+  <br />
+  <hr />
+  <h2 id="clj-hector.core/get-counter-column-range">get-counter-column-range</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (get-counter-column-range ks cf pk start end &amp; o)
+</pre>
+  <pre id="var-docstr">Queries for a range of counter columns.</pre>
   
   
   
@@ -213,6 +245,17 @@ Example: (delete-super-columns keyspace "ColumnFamily" {"row-key" {"SuperCol" ["
 </pre>
   <pre id="var-docstr">Queries counter column values. c is a sequence of column names to
 retrieve the values for.</pre>
+  
+  
+  
+</div><div id="var-entry">
+  <br />
+  <hr />
+  <h2 id="clj-hector.core/get-counter-rows">get-counter-rows</h2>
+  <span id="var-type">function</span><br />
+  <pre id="var-usage">Usage: (get-counter-rows ks cf pks cs &amp; o)
+</pre>
+  <pre id="var-docstr">Load data for specified keys and columns</pre>
   
   
   
@@ -270,9 +313,17 @@ Optional: scs can be a sequence of super column names to retrieve columns for.</
   <h2 id="clj-hector.core/keyspace">keyspace</h2>
   <span id="var-type">function</span><br />
   <pre id="var-usage">Usage: (keyspace cluster name)
+       (keyspace cluster name consistency-map)
 </pre>
   <pre id="var-docstr">Connects the client to the specified Keyspace. All other interactions
-with Cassandra are performed against this keyspace.</pre>
+ with Cassandra are performed against this keyspace.
+
+ cluster is the hector cluster object, name is the string name of the keyspace
+
+ An optional consistency map can be passed indicating the desired consistency levels
+ for each cf/operation type combination. The default is a consistency level of ONE
+ and a default across all cfs can be defined/overridden by using the keyspace name '*'.
+</pre>
   
   
   
@@ -281,26 +332,9 @@ with Cassandra are performed against this keyspace.</pre>
   <hr />
   <h2 id="clj-hector.core/put">put</h2>
   <span id="var-type">function</span><br />
-  <pre id="var-usage">Usage: (put ks cf pk m)
+  <pre id="var-usage">Usage: (put ks cf pk m &amp; opts)
 </pre>
   <pre id="var-docstr">Stores values in columns in map m against row key pk</pre>
-  
-  
-  
-</div><div id="var-entry">
-  <br />
-  <hr />
-  <h2 id="clj-hector.core/put-counter">put-counter</h2>
-  <span id="var-type">function</span><br />
-  <pre id="var-usage">Usage: (put-counter ks cf pk m)
-</pre>
-  <pre id="var-docstr">Stores a counter value. Column Family must have the name validator
-type set to :counter (CounterColumnType).
-
-pk is the row key. m is a map of column names and the (long) counter
-value to store.
-
-Counter columns allow atomic increment/decrement.</pre>
   
   
   
