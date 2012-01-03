@@ -1,13 +1,15 @@
 (ns clj-hector.core
   ^{:author "Paul Ingles"
     :doc "Hector-based Cassandra client"}
-  (:require [clj-hector.consistency :as c])
   (:require [clj-hector.serialize :as s])
+  (:require [clj-hector.ddl :as ddl])
+  (:require [clj-hector.consistency :as c])
   (:import [java.io Closeable]
            [me.prettyprint.hector.api.mutation Mutator]
            [me.prettyprint.hector.api Cluster]
            [me.prettyprint.hector.api.factory HFactory]
            [me.prettyprint.hector.api.query Query]
+           [me.prettyprint.hector.api.beans Composite DynamicComposite]
            [me.prettyprint.cassandra.service CassandraHostConfigurator]
            [me.prettyprint.cassandra.serializers TypeInferringSerializer]))
 
@@ -31,6 +33,7 @@
 (defn shutdown-cluster! [c] (HFactory/shutdownCluster c))
 
 (defn cluster-name [c] (.describeClusterName c))
+
 (defn partitioner [c] (.describePartitioner c))
 
 (defn keyspace
@@ -54,7 +57,8 @@
                   :ttl nil
                   :s-serializer :bytes
                   :n-serializer :bytes
-                  :v-serializer :bytes}]
+                  :v-serializer :bytes
+                  :c-serializer nil}]
    (merge defaults (apply hash-map opts) (get *schemas* column-family))))
 
 (defn- query-options
@@ -65,11 +69,12 @@
                   :limit Integer/MAX_VALUE}]
     (merge defaults (apply hash-map opts))))
 
-(defn- extract-options
+(defn extract-options
   [opts cf]
   (merge (query-options opts) (schema-options opts cf)))
 
 (def serializer-keys [:n-serializer :v-serializer :s-serializer])
+
 (defn convert-serializers [opts]
   (reduce (fn [m [k v]] (assoc m k (s/serializer v)))
           opts
@@ -77,8 +82,51 @@
 
 (defn- super? [opts]
   (= (opts :type :standard) :super))
+
 (defn- counter? [opts]
   (get opts :counter false))
+
+(defn- populate-composite
+  "populate the component values of a DynamicComposite or Composite"
+  [composite components]
+  (doseq [c components]
+    (if (map? c)
+      (let [opts (merge {:n-serializer :bytes
+                         :comparator :bytes
+                         :equality :equal} c)]
+        (.addComponent composite
+                       (:value opts)
+                       (s/serializer (:n-serializer opts))
+                       (.getTypeName (ddl/comparator-types (:comparator opts)))
+                       (ddl/component-equality-type (:equality opts))))
+      (.add composite -1 c)))
+  composite)
+
+(defn create-composite
+  "Given a list create a Composite
+
+  Supply a list of hashes to specify Component options for each element in the composite
+
+  ex: [\"col\" \"name\"]
+  ex: [{:value \"col\" :n-serializer :string :comparator :utf-8 :equality :equal}
+       {:value 2 :n-serializer :string :comparator :integer :equality :less_than_equal}]"
+
+  [& components]
+  (let [^Composite composite (new Composite)]
+    (populate-composite composite components)))
+
+(defn create-dynamic-composite
+  "Given a list create a DynamicComposite
+
+  Supply a list of hashes to specify Component options for each element in the composite
+
+  ex: [\"col\" \"name\"]
+  ex: [{:value \"col\" :n-serializer :string :comparator :utf-8 :equality :equal}
+       {:value 2 :n-serializer :string :comparator :integer :equality :less_than_equal}]"
+
+  [& components]
+  (let [^DynamicComposite composite (new DynamicComposite)]
+    (populate-composite composite components)))
 
 (defn- create-column
   "Creates Column and SuperColumns.
@@ -118,8 +166,18 @@
       (doseq [[k v] m] (.addInsertion mut pk cf (create-column k v opts))))
     (.execute mut)))
 
-(defn- execute-query [^Query query]
-  (s/to-clojure (.execute query)))
+(defn create-counter-column
+  [name value & {:keys [n-serializer v-serializer s-serializer]
+                 :or {n-serializer type-inferring
+                      v-serializer type-inferring
+                      s-serializer type-inferring}}]
+  (if (map? value)
+    (let [cols (map (fn [[n v]] (create-counter-column n v :n-serializer n-serializer :v-serializer v-serializer)) value)]
+      (HFactory/createCounterSuperColumn name cols s-serializer n-serializer))
+    (HFactory/createCounterColumn name value n-serializer)))
+
+(defn- execute-query [^Query query & [opts]]
+  (s/to-clojure (.execute query) opts))
 
 (defn get-super-rows
   "In keyspace ks, from Super Column Family cf, retrieve the rows identified by pks. Executed
@@ -137,7 +195,8 @@
                      (.setColumnFamily cf)
                      (.setKeys (into-array pks))
                      (.setColumnNames (into-array scs))
-                     (.setRange (:start opts) (:end opts) (:reversed opts) (:limit opts))))))
+                     (.setRange (:start opts) (:end opts) (:reversed opts) (:limit opts)))
+                   opts)))
 
 (defn get-rows
   "In keyspace ks, retrieve rows for pks within column family cf."
@@ -149,7 +208,8 @@
                                                             (s/serializer (:v-serializer opts)))
                      (.setColumnFamily cf)
                      (.setKeys (into-array pks))
-                     (.setRange (:start opts) (:end opts) (:reversed opts) (:limit opts))))))
+                     (.setRange (:start opts) (:end opts) (:reversed opts) (:limit opts)))
+                   opts)))
 
 (defn get-super-columns
   "In keyspace ks, for row pk, retrieve columns in c from super column sc."
@@ -163,7 +223,8 @@
                      (.setColumnFamily cf)
                      (.setKey pk)
                      (.setSuperColumn sc)
-                     (.setColumnNames (into-array c))))))
+                     (.setColumnNames (into-array c)))
+                   opts)))
 
 (defn get-column-range
   "In keyspace ks, retrieve columns between start and end from column family cf."
@@ -174,7 +235,8 @@
     (execute-query (doto (HFactory/createSliceQuery ks type-inferring ns vs)
                      (.setColumnFamily cf)
                      (.setKey pk)
-                     (.setRange start end (:reversed opts) (:limit opts))))))
+                     (.setRange start end (:reversed opts) (:limit opts)))
+                   opts)))
 
 (defn get-columns
   "In keyspace ks, retrieve c columns for row pk from column family cf"
@@ -186,11 +248,13 @@
       (execute-query (doto (HFactory/createSliceQuery ks type-inferring ns vs)
                        (.setColumnFamily cf)
                        (.setKey pk)
-                       (.setColumnNames (into-array c))))
+                       (.setColumnNames (into-array c)))
+                     opts)
       (execute-query (doto (HFactory/createColumnQuery ks type-inferring ns vs)
                        (.setColumnFamily cf)
                        (.setKey pk)
-                       (.setName c))))))
+                       (.setName c))
+                     opts))))
 
 (defn get-counter-columns
   "Queries counter column values. c is a sequence of column names to
@@ -202,11 +266,13 @@
       (execute-query (doto (HFactory/createCounterSliceQuery ks type-inferring ns)
                        (.setColumnFamily cf)
                        (.setKey pk)
-                       (.setColumnNames (into-array c))))
+                       (.setColumnNames (into-array c)))
+                     opts)
       (execute-query (doto (HFactory/createCounterColumnQuery ks type-inferring ns)
                        (.setColumnFamily cf)
                        (.setKey pk)
-                       (.setName (into-array c)))))))
+                       (.setName (into-array c)))
+                     opts))))
 
 (defn get-counter-rows
   "Load data for specified keys and columns"
@@ -217,7 +283,8 @@
     (execute-query (doto (HFactory/createMultigetSliceCounterQuery ks kser ns)
                      (.setKeys pks)
                      (.setColumnFamily cf)
-                     (.setColumnNames (into-array cs))))))
+                     (.setColumnNames (into-array cs)))
+                   opts)))
 
 (defn get-counter-column-range
   "Queries for a range of counter columns."
@@ -227,7 +294,8 @@
     (execute-query (doto (HFactory/createCounterSliceQuery ks type-inferring ns)
                      (.setColumnFamily cf)
                      (.setKey pk)
-                     (.setRange start end (:reversed opts) (:limit opts))))))
+                     (.setRange start end (:reversed opts) (:limit opts)))
+                   opts)))
 
 (defn get-counter-super-columns
   "Queries for counter values in a super column column family."
@@ -239,7 +307,8 @@
                      (.setKey pk)
                      (.setColumnFamily cf)
                      (.setColumnNames (into-array c))
-                     (.setRange (:start o) (:end o) (:reversed o) (:limit o))))))
+                     (.setRange (:start o) (:end o) (:reversed o) (:limit o)))
+                   opts)))
 
 (defn delete-columns
   "Deletes columns identified in cs for row pk."
