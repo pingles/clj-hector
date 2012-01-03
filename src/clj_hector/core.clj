@@ -1,6 +1,6 @@
-(ns clj-hector.core
-  ^{:author "Paul Ingles"
-    :doc "Hector-based Cassandra client"}
+(ns ^{:author "Paul Ingles"
+      :doc "Hector-based Cassandra client"}
+  clj-hector.core
   (:require [clj-hector.serialize :as s])
   (:require [clj-hector.ddl :as ddl])
   (:require [clj-hector.consistency :as c])
@@ -20,15 +20,15 @@
 (defn cluster
   "Connects to Cassandra cluster"
   ([cluster-name host]
-    (cluster cluster-name host 9160))
+     (cluster cluster-name host 9160))
   ([cluster-name host port]
-    (cluster cluster-name host port (new CassandraHostConfigurator)))
+     (cluster cluster-name host port (CassandraHostConfigurator. )))
   ([cluster-name host port configurator]
-    (cluster cluster-name host port (new CassandraHostConfigurator) {}))
+     (cluster cluster-name host port configurator {}))
   ([cluster-name host port configurator credentials]
      (HFactory/getOrCreateCluster cluster-name
-                             (doto configurator (.setHosts (str host ":" port)))
-                             credentials)))
+                                  (doto configurator (.setHosts (str host ":" port)))
+                                  credentials)))
 
 (defn shutdown-cluster! [c] (HFactory/shutdownCluster c))
 
@@ -110,9 +110,8 @@
   ex: [\"col\" \"name\"]
   ex: [{:value \"col\" :n-serializer :string :comparator :utf-8 :equality :equal}
        {:value 2 :n-serializer :string :comparator :integer :equality :less_than_equal}]"
-
   [& components]
-  (let [^Composite composite (new Composite)]
+  (let [^Composite composite (Composite. )]
     (populate-composite composite components)))
 
 (defn create-dynamic-composite
@@ -123,9 +122,8 @@
   ex: [\"col\" \"name\"]
   ex: [{:value \"col\" :n-serializer :string :comparator :utf-8 :equality :equal}
        {:value 2 :n-serializer :string :comparator :integer :equality :less_than_equal}]"
-
   [& components]
-  (let [^DynamicComposite composite (new DynamicComposite)]
+  (let [^DynamicComposite composite (DynamicComposite. )]
     (populate-composite composite components)))
 
 (defn- create-column
@@ -160,7 +158,6 @@
                          :s-serializer :type-inferring}
                         (apply hash-map opts))
         opts (extract-options (apply concat (seq defaults)) cf)]
-        ;opts (dissoc (extract-options opts cf) :n-serializer :v-serializer :s-serializer)]
     (if (counter? opts)
       (doseq [[n v] m] (.addCounter mut pk cf (create-column n v opts)))
       (doseq [[k v] m] (.addInsertion mut pk cf (create-column k v opts))))
