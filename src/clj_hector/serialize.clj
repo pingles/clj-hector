@@ -1,6 +1,6 @@
-(ns clj-hector.serialize
-  ^{:author "Paul Ingles"
-    :description "Utilities for serializing and deserializing Clojure and Hector types."}
+(ns ^{:author "Paul Ingles"
+      :description "Utilities for serializing and deserializing Clojure and Hector types."}
+  clj-hector.serialize
   (:import [me.prettyprint.cassandra.serializers StringSerializer IntegerSerializer LongSerializer TypeInferringSerializer BytesArraySerializer SerializerTypeInferer UUIDSerializer BigIntegerSerializer BooleanSerializer DateSerializer ObjectSerializer AsciiSerializer ByteBufferSerializer FloatSerializer CharSerializer DoubleSerializer ShortSerializer CompositeSerializer DynamicCompositeSerializer]
            [me.prettyprint.cassandra.model QueryResultImpl HColumnImpl ColumnSliceImpl RowImpl RowsImpl SuperRowImpl SuperRowsImpl HSuperColumnImpl CounterSliceImpl HCounterColumnImpl CounterSuperSliceImpl HCounterSuperColumnImpl CounterRowsImpl CounterRowImpl]
            [me.prettyprint.hector.api.ddl KeyspaceDefinition ColumnFamilyDefinition ColumnDefinition]
@@ -52,7 +52,6 @@
    Unfortunatly this is required due to a limition of the Composite
    implementation in Hector.  this isn't neccessary for
    DynamicComposite."
-
   [composite deserializers]
   (into []
         (map (fn [component deserializer]
