@@ -37,14 +37,6 @@
                       :uuid              "UUIDType"
                       :counter           "CounterColumnType"})
 
-(defn- make-column-family
-  "Returns an object defining a new column family"
-  ([keyspace column-family-name]
-     (HFactory/createColumnFamilyDefinition keyspace column-family-name))
-  ([keyspace column-family-name comparator-type]
-     (let [cmp (comparator-type comparator-types)]
-       (HFactory/createColumnFamilyDefinition keyspace column-family-name cmp))))
-
 (defn- column-type
   [type]
   (if (= :super type)
@@ -55,26 +47,24 @@
   [validator]
   (get validator-types (or validator :bytes)))
 
+(defn- make-column-family
+  "Returns an object defining a new column family"
+  ([keyspace {:keys [name type comparator comparator-alias validator]}]
+     (let [cf-def (HFactory/createColumnFamilyDefinition keyspace name)]
+       (doto ^ThriftCfDef cf-def
+             (.setColumnType (column-type type))
+             (.setDefaultValidationClass (default-validation-class validator)))
+       (if comparator
+         (.setComparatorType cf-def (comparator-types comparator)))
+       (if comparator-alias
+         (.setComparatorTypeAlias cf-def comparator-alias))
+       cf-def)))
+
 (defn- make-keyspace-definition
   ([keyspace strategy-class replication-factor column-families]
-     (let [column-families (map (fn [{:keys [name comparator type validator comparator-alias]}]
-                                  (let [cf-def (if (nil? comparator)
-                                                 (make-column-family keyspace name)
-                                                 (make-column-family keyspace name comparator))]
-
-                                    (doto ^ThriftCfDef cf-def
-                                          (.setColumnType (column-type type))
-                                          (.setDefaultValidationClass (default-validation-class validator)))
-
-                                    (if comparator
-                                      (.setComparatorType cf-def (comparator-types comparator)))
-
-                                    (if comparator-alias
-                                      (.setComparatorTypeAlias cf-def comparator-alias))
-
-                                    cf-def))
+     (let [column-families (map (fn [column-family]
+                                  (make-column-family keyspace column-family))
                                 column-families)]
-
        (HFactory/createKeyspaceDefinition keyspace
                                           strategy-class
                                           replication-factor
@@ -82,12 +72,8 @@
 
 (defn add-column-family
   "Adds a column family to a keyspace"
-  ([^Cluster cluster keyspace {:keys [name comparator type]}]
-     (let [cf (if (nil? comparator)
-                (make-column-family keyspace name)
-                (make-column-family keyspace name comparator))]
-       (.addColumnFamily cluster (doto ^ThriftCfDef cf
-                                       (.setColumnType (column-type type)))))))
+  ([^Cluster cluster keyspace opts]
+       (.addColumnFamily cluster (make-column-family keyspace opts))))
 
 (defn drop-column-family
   "Removes a column family from a keyspace"
