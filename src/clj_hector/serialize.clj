@@ -109,7 +109,7 @@
     {(.getKey s) (to-clojure (.getColumnSlice s) opts)})
   ColumnSliceImpl
   (to-clojure [s opts]
-    (into (hash-map) (for [c (.getColumns s)] (to-clojure c opts))))
+    (into (sorted-map) (for [c (.getColumns s)] (to-clojure c opts))))
   HColumnImpl
   (to-clojure [s opts]
     {(let [col (.getName s)] (if (instance? AbstractComposite col)
@@ -119,13 +119,13 @@
     {(.getName s) (.getValue s)})
   CounterSuperSliceImpl
   (to-clojure [s opts]
-    (into {} (map (partial tc-swap opts) (.getSuperColumns s))))
+    (into (sorted-map) (map (partial tc-swap opts) (.getSuperColumns s))))
   HCounterSuperColumnImpl
   (to-clojure [s opts]
     {(.getName s) (into {} (map (partial tc-swap opts) (.getColumns s)))})
   CounterSliceImpl
   (to-clojure [s opts]
-    (into {} (map (partial tc-swap opts) (.getColumns s))))
+    (into (sorted-map) (map (partial tc-swap opts) (.getColumns s))))
   Integer
   (to-clojure [s _]
     {:count s})
