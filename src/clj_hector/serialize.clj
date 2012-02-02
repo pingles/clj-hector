@@ -63,9 +63,11 @@
 (defprotocol ToClojure
   (to-clojure [_ _] "Convert hector types to Clojure data structures."))
 
-(defn- tc-swap
-  [opts s]
-  (to-clojure s opts))
+(defn partial>
+  "Like clojure.core/partial, but appends args to the end of
+   the argument list when f is applied."
+  [f & args]
+  (fn [& more] (apply f (concat more args))))
 
 (extend-protocol ToClojure
   ColumnDefinition
@@ -80,30 +82,30 @@
                        :column-type (.getColumnType c)
                        :comparator-type (.getComparatorType c)
                        :sub-comparator-type (.getSubComparatorType c)
-                       :columns (map (partial tc-swap opts) (.getColumnMetadata c))})
+                       :columns (map (partial> to-clojure opts) (.getColumnMetadata c))})
 
   KeyspaceDefinition
   (to-clojure [k opts] {(.getName k) {:strategy (.getStrategyClass k)
                                      :replication (.getReplicationFactor k)
-                                     :column-families (map (partial tc-swap opts) (.getCfDefs k))}})
+                                     :column-families (map (partial> to-clojure opts) (.getCfDefs k))}})
   CounterRowsImpl
   (to-clojure [s opts]
-    (into (sorted-map) (partial tc-swap opts) (iterator-seq (.iterator s))))
+    (into (sorted-map) (partial> to-clojure opts) (iterator-seq (.iterator s))))
   CounterRowImpl
   (to-clojure [s opts]
     {(.getKey s) (to-clojure (.getColumnSlice s) opts)})
   SuperRowsImpl
   (to-clojure [s opts]
-    (map (partial tc-swap opts) (iterator-seq (.iterator s))))
+    (map (partial> to-clojure opts) (iterator-seq (.iterator s))))
   SuperRowImpl
   (to-clojure [s opts]
-    {(.getKey s) (map (partial tc-swap opts) (seq (.. s getSuperSlice getSuperColumns)))})
+    {(.getKey s) (map (partial> to-clojure opts) (seq (.. s getSuperSlice getSuperColumns)))})
   HSuperColumnImpl
   (to-clojure [s opts]
-    {(.getName s) (into (sorted-map) (map (partial tc-swap opts) (.getColumns s)))})
+    {(.getName s) (into (sorted-map) (map (partial> to-clojure opts) (.getColumns s)))})
   RowsImpl
   (to-clojure [s opts]
-    (map (partial tc-swap opts) (iterator-seq (.iterator s))))
+    (map (partial> to-clojure opts) (iterator-seq (.iterator s))))
   RowImpl
   (to-clojure [s opts]
     {(.getKey s) (to-clojure (.getColumnSlice s) opts)})
@@ -119,13 +121,13 @@
     {(.getName s) (.getValue s)})
   CounterSuperSliceImpl
   (to-clojure [s opts]
-    (into (sorted-map) (map (partial tc-swap opts) (.getSuperColumns s))))
+    (into (sorted-map) (map (partial> to-clojure opts) (.getSuperColumns s))))
   HCounterSuperColumnImpl
   (to-clojure [s opts]
-    {(.getName s) (into (sorted-map) (map (partial tc-swap opts) (.getColumns s)))})
+    {(.getName s) (into (sorted-map) (map (partial> to-clojure opts) (.getColumns s)))})
   CounterSliceImpl
   (to-clojure [s opts]
-    (into (sorted-map) (map (partial tc-swap opts) (.getColumns s))))
+    (into (sorted-map) (map (partial> to-clojure opts) (.getColumns s))))
   Integer
   (to-clojure [s _]
     {:count s})
