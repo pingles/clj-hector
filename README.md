@@ -2,6 +2,8 @@
 
 A simple Clojure client for Cassandra that wraps Hector
 
+Current build status: ![Build status](https://secure.travis-ci.org/pingles/clj-hector.png)
+
 ## Installation
 
 Add the following to your `project.clj`
