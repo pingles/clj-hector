@@ -106,6 +106,16 @@
               "c" "v"}
              (apply get-column-range keyspace column-family "row-key" "a" "c" opts))))))
 
+(deftest get-rows-via-cql-query
+  (with-test-keyspace keyspace [{:name "A"}]
+    (let [column-family "A"
+          opts [:v-serializer :string
+                :n-serializer :string
+                :k-serializer :string]]
+      (put keyspace column-family "row-key" {"k" "v"})
+      (is (= {"row-key" {"KEY" "row-key" "k" "v"}}
+             (first (apply get-rows-cql-query keyspace "select * from A" opts)))))))
+
 (deftest dynamic-composite-column-ranges
   (with-test-keyspace keyspace [{:name "A"}]
     (let [column-family "A"

@@ -9,6 +9,7 @@
            [me.prettyprint.hector.api Cluster]
            [me.prettyprint.hector.api.factory HFactory]
            [me.prettyprint.hector.api.query Query]
+           [me.prettyprint.cassandra.model CqlQuery]
            [me.prettyprint.hector.api.beans Composite DynamicComposite]
            [me.prettyprint.cassandra.service CassandraHostConfigurator]
            [me.prettyprint.cassandra.serializers TypeInferringSerializer]))
@@ -56,6 +57,7 @@
                   :counter false
                   :ttl nil
                   :s-serializer :bytes
+                  :k-serializer :bytes
                   :n-serializer :bytes
                   :v-serializer :bytes
                   :c-serializer nil}]
@@ -206,6 +208,17 @@
                      (.setColumnFamily cf)
                      (.setKeys (into-array pks))
                      (.setRange (:start opts) (:end opts) (:reversed opts) (:limit opts)))
+                   opts)))
+
+(defn get-rows-cql-query
+  "In keyspace ks, retrieve rows for pks within column family cf."
+  [ks query & o]
+  (let [opts (extract-options o nil)]
+    (execute-query (doto (CqlQuery. ks,
+                                    (s/serializer (:k-serializer opts))
+                                    (s/serializer (:n-serializer opts))
+                                    (s/serializer (:v-serializer opts)))
+                     (.setQuery query))
                    opts)))
 
 (defn get-super-columns
