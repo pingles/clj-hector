@@ -218,6 +218,7 @@
                                     (s/serializer (:k-serializer opts))
                                     (s/serializer (:n-serializer opts))
                                     (s/serializer (:v-serializer opts)))
+                     (.setSuppressKeyInColumns true)
                      (.setQuery query))
                    opts)))
 

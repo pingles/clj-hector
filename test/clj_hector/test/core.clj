@@ -113,7 +113,7 @@
                 :n-serializer :string
                 :k-serializer :string]]
       (put keyspace column-family "row-key" {"k" "v"})
-      (is (= {"row-key" {"KEY" "row-key" "k" "v"}}
+      (is (= {"row-key" {"k" "v"}}
              (first (apply get-rows-cql-query keyspace "select * from A" opts)))))))
 
 (deftest dynamic-composite-column-ranges
