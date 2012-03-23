@@ -1,4 +1,4 @@
-(defproject org.clojars.paul/clj-hector "0.1.3"
+(defproject org.clojars.paul/clj-hector "0.2.0"
   :description "Wrapper for Hector Cassandra client"
   :resources-path "test/resources"
   :dev-dependencies [[org.slf4j/slf4j-simple "1.6.3"]
