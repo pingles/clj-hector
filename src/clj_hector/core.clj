@@ -152,9 +152,8 @@
           (HFactory/createColumn name value n-serializer v-serializer))))))
 
 (defn batch-put
-  "add multiple rows before executing the put operation
-   rows are expressed as a vector of maps of the form {:pk ... :col-map {...}}
-   e.g. [{:pk ... :col-map {...}}, {:pk ... :col-map {...}}, ...]"
+  "Add multiple rows before executing the put operation. Rows are expressed as
+   a map, i.e. {<row-pk> {<col-k> <col-v>, ... }, <row-pk> {...}, ...}"
   [ks cf rows & {:as opts}]
   (let [^Mutator mut (HFactory/createMutator ks type-inferring)
         defaults (merge {:n-serializer :type-inferring
@@ -167,15 +166,15 @@
                     (.addCounter mut pk cf (create-column n v opts)))
                   (fn [pk cf k v]
                     (.addInsertion mut pk cf (create-column k v opts))))]
-    (doseq [{pk :pk col-map :col-map} rows
-            [k v]                     col-map]
+    (doseq [[pk col-map] rows
+            [k v]        col-map]
       (mut-add pk cf k v))
     (.execute mut)))
 
 (defn put
   "Stores values in columns in map m against row key pk"
   [ks cf pk col-map & {:as opts}]
-  (apply (partial batch-put ks cf [{:pk pk :col-map col-map}])
+  (apply (partial batch-put ks cf {pk col-map})
          (apply concat opts)))
   
 (defn create-counter-column
