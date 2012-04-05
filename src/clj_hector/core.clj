@@ -156,8 +156,8 @@
    a map, i.e. {<row-pk> {<col-k> <col-v>, ... }, <row-pk> {...}, ...}
 
    NOTE: you will need to experiment to find the right batch size for your
-   specific use case. While a larger batch may improve performance, batches
-   that are two large will cause decreases in performance."
+   specific use case. While a larger batch may improve performance, overly
+   large batches will cause decreases in performance."
   [ks cf rows & {:as opts}]
   (let [^Mutator mut (HFactory/createMutator ks type-inferring)
         defaults (merge {:n-serializer :type-inferring
