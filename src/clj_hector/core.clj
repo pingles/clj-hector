@@ -177,10 +177,9 @@
 
 (defn put
   "Stores values in columns in map m against row key pk"
-  [ks cf pk col-map & {:as opts}]
-  (apply (partial batch-put ks cf {pk col-map})
-         (apply concat opts)))
-  
+  [ks cf pk col-map & opts]
+  (apply batch-put ks cf {pk col-map} opts))
+
 (defn create-counter-column
   [name value & {:keys [n-serializer v-serializer s-serializer]
                  :or {n-serializer type-inferring
