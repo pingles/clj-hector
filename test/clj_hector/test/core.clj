@@ -245,4 +245,4 @@
       (is (= {"n3" 3 "n4" 4}
              (apply get-super-columns keyspace column-family pk2
                     "SuperCol" ["n3" "n4"] opts))))))
-  
+

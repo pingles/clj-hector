@@ -53,11 +53,11 @@
    implementation in Hector.  this isn't neccessary for
    DynamicComposite."
   [composite deserializers]
-  (into []
-        (map (fn [component deserializer]
-               (.fromByteBuffer (serializer deserializer) (.getBytes component)))
-             (.getComponents composite)
-             deserializers)))
+  (vec
+    (map (fn [component deserializer]
+            (.fromByteBuffer (serializer deserializer) (.getBytes component)))
+          (.getComponents composite)
+          deserializers)))
 
 
 (defprotocol ToClojure
@@ -136,7 +136,7 @@
     (let [serializers (:c-serializer opts)]
       (if serializers
         (deserialize-composite s serializers)
-        (into [] (map #(.getValue %1) (.getComponents s))))))
+        (vec (map #(.getValue %1) (.getComponents s))))))
   QueryResultImpl
   (to-clojure [s opts]
     (with-meta (to-clojure (.get s) opts) {:exec_us (.getExecutionTimeMicro s)
