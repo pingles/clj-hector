@@ -64,7 +64,7 @@ Firstly, the column family will need to support super columns.
 
 Storing super columns works using a nested map structure:
 
-    user> (put ks "UserRelationships" "paul" {"SuperCol" {"k" "v"} "SuperCol2" {"k2" "v2"}})
+    user> (put ks "UserRelationships" "paul" {"SuperCol" {"k" "v"} "SuperCol2" {"k2" "v2"}} :type :super)
     #<MutationResultImpl MutationResult took (6us) for query (n/a) on host: localhost(127.0.0.1):9160>
 
 Retrieving super columns with `get-super-rows`:
