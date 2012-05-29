@@ -5,5 +5,5 @@
                      [org.apache.cassandra/cassandra-all "1.0.5"]]
   :dependencies [[me.prettyprint/hector-core "1.0-3" :exclusions [org.slf4j/slf4j-log4j12]]
                  [org.slf4j/slf4j-api "1.6.1"]
-                 [org.clojure/clojure "1.2.1"]
+                 [org.clojure/clojure "1.4.0"]
                  [joda-time/joda-time "2.0"]])
