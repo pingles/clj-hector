@@ -1,6 +1,6 @@
 # clj-hector
 
-A simple Clojure client for Cassandra that wraps Hector
+A simple Clojure client for Cassandra that wraps Hector. The 0.2.1 release was built against Clojure 1.4.0.
 
 Current build status: ![Build status](https://secure.travis-ci.org/pingles/clj-hector.png)
 
@@ -8,7 +8,7 @@ Current build status: ![Build status](https://secure.travis-ci.org/pingles/clj-h
 
 Add the following to your `project.clj`
 
-    :dev-dependencies [[org.clojars.paul/clj-hector "0.1.3"]]
+    :dev-dependencies [[org.clojars.paul/clj-hector "0.2.1"]]
 
 ## Usage
 
