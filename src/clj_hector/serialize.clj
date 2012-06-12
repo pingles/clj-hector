@@ -72,22 +72,22 @@
 (extend-protocol ToClojure
   ColumnDefinition
   (to-clojure [c _] {:name (.getName c)
-                       :index (.getIndexName c)
-                       :index-type (.getIndexType c)
-                       :validation-class (.getValidationClass c)})
+                     :index (.getIndexName c)
+                     :index-type (.getIndexType c)
+                     :validation-class (.getValidationClass c)})
 
   ColumnFamilyDefinition
   (to-clojure [c opts] {:name (.getName c)
-                       :comment (.getComment c)
-                       :column-type (.getColumnType c)
-                       :comparator-type (.getComparatorType c)
-                       :sub-comparator-type (.getSubComparatorType c)
-                       :columns (map (partial> to-clojure opts) (.getColumnMetadata c))})
+                        :comment (.getComment c)
+                        :column-type (.getColumnType c)
+                        :comparator-type (.getComparatorType c)
+                        :sub-comparator-type (.getSubComparatorType c)
+                        :columns (map (partial> to-clojure opts) (.getColumnMetadata c))})
 
   KeyspaceDefinition
   (to-clojure [k opts] {(.getName k) {:strategy (.getStrategyClass k)
-                                     :replication (.getReplicationFactor k)
-                                     :column-families (map (partial> to-clojure opts) (.getCfDefs k))}})
+                                      :replication (.getReplicationFactor k)
+                                      :column-families (map (partial> to-clojure opts) (.getCfDefs k))}})
   CounterRowsImpl
   (to-clojure [s opts]
     (into (sorted-map) (partial> to-clojure opts) (iterator-seq (.iterator s))))
@@ -139,5 +139,9 @@
         (into [] (map #(.getValue %1) (.getComponents s))))))
   QueryResultImpl
   (to-clojure [s opts]
-    (with-meta (to-clojure (.get s) opts) {:exec_us (.getExecutionTimeMicro s)
-                                           :host (.getHostUsed s)})))
+    (with-meta
+      (if-let [result (.get s)]
+        (to-clojure result opts)
+        {})
+      {:exec_us (.getExecutionTimeMicro s)
+       :host (.getHostUsed s)})))

@@ -116,6 +116,24 @@
       (is (= {"row-key" {"k" "v"}}
              (first (apply get-rows-cql-query keyspace "select * from A" opts)))))))
 
+(deftest empty-result
+  (with-test-keyspace keyspace [{:name "A"}]
+    (let [column-family "A"
+          opts [:v-serializer :string
+                :n-serializer :string
+                :k-serializer :string]]
+      (is (= [{"row-key" {}}]
+             (apply get-rows keyspace column-family ["row-key"] opts))))))
+
+(deftest empty-result-via-cql-query
+  (with-test-keyspace keyspace [{:name "A"}]
+    (let [column-family "A"
+          opts [:v-serializer :string
+                :n-serializer :string
+                :k-serializer :string]]
+      (is (= {}
+             (apply get-rows-cql-query keyspace "select * from A" opts))))))
+
 (deftest dynamic-composite-column-ranges
   (with-test-keyspace keyspace [{:name "A"}]
     (let [column-family "A"
