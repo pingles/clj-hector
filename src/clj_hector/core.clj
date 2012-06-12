@@ -151,19 +151,36 @@
           (HFactory/createColumn name value (int ttl) n-serializer v-serializer)
           (HFactory/createColumn name value n-serializer v-serializer))))))
 
-(defn put
-  "Stores values in columns in map m against row key pk"
-  [ks cf pk m & opts]
+(defn batch-put
+  "Add multiple rows before executing the put operation. Rows are expressed as
+   a map, i.e. {<row-pk> {<col-k> <col-v>, ... }, <row-pk> {...}, ...}
+
+   NOTE: You will need to experiment to find the right batch size for your
+   specific use case. While a larger batch may improve performance, overly
+   large batches are discouraged. When a batch mutation fails, the entire
+   request must be retried. Additionally, loading very large batches into
+   memory can cause problems on the server."
+  [ks cf rows & {:as opts}]
   (let [^Mutator mut (HFactory/createMutator ks type-inferring)
         defaults (merge {:n-serializer :type-inferring
                          :v-serializer :type-inferring
                          :s-serializer :type-inferring}
-                        (apply hash-map opts))
-        opts (extract-options (apply concat (seq defaults)) cf)]
-    (if (counter? opts)
-      (doseq [[n v] m] (.addCounter mut pk cf (create-column n v opts)))
-      (doseq [[k v] m] (.addInsertion mut pk cf (create-column k v opts))))
+                        opts)
+        opts (extract-options (apply concat (seq defaults)) cf)
+        mut-add (if (counter? opts)
+                  (fn [pk cf n v]
+                    (.addCounter mut pk cf (create-column n v opts)))
+                  (fn [pk cf k v]
+                    (.addInsertion mut pk cf (create-column k v opts))))]
+    (doseq [[pk col-map] rows
+            [k v]        col-map]
+      (mut-add pk cf k v))
     (.execute mut)))
+
+(defn put
+  "Stores values in columns in map m against row key pk"
+  [ks cf pk col-map & opts]
+  (apply batch-put ks cf {pk col-map} opts))
 
 (defn create-counter-column
   [name value & {:keys [n-serializer v-serializer s-serializer]

@@ -5,7 +5,10 @@
            [me.prettyprint.hector.api Cluster]
            [me.prettyprint.cassandra.service ThriftCfDef]
            [me.prettyprint.hector.api.beans Composite AbstractComposite$ComponentEquality]
-           [me.prettyprint.hector.api.ddl ComparatorType ColumnFamilyDefinition ColumnType KeyspaceDefinition]))
+           [me.prettyprint.hector.api.ddl ComparatorType ColumnFamilyDefinition ColumnType KeyspaceDefinition ColumnIndexType]
+           [me.prettyprint.cassandra.model BasicColumnDefinition BasicColumnFamilyDefinition]
+           [me.prettyprint.cassandra.serializers StringSerializer]))
+
 
 (def component-equality-type {:less_than_equal    AbstractComposite$ComponentEquality/LESS_THAN_EQUAL
                               :equal              AbstractComposite$ComponentEquality/EQUAL
@@ -37,6 +40,8 @@
                       :uuid              "UUIDType"
                       :counter           "CounterColumnType"})
 
+(def column-index-types {:keys ColumnIndexType/KEYS})
+
 (defn- column-type
   [type]
   (if (= :super type)
@@ -47,18 +52,36 @@
   [validator]
   (get validator-types (or validator :bytes)))
 
+(defn- make-column
+  "Returns an object defining a column with validation and optional index"
+  ([{:keys [name index-name index-type validator]}]
+   (let [c-def (BasicColumnDefinition.)
+         name (.toByteBuffer (StringSerializer/get) name)]
+     (doto c-def
+       (.setName name)
+       (.setValidationClass (.getClassName (comparator-types validator))))
+     (if index-type
+       (.setIndexType c-def (column-index-types index-type)))
+     (if index-name
+       (.setIndexName c-def index-name))
+     c-def)))
+
 (defn- make-column-family
   "Returns an object defining a new column family"
-  ([keyspace {:keys [name type comparator comparator-alias validator]}]
-     (let [cf-def (HFactory/createColumnFamilyDefinition keyspace name)]
-       (doto ^ThriftCfDef cf-def
-             (.setColumnType (column-type type))
-             (.setDefaultValidationClass (default-validation-class validator)))
+  ([keyspace {:keys [name type comparator comparator-alias validator column-metadata]}]
+     (let [cf-def (BasicColumnFamilyDefinition.)
+           columns (map make-column column-metadata)]
+       (doto ^BasicColumnFamilyDefinition cf-def
+         (.setName name)
+         (.setKeyspaceName keyspace)
+         (.setColumnType (column-type type))
+         (.setDefaultValidationClass (default-validation-class validator)))
        (if comparator
          (.setComparatorType cf-def (comparator-types comparator)))
        (if comparator-alias
          (.setComparatorTypeAlias cf-def comparator-alias))
-       cf-def)))
+       (doseq [column columns] (.addColumnDefinition cf-def column))
+       (ThriftCfDef. cf-def))))
 
 (defn- make-keyspace-definition
   ([keyspace strategy-class replication-factor column-families]

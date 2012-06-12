@@ -1,6 +1,6 @@
 # clj-hector
 
-A simple Clojure client for Cassandra that wraps Hector
+A simple Clojure client for Cassandra that wraps Hector. The 0.2.1 release was built against Clojure 1.4.0.
 
 Current build status: ![Build status](https://secure.travis-ci.org/pingles/clj-hector.png)
 
@@ -8,7 +8,7 @@ Current build status: ![Build status](https://secure.travis-ci.org/pingles/clj-h
 
 Add the following to your `project.clj`
 
-    :dev-dependencies [[org.clojars.paul/clj-hector "0.1.3"]]
+    :dev-dependencies [[org.clojars.paul/clj-hector "0.2.1"]]
 
 ## Usage
 
@@ -64,7 +64,7 @@ Firstly, the column family will need to support super columns.
 
 Storing super columns works using a nested map structure:
 
-    user> (put ks "UserRelationships" "paul" {"SuperCol" {"k" "v"} "SuperCol2" {"k2" "v2"}})
+    user> (put ks "UserRelationships" "paul" {"SuperCol" {"k" "v"} "SuperCol2" {"k2" "v2"}} :type :super)
     #<MutationResultImpl MutationResult took (6us) for query (n/a) on host: localhost(127.0.0.1):9160>
 
 Retrieving super columns with `get-super-rows`:

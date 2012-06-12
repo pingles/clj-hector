@@ -96,3 +96,26 @@
               :validator :counter}
              (first (column-families cluster random-ks))))
       (drop-keyspace cluster random-ks))))
+
+(deftest should-add-remove-column-families-with-column-meta-data
+  (let [random-ks (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")]
+    (with-test-cluster cluster
+      (add-keyspace cluster
+                    {:name random-ks
+                     :strategy :simple
+                     :replication 1
+                     :column-families [{:name "a"
+                                        :type :standard
+                                        :column-metadata
+                                        [{:name "col"
+                                          :index-name "colidx"
+                                          :index-type :keys
+                                          :validator :utf-8}
+                                         {:name "coltwo"
+                                          :validator :integer}]}]})
+      (is (= {:name "a"
+              :comparator :bytes
+              :type :standard
+              :validator :bytes}
+             (first (column-families cluster random-ks))))
+      (drop-keyspace cluster random-ks))))

@@ -224,7 +224,7 @@
 (deftest ttl-columns
   (testing "regular column ttl"
     (let [column-family "A"
-          opts [:n-serializer :string :v-serializer :integer]
+          opts [:n-serializer :string :v-serializer :long]
           pk "row-key1"]
       (with-test-keyspace keyspace [{:name column-family}]
         (put keyspace column-family pk {"n" 1 "n2" 2} :ttl 1)
@@ -235,7 +235,7 @@
                (apply get-columns keyspace column-family pk ["n" "n2"] opts))))))
   (testing "super column ttl"
     (let [column-family "A"
-          opts [:s-serializer :string :n-serializer :string :v-serializer :integer]
+          opts [:s-serializer :string :n-serializer :string :v-serializer :long]
           pk "row-key"]
       (with-test-keyspace keyspace [{:name column-family
                                      :type :super}]
@@ -245,3 +245,22 @@
         (Thread/sleep 2000)
         (is (= {}
                (apply get-super-columns keyspace column-family pk "SuperCol" ["n" "n2"] opts)))))))
+
+(deftest test-batch-put
+  (let [column-family "A"
+        opts [:s-serializer :string :n-serializer :string :v-serializer :long]
+        pk1 "row-key1"
+        pk2 "row-key2"]
+    (with-test-keyspace keyspace [{:name column-family
+                                   :type :super}]
+      (batch-put keyspace column-family
+                 {pk1 {"SuperCol" {"n" 1 "n2" 2}}
+                  pk2 {"SuperCol" {"n3" 3 "n4" 4}}}
+                 :ttl 1 :type :super)
+      (is (= {"n" 1 "n2" 2}
+             (apply get-super-columns keyspace column-family pk1
+                    "SuperCol" ["n" "n2"] opts)))
+      (is (= {"n3" 3 "n4" 4}
+             (apply get-super-columns keyspace column-family pk2
+                    "SuperCol" ["n3" "n4"] opts))))))
+
