@@ -33,6 +33,11 @@
   [bytes]
   (TimeUUIDUtils/toUUID bytes))
 
+(defn from-string
+  "Deserializes a UUID object from a string."
+  [s]
+  (java.util.UUID/fromString s))
+
 (defn- byte-array?
   [obj]
   (= Byte/TYPE (.getComponentType (class obj))))
