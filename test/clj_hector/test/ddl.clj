@@ -58,7 +58,8 @@
       (is (= {:name "b"
               :comparator :long
               :type :super
-              :validator :bytes}
+              :validator :bytes
+              :k-validator :bytes}
              (first (filter #(= (:name %) "b")
                             (column-families cluster random-ks)))))
       (drop-keyspace cluster random-ks))))
@@ -76,7 +77,8 @@
       (is (= {:name "b"
               :comparator :long
               :type :super
-              :validator :bytes}
+              :validator :bytes
+              :k-validator :bytes}
              (first (filter #(= (:name %) "b")
                             (column-families cluster random-ks)))))
       (drop-keyspace cluster random-ks))))
@@ -93,9 +95,11 @@
       (is (= {:name "a"
               :comparator :bytes
               :type :standard
-              :validator :counter}
+              :validator :counter
+              :k-validator :bytes}
              (first (column-families cluster random-ks))))
       (drop-keyspace cluster random-ks))))
+
 
 (deftest should-add-remove-column-families-with-column-meta-data
   (let [random-ks (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")]
@@ -116,6 +120,34 @@
       (is (= {:name "a"
               :comparator :bytes
               :type :standard
-              :validator :bytes}
+              :validator :bytes
+              :k-validator :bytes}
              (first (column-families cluster random-ks))))
       (drop-keyspace cluster random-ks))))
+
+(deftest should-add-remove-column-families-with-k-validator
+  (let [random-ks (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")]
+    (with-test-cluster cluster
+      (add-keyspace cluster
+                    {:name random-ks
+                     :strategy :simple
+                     :replication 1
+                     :column-families [{:name "a"
+                                        :type :standard
+                                        :k-validator :uuid
+                                        :column-metadata
+                                        [{:name "col"
+                                          :index-name "colidx"
+                                          :index-type :keys
+                                          :validator :utf-8}
+                                         {:name "coltwo"
+                                          :validator :integer}]}]})
+      (is (= {:name "a"
+              :comparator :bytes
+              :type :standard
+              :validator :bytes
+              :k-validator :uuid}
+             (first (column-families cluster random-ks))))
+      (drop-keyspace cluster random-ks))))
+
+
