@@ -68,7 +68,7 @@
 
 (defn- make-column-family
   "Returns an object defining a new column family"
-  ([keyspace {:keys [name type comparator comparator-alias validator key-validator column-metadata]}]
+  ([keyspace {:keys [name type comparator comparator-alias validator k-validator column-metadata]}]
      (let [cf-def (BasicColumnFamilyDefinition.)
            columns (map make-column column-metadata)]
        (doto ^BasicColumnFamilyDefinition cf-def
@@ -76,8 +76,8 @@
          (.setKeyspaceName keyspace)
          (.setColumnType (column-type type))
          (.setDefaultValidationClass (default-validation-class validator)))
-       (if key-validator
-         (.setKeyValidationClass cf-def (validator-types key-validator)))
+       (if k-validator
+         (.setKeyValidationClass cf-def (validator-types k-validator)))
        (if comparator
          (.setComparatorType cf-def (comparator-types comparator)))
        (if comparator-alias
@@ -164,5 +164,6 @@
               {:name (.getName cf-def)
                :comparator (parse-comparator (.getComparatorType cf-def))
                :type (parse-type (.getColumnType cf-def))
-               :validator (get types (.getDefaultValidationClass cf-def))})
+               :validator (get types (.getDefaultValidationClass cf-def))
+               :k-validator (get types (.getKeyValidationClass cf-def))})
             cf-defs))))
