@@ -8,6 +8,14 @@
            [me.prettyprint.hector.api Serializer]
            [java.nio ByteBuffer]))
 
+
+(def keyword-serializer
+  (let [ss (me.prettyprint.cassandra.serializers.StringSerializer/get)]
+    (proxy [me.prettyprint.cassandra.serializers.AbstractSerializer] []
+      (getComparatorType [] (.getComparatorType ss))
+      (toByteBuffer [bb] (.toByteBuffer ss (name bb)))
+      (fromByteBuffer [bb] (keyword (.fromByteBuffer ss bb))))))
+
 (def serializers {:integer (IntegerSerializer/get)
                   :string (StringSerializer/get)
                   :long (LongSerializer/get)
@@ -25,7 +33,8 @@
                   :short (ShortSerializer/get)
                   :dynamic-composite (new DynamicCompositeSerializer)
                   :composite (new CompositeSerializer)
-                  :type-inferring (TypeInferringSerializer/get)})
+                  :type-inferring (TypeInferringSerializer/get)
+                  :keyword keyword-serializer})
 
 (defn serializer
   "Returns an instance of the specified serializer.

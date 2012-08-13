@@ -14,3 +14,7 @@
 (deftest long-serializer
   (let [s (serializer :long)]
     (is (= (long 5) (.fromBytes s (.toBytes s (long 5)))))))
+
+(deftest keyword-serialization
+  (let [s (serializer :keyword)]
+    (is (= :kw (.fromBytes s (.toBytes s :kw))))))
