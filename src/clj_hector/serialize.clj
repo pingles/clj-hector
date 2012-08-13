@@ -13,7 +13,7 @@
   (let [ss (me.prettyprint.cassandra.serializers.StringSerializer/get)]
     (proxy [me.prettyprint.cassandra.serializers.AbstractSerializer] []
       (getComparatorType [] (.getComparatorType ss))
-      (toByteBuffer [bb] (.toByteBuffer ss (name bb)))
+      (toByteBuffer [k] (.toByteBuffer ss (name k)))
       (fromByteBuffer [bb] (keyword (.fromByteBuffer ss bb))))))
 
 (def serializers {:integer (IntegerSerializer/get)
