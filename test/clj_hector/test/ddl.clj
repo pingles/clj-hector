@@ -60,8 +60,10 @@
               :type :super
               :validator :bytes
               :k-validator :bytes}
-             (first (filter #(= (:name %) "b")
-                            (column-families cluster random-ks)))))
+             (dissoc 
+              (first (filter #(= (:name %) "b")
+                             (column-families cluster random-ks)))
+              :id :column-metadata)))
       (drop-keyspace cluster random-ks))))
 
 (deftest should-add-remove-super-column-family
@@ -79,8 +81,10 @@
               :type :super
               :validator :bytes
               :k-validator :bytes}
-             (first (filter #(= (:name %) "b")
-                            (column-families cluster random-ks)))))
+             (dissoc 
+              (first (filter #(= (:name %) "b")
+                             (column-families cluster random-ks)))
+              :id :column-metadata)))
       (drop-keyspace cluster random-ks))))
 
 (deftest should-create-counter-column
@@ -97,7 +101,8 @@
               :type :standard
               :validator :counter
               :k-validator :bytes}
-             (first (column-families cluster random-ks))))
+             (dissoc (first (column-families cluster random-ks)) 
+                     :id :column-metadata)))
       (drop-keyspace cluster random-ks))))
 
 
@@ -122,8 +127,54 @@
               :type :standard
               :validator :bytes
               :k-validator :bytes}
-             (first (column-families cluster random-ks))))
+             (dissoc (first (column-families cluster random-ks))
+                     :id :column-metadata)))
       (drop-keyspace cluster random-ks))))
+
+(deftest should-add-update-remove-column-families-with-column-meta-data
+  (let [random-ks (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")]
+    (with-test-cluster cluster
+      (add-keyspace cluster
+                    {:name random-ks
+                     :strategy :simple
+                     :replication 1
+                     :column-families [{:name "a"
+                                        :type :standard
+                                        :column-metadata
+                                        [{:name "col"
+                                          :index-name "colidx"
+                                          :index-type :keys
+                                          :validator :utf-8}
+                                         ]}]})
+      (is (= {:name "a"
+              :comparator :bytes
+              :type :standard
+              :validator :bytes
+              :k-validator :bytes}
+             (dissoc (first (column-families cluster random-ks))
+                     :id :column-metadata)))
+      (let [orig-cf (first (column-families cluster random-ks))
+            new-cf (assoc-in orig-cf [:column-metadata]
+                                        [{:name "col"
+                                          :index-name "colidx"
+                                          :index-type :keys
+                                          :validator :utf-8}
+                                        {:name "coltwo" :validator :integer}] )]
+
+        (update-column-family cluster random-ks new-cf))
+        ;; Column names need to be converted to strings to test for equality.
+        (is (= [{
+                 :name "col"
+                 :index-name "colidx", 
+                 :index-type :keys, 
+                 :validation-class :utf-8}
+                {:name "coltwo"
+                 :validation-class :integer}]
+               (map ;convert col names to string
+                #(assoc % :name (String. (:name %)))
+                (:column-metadata (first (column-families cluster random-ks))))))
+
+(drop-keyspace cluster random-ks))))
 
 (deftest should-add-remove-column-families-with-k-validator
   (let [random-ks (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")]
@@ -147,7 +198,8 @@
               :type :standard
               :validator :bytes
               :k-validator :uuid}
-             (first (column-families cluster random-ks))))
+             (dissoc (first (column-families cluster random-ks)) 
+                     :id :column-metadata)))
       (drop-keyspace cluster random-ks))))
 
 

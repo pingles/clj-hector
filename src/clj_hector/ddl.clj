@@ -7,7 +7,7 @@
            [me.prettyprint.hector.api.beans Composite AbstractComposite$ComponentEquality]
            [me.prettyprint.hector.api.ddl ComparatorType ColumnFamilyDefinition ColumnType KeyspaceDefinition ColumnIndexType]
            [me.prettyprint.cassandra.model BasicColumnDefinition BasicColumnFamilyDefinition]
-           [me.prettyprint.cassandra.serializers StringSerializer]))
+           [me.prettyprint.cassandra.serializers StringSerializer BytesArraySerializer]))
 
 
 (def component-equality-type {:less_than_equal    AbstractComposite$ComponentEquality/LESS_THAN_EQUAL
@@ -54,7 +54,7 @@
 
 (defn- make-column
   "Returns an object defining a column with validation and optional index"
-  ([{:keys [name index-name index-type validator]}]
+  ([{:keys [name index-name index-type validator id]}]
    (let [c-def (BasicColumnDefinition.)
          name (.toByteBuffer (StringSerializer/get) name)]
      (doto c-def
@@ -68,7 +68,7 @@
 
 (defn- make-column-family
   "Returns an object defining a new column family"
-  ([keyspace {:keys [name type comparator comparator-alias validator k-validator column-metadata]}]
+  ([keyspace {:keys [name type comparator comparator-alias validator k-validator column-metadata id]}]
      (let [cf-def (BasicColumnFamilyDefinition.)
            columns (map make-column column-metadata)]
        (doto ^BasicColumnFamilyDefinition cf-def
@@ -76,6 +76,8 @@
          (.setKeyspaceName keyspace)
          (.setColumnType (column-type type))
          (.setDefaultValidationClass (default-validation-class validator)))
+       (when id
+         (.setId cf-def id))
        (if k-validator
          (.setKeyValidationClass cf-def (validator-types k-validator)))
        (if comparator
@@ -99,6 +101,11 @@
   "Adds a column family to a keyspace"
   ([^Cluster cluster keyspace opts]
        (.addColumnFamily cluster (make-column-family keyspace opts))))
+
+(defn update-column-family
+  "Updates a column family in a keyspace"
+  ([^Cluster cluster keyspace opts]
+       (.updateColumnFamily cluster (make-column-family keyspace opts))))
 
 (defn drop-column-family
   "Removes a column family from a keyspace"
@@ -154,6 +161,15 @@
   [^ComparatorType comparator-type]
   (get types (.getClassName comparator-type)))
 
+(defn- convert-metadata [cf-m]
+  (let [base {:name  (.fromByteBuffer (BytesArraySerializer/get) (.getName cf-m))
+              :validation-class (.get types (.getValidationClass cf-m))}]
+    (if (.getIndexName cf-m)
+      (assoc base
+        :index-type (keyword (clojure.string/lower-case (.name (.getIndexType cf-m))))
+        :index-name (.getIndexName cf-m))
+      base)))
+
 (defn column-families
   "Returns all the column families for a certain keyspace"
   ([^Cluster cluster ^String keyspace]
@@ -161,9 +177,12 @@
                              (.describeKeyspaces cluster)))
            cf-defs (.getCfDefs ^KeyspaceDefinition ks)]
        (map (fn [^ColumnFamilyDefinition cf-def]
-              {:name (.getName cf-def)
+              {
+               :id (.getId cf-def)
+               :name (.getName cf-def)
                :comparator (parse-comparator (.getComparatorType cf-def))
                :type (parse-type (.getColumnType cf-def))
                :validator (get types (.getDefaultValidationClass cf-def))
-               :k-validator (get types (.getKeyValidationClass cf-def))})
+               :k-validator (get types (.getKeyValidationClass cf-def))
+               :column-metadata (map convert-metadata (.getColumnMetadata cf-def))})
             cf-defs))))
