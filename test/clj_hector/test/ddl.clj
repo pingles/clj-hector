@@ -60,10 +60,10 @@
               :type :super
               :validator :bytes
               :k-validator :bytes}
-             (dissoc 
-              (first (filter #(= (:name %) "b")
-                             (column-families cluster random-ks)))
-              :id :column-metadata)))
+             (dissoc (first (filter #(= (:name %) "b")
+                                    (column-families cluster random-ks)))
+                     :id
+                     :column-metadata)))
       (drop-keyspace cluster random-ks))))
 
 (deftest should-add-remove-super-column-family
@@ -81,10 +81,10 @@
               :type :super
               :validator :bytes
               :k-validator :bytes}
-             (dissoc 
-              (first (filter #(= (:name %) "b")
-                             (column-families cluster random-ks)))
-              :id :column-metadata)))
+             (dissoc (first (filter #(= (:name %) "b")
+                                    (column-families cluster random-ks)))
+                     :id
+                     :column-metadata)))
       (drop-keyspace cluster random-ks))))
 
 (deftest should-create-counter-column
@@ -102,7 +102,8 @@
               :validator :counter
               :k-validator :bytes}
              (dissoc (first (column-families cluster random-ks)) 
-                     :id :column-metadata)))
+                     :id
+                     :column-metadata)))
       (drop-keyspace cluster random-ks))))
 
 
@@ -128,7 +129,8 @@
               :validator :bytes
               :k-validator :bytes}
              (dissoc (first (column-families cluster random-ks))
-                     :id :column-metadata)))
+                     :id
+                     :column-metadata)))
       (drop-keyspace cluster random-ks))))
 
 (deftest should-add-update-remove-column-families-with-column-meta-data
@@ -152,7 +154,8 @@
               :validator :bytes
               :k-validator :bytes}
              (dissoc (first (column-families cluster random-ks))
-                     :id :column-metadata)))
+                     :id
+                     :column-metadata)))
       (let [orig-cf (first (column-families cluster random-ks))
             new-cf (assoc-in orig-cf [:column-metadata]
                                         [{:name "col"
@@ -199,7 +202,8 @@
               :validator :bytes
               :k-validator :uuid}
              (dissoc (first (column-families cluster random-ks)) 
-                     :id :column-metadata)))
+                     :id
+                     :column-metadata)))
       (drop-keyspace cluster random-ks))))
 
 

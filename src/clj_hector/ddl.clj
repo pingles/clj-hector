@@ -1,4 +1,4 @@
-(ns ^{:author "Antonio Garrote, Paul Ingles"
+(ns ^{:author "Antonio Garrote, Paul Ingles, Ryan Fowler"
       :description "Functions to define Cassandra schemas: create/delete keyspaces, column families etc."}
   clj-hector.ddl
   (:import [me.prettyprint.hector.api.factory HFactory]
@@ -162,7 +162,7 @@
   (get types (.getClassName comparator-type)))
 
 (defn- convert-metadata [cf-m]
-  (let [base {:name  (.fromByteBuffer (BytesArraySerializer/get) (.getName cf-m))
+  (let [base {:name (.fromByteBuffer (BytesArraySerializer/get) (.getName cf-m))
               :validation-class (.get types (.getValidationClass cf-m))}]
     (if (.getIndexName cf-m)
       (assoc base
@@ -177,8 +177,7 @@
                              (.describeKeyspaces cluster)))
            cf-defs (.getCfDefs ^KeyspaceDefinition ks)]
        (map (fn [^ColumnFamilyDefinition cf-def]
-              {
-               :id (.getId cf-def)
+              {:id (.getId cf-def)
                :name (.getName cf-def)
                :comparator (parse-comparator (.getComparatorType cf-def))
                :type (parse-type (.getColumnType cf-def))
