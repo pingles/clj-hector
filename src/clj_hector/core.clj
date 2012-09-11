@@ -340,9 +340,11 @@
 
 (defn delete-columns
   "Deletes columns identified in cs for row pk."
-  [ks cf pk cs]
-  (let [mut (HFactory/createMutator ks type-inferring)]
-    (doseq [c cs] (.addDeletion mut pk cf c type-inferring))
+  [ks cf pk cs & o]
+  (let [mut (HFactory/createMutator ks type-inferring)
+        opts (apply hash-map o)
+        serializer (s/serializer (or (:n-serializer opts) type-inferring))]
+    (doseq [c cs] (.addDeletion mut pk cf c serializer))
     (.execute mut)))
 
 (defn delete-super-columns
