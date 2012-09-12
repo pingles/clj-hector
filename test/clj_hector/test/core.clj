@@ -27,9 +27,8 @@
                  (apply get-rows keyspace column-family ["row-key"] opts))
               (= {["col" "name"] "v"}
                  (apply get-columns keyspace column-family "row-key" [comp] opts)))
-          (is
-           (instance? me.prettyprint.hector.api.mutation.MutationResult
-                      (delete-columns keyspace column-family "row-key" [comp] :n-serializer :composite))))))))
+          (is (instance? me.prettyprint.hector.api.mutation.MutationResult
+                         (delete-columns keyspace column-family "row-key" [comp] :n-serializer :composite))))))))
 
 (deftest serializers
   (let [column-family "A"]
