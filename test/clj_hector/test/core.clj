@@ -1,6 +1,7 @@
 (ns clj-hector.test.core
   (:import [me.prettyprint.cassandra.serializers StringSerializer])
-  (:require [clj-hector.serialize :as s])
+  (:require [clj-hector.serialize :as s]
+            [clj-hector.time :as t])
   (:use [clojure.test]
         [clj-hector.test.test-helper]
         [clj-hector.test.cassandra-helper :only (with-test-keyspace)]
@@ -93,6 +94,32 @@
                                     (long 3) (long 3))}
              (-> (apply get-rows keyspace column-family ["row-key"] opts)
                  (first)))))))
+
+;; The pair of UUIDs below were chosen because sorted-map and
+;; Cassandra's TimeUUID comparator sort them differently. The Time 
+;; portion of the UUID is important part for sorting, but the main
+;; point is that clj-hector should return results in the order 
+;; that Cassandra returned them.
+(deftest time-uuid-column-comparator 
+  (with-test-keyspace keyspace [{:name "A" :comparator :time-uuid}]
+    (let [column-family "A"
+          opts [:n-serializer :uuid
+                :v-serializer :long]
+          a (t/from-string "9e296c00-fec6-11e1-81e5-e0f84733a7f4")
+          b (t/from-string "9c4462e0-fec7-11e1-81e5-e0f84733a7f4")]
+      (put 
+       keyspace 
+       column-family 
+       "row-key" 
+       {a 4800
+        b 5507})
+      (is (= [(t/get-date a) (t/get-date b)]
+             (-> (apply get-rows keyspace column-family ["row-key"] opts)
+                 (first)
+                 vals
+                 first
+                 keys
+                 (#(map t/get-date %))))))))
 
 (deftest column-ranges
   (with-test-keyspace keyspace [{:name "A"}]
