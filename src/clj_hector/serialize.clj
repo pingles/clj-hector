@@ -120,7 +120,7 @@
     {(.getKey s) (to-clojure (.getColumnSlice s) opts)})
   ColumnSliceImpl
   (to-clojure [s opts]
-    (into (sorted-map) (for [c (.getColumns s)] (to-clojure c opts))))
+    (into (array-map) (for [c (.getColumns s)] (to-clojure c opts))))
   HColumnImpl
   (to-clojure [s opts]
     {(let [col (.getName s)] (if (instance? AbstractComposite col)
