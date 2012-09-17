@@ -1,4 +1,4 @@
-(defproject org.clojars.paul/clj-hector "0.2.4-SNAPSHOT" 
+(defproject org.clojars.paul/clj-hector "0.2.4" 
   :dependencies [[me.prettyprint/hector-core "1.0-3"]
                  [org.slf4j/slf4j-api "1.6.1"]
                  [org.clojure/clojure "1.4.0"]
