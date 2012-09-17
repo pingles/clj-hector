@@ -93,7 +93,21 @@
                                     (long 2) (long 2)
                                     (long 3) (long 3))}
              (-> (apply get-rows keyspace column-family ["row-key"] opts)
-                 (first)))))))
+                 (first))))))
+  (testing "avoids array-map conversion to hash-map"
+    (with-test-keyspace keyspace [{:name "A" :comparator :utf-8}]
+      (let [column-family "A"
+            num-strs (map str (range 10 50))
+            opts [:n-serializer :string
+                  :v-serializer :string]]
+        (put keyspace column-family "row-key" (zipmap num-strs num-strs))
+        (is (= num-strs
+               (-> (apply get-rows keyspace column-family ["row-key"] opts)
+                   first
+                   vals
+                   first
+                   keys)))))))
+
 
 ;; The pair of UUIDs below were chosen because sorted-map and
 ;; Cassandra's TimeUUID comparator sort them differently. The Time 
