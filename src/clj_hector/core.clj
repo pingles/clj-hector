@@ -68,6 +68,9 @@
   (let [defaults {:start nil
                   :end nil
                   :reversed false
+                  :row-limit 10
+                  :first ""
+                  :last ""
                   :limit Integer/MAX_VALUE}]
     (merge defaults (apply hash-map opts))))
 
@@ -226,6 +229,31 @@
                      (.setKeys (into-array pks))
                      (.setRange (:start opts) (:end opts) (:reversed opts) (:limit opts)))
                    opts)))
+
+
+
+
+(defn row-sequence
+  "In keyspace ks, retrieve rows for pks within column family cf."
+  [ks cf & o]
+  (let [opts (extract-options o cf)
+        rows (execute-query (doto (HFactory/createRangeSlicesQuery ks
+                                                                   (s/serializer (:k-serializer opts))
+                                                                   (s/serializer (:n-serializer opts))
+                                                                   (s/serializer (:v-serializer opts)))
+                              (.setColumnFamily cf)
+                              (.setKeys (:first opts) (:last opts))
+                              (.setRange (:start opts) (:end opts) (:reversed opts) (:limit opts))
+                              (.setRowCount (Integer. (:row-limit opts))))
+                            opts)
+        next-page (last (mapcat keys rows))]
+
+    (if-not (= next-page (:first opts))
+      (concat (if-not (:inclusive opts) (remove #(= (:first opts) (first (keys %1))) rows) rows)
+              (lazy-seq
+               (apply row-sequence ks cf (flatten (into [] (merge opts {:first next-page :last ""})))))))))
+
+
 
 (defn get-rows-cql-query
   "In keyspace ks, retrieve rows for pks within column family cf."
