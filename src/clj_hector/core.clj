@@ -69,8 +69,6 @@
                   :end nil
                   :reversed false
                   :row-limit 10
-                  :first ""
-                  :last ""
                   :limit Integer/MAX_VALUE}]
     (merge defaults (apply hash-map opts))))
 
@@ -231,29 +229,31 @@
                    opts)))
 
 
-
+(defn get-row-slice
+  "In keyspace ks, retrieve row range within column family cf."
+  [ks cf f l & o]
+  (let [opts (extract-options o cf)]
+    (execute-query (doto (HFactory/createRangeSlicesQuery ks
+                                                          (s/serializer (:k-serializer opts))
+                                                          (s/serializer (:n-serializer opts))
+                                                          (s/serializer (:v-serializer opts)))
+                     (.setColumnFamily cf)
+                     (.setKeys f l)
+                     (.setRange (:start opts) (:end opts) (:reversed opts) (:limit opts))
+                     (.setRowCount (Integer. (:row-limit opts))))
+                   opts)))
 
 (defn row-sequence
-  "In keyspace ks, retrieve rows for pks within column family cf."
-  [ks cf & o]
+  "In keyspace ks, retrieve row range within column family cf. Returned as a lazy sequence."
+  [ks cf f l & o]
   (let [opts (extract-options o cf)
-        rows (execute-query (doto (HFactory/createRangeSlicesQuery ks
-                                                                   (s/serializer (:k-serializer opts))
-                                                                   (s/serializer (:n-serializer opts))
-                                                                   (s/serializer (:v-serializer opts)))
-                              (.setColumnFamily cf)
-                              (.setKeys (:first opts) (:last opts))
-                              (.setRange (:start opts) (:end opts) (:reversed opts) (:limit opts))
-                              (.setRowCount (Integer. (:row-limit opts))))
-                            opts)
+        rows (apply get-row-slice ks cf f l o)
         next-page (last (mapcat keys rows))]
 
-    (if-not (= next-page (:first opts))
-      (concat (if-not (:inclusive opts) (remove #(= (:first opts) (first (keys %1))) rows) rows)
+    (if-not (= next-page f)
+      (concat (if-not (:inclusive opts) (remove #(= f (first (keys %1))) rows) rows)
               (lazy-seq
-               (apply row-sequence ks cf (flatten (into [] (merge opts {:first next-page :last ""})))))))))
-
-
+               (apply row-sequence ks cf next-page l (flatten (into [] opts))))))))
 
 (defn get-rows-cql-query
   "In keyspace ks, retrieve rows for pks within column family cf."
