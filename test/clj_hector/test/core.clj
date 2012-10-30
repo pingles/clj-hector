@@ -48,7 +48,11 @@
           (is (= [{"row-key" {["col" "name"] "v"}}]
                  (apply get-rows keyspace column-family ["row-key"] opts))
               (= {["col" "name"] "v"}
-                 (apply get-columns keyspace column-family "row-key" [comp] opts))))))
+                 (apply get-columns keyspace column-family "row-key" [comp] opts)))
+          (is (= {comp "v"}
+                 (apply get-columns keyspace column-family "row-key" [comp]
+                        (conj opts :deserialize-composites false)))))))
+
 
     (with-test-keyspace keyspace [{:name column-family}]
       (testing ":string serializer"
