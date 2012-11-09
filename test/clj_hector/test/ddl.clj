@@ -166,16 +166,16 @@
 
         (update-column-family cluster random-ks new-cf))
         ;; Column names need to be converted to strings to test for equality.
-        (is (= [{
-                 :name "col"
-                 :index-name "colidx", 
-                 :index-type :keys, 
-                 :validation-class :utf-8}
-                {:name "coltwo"
-                 :validation-class :integer}]
-               (map ;convert col names to string
-                #(assoc % :name (String. (:name %)))
-                (:column-metadata (first (column-families cluster random-ks))))))
+        (let [actual (map ;convert col names to string
+                       #(assoc % :name (String. (:name %)))
+                       (:column-metadata (first (column-families cluster random-ks))))
+              expected [{:name "col"
+                         :index-name "colidx",
+                         :index-type :keys,
+                         :validation-class :utf-8}
+                        {:name "coltwo"
+                         :validation-class :integer}]]
+          (is (= (set expected) (set actual))))
 
 (drop-keyspace cluster random-ks))))
 
