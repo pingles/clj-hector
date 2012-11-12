@@ -36,7 +36,7 @@
                       :time-uuid         "TimeUUIDType"
                       :utf-8             "UTF8Type"
                       :composite         "CompositeType"
-                      :dynamic-composite "DynamicCompositeTYpe"
+                      :dynamic-composite "DynamicCompositeType"
                       :uuid              "UUIDType"
                       :counter           "CounterColumnType"})
 
