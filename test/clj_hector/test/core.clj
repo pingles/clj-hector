@@ -7,6 +7,10 @@
         [clj-hector.test.cassandra-helper :only (with-test-keyspace)]
         [clj-hector.core] :reload))
 
+
+(.setLevel (java.util.logging.Logger/getLogger "org.apache.cassandra.db.Memtable")
+           java.util.logging.Level/WARNING)
+
 (deftest composite-serializer
   (let [column-family "A"]
     (with-test-keyspace keyspace [{:name column-family
@@ -110,21 +114,21 @@
 
 
 ;; The pair of UUIDs below were chosen because sorted-map and
-;; Cassandra's TimeUUID comparator sort them differently. The Time 
+;; Cassandra's TimeUUID comparator sort them differently. The Time
 ;; portion of the UUID is important part for sorting, but the main
-;; point is that clj-hector should return results in the order 
+;; point is that clj-hector should return results in the order
 ;; that Cassandra returned them.
-(deftest time-uuid-column-comparator 
+(deftest time-uuid-column-comparator
   (with-test-keyspace keyspace [{:name "A" :comparator :time-uuid}]
     (let [column-family "A"
           opts [:n-serializer :uuid
                 :v-serializer :long]
           a (t/from-string "9e296c00-fec6-11e1-81e5-e0f84733a7f4")
           b (t/from-string "9c4462e0-fec7-11e1-81e5-e0f84733a7f4")]
-      (put 
-       keyspace 
-       column-family 
-       "row-key" 
+      (put
+       keyspace
+       column-family
+       "row-key"
        {a 4800
         b 5507})
       (is (= [(t/get-date a) (t/get-date b)]
@@ -307,3 +311,30 @@
              (apply get-super-columns keyspace column-family pk2
                     "SuperCol" ["n3" "n4"] opts))))))
 
+(deftest test-get-rows-slice
+  (with-test-keyspace keyspace [{:name "A"}]
+    (let [column-family "A"
+          opts [:v-serializer :string
+                :n-serializer :string
+                :k-serializer :string]
+          input (map #(vector (str %) {"k" "v"}) (range 0 5))]
+
+      (doseq [[rk v] input]
+        (put keyspace column-family rk v))
+
+      (is (= (sort (map first input))
+             (sort (mapcat keys (apply get-row-slice keyspace column-family "" "" opts))))))))
+
+(deftest test-row-sequence
+  (with-test-keyspace keyspace [{:name "A"}]
+    (let [column-family "A"
+          opts [:v-serializer :string
+                :n-serializer :string
+                :k-serializer :string]
+          input (map #(vector (str %) {"k" "v"}) (range 0 50))]
+
+      (doseq [[rk v] input]
+        (put keyspace column-family rk v))
+
+      (is (= (sort (map first input))
+             (sort (mapcat keys (apply row-sequence keyspace column-family "" "" opts))))))))
