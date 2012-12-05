@@ -20,7 +20,7 @@
 (def type-inferring (TypeInferringSerializer/get))
 
 (defn cluster
-  "Connects to Cassandra cluster"
+  "Connects to Cassandra cluster. Host can be a sequence of hostnames, or a single hostname."
   ([cluster-name host]
      (cluster cluster-name host 9160))
   ([cluster-name host port]
@@ -28,7 +28,6 @@
   ([cluster-name host port configurator]
      (cluster cluster-name host port configurator {}))
   ([cluster-name host port configurator credentials]
-     ; accept a sequence of hosts
      (let [host-str (if (sequential? host)
                       (string/join "," (map #(str % ":" port) host))
                       (str host ":" port))]
