@@ -1,9 +1,10 @@
 (ns ^{:author "Paul Ingles"
       :doc "Hector-based Cassandra client"}
   clj-hector.core
-  (:require [clj-hector.serialize :as s])
-  (:require [clj-hector.ddl :as ddl])
-  (:require [clj-hector.consistency :as c])
+  (:require [clj-hector.serialize :as s]
+            [clj-hector.ddl :as ddl]
+            [clj-hector.consistency :as c]
+            [clojure.string :as string])
   (:import [java.io Closeable]
            [me.prettyprint.hector.api.mutation Mutator]
            [me.prettyprint.hector.api Cluster]
@@ -27,9 +28,13 @@
   ([cluster-name host port configurator]
      (cluster cluster-name host port configurator {}))
   ([cluster-name host port configurator credentials]
-     (HFactory/getOrCreateCluster cluster-name
-                                  (doto configurator (.setHosts (str host ":" port)))
-                                  credentials)))
+     ; accept a sequence of hosts
+     (let [host-str (if (sequential? host)
+                      (string/join "," (map #(str % ":" port) host))
+                      (str host ":" port))]
+       (HFactory/getOrCreateCluster cluster-name
+                                    (doto configurator (.setHosts host-str))
+                                    credentials))))
 
 (defn shutdown-cluster! [c] (HFactory/shutdownCluster c))
 
