@@ -68,7 +68,7 @@
 
 (defn- make-column-family
   "Returns an object defining a new column family"
-  ([keyspace {:keys [name type comparator comparator-alias validator k-validator column-metadata id]}]
+  ([keyspace {:keys [name type comparator comparator-alias validator k-validator column-metadata id replicate-on-write]}]
      (let [cf-def (BasicColumnFamilyDefinition.)
            columns (map make-column column-metadata)]
        (doto ^BasicColumnFamilyDefinition cf-def
@@ -84,6 +84,8 @@
          (.setComparatorType cf-def (comparator-types comparator)))
        (if comparator-alias
          (.setComparatorTypeAlias cf-def comparator-alias))
+       (if replicate-on-write
+         (.setReplicateOnWrite cf-def replicate-on-write))
        (doseq [column columns] (.addColumnDefinition cf-def column))
        (ThriftCfDef. cf-def))))
 
