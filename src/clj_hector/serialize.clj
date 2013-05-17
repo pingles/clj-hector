@@ -144,10 +144,12 @@
     {:count s})
   AbstractComposite
   (to-clojure [s opts]
-    (let [serializers (:c-serializer opts)]
-      (if serializers
-        (deserialize-composite s serializers)
-        (vec (map #(.getValue %1) (.getComponents s))))))
+    (if (:deserialize-composites opts true)
+     (let [serializers (:c-serializer opts)]
+       (if serializers
+         (deserialize-composite s serializers)
+         (vec (map #(.getValue %1) (.getComponents s)))))
+     s))
   QueryResultImpl
   (to-clojure [s opts]
     (with-meta
