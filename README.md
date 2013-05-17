@@ -8,7 +8,7 @@ Current build status: ![Build status](https://secure.travis-ci.org/pingles/clj-h
 
 Add the following to your `project.clj`
 
-    :dev-dependencies [[org.clojars.paul/clj-hector "0.2.8"]]
+    :dev-dependencies [[org.clojars.paul/clj-hector "0.2.10"]]
 
 ## Usage
 
