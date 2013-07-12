@@ -206,4 +206,22 @@
                      :column-metadata)))
       (drop-keyspace cluster random-ks))))
 
-
+(deftest should-return-dynamic-composite-comparator
+  (let [random-ks (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")]
+    (with-test-cluster cluster
+      (add-keyspace cluster
+                    {:name random-ks
+                     :strategy :simple
+                     :replication 1
+                     :column-families [{:name "a"
+                                        :type :standard
+                                        :k-validator :uuid
+                                        :comparator :dynamic-composite
+                                        :comparator-alias
+                                        "(t=>TimeUUIDType,s=>UTF8Type)"}]})
+      (is (= {:comparator :dynamic-composite
+              :comparator-alias
+              "(t=>org.apache.cassandra.db.marshal.TimeUUIDType,s=>org.apache.cassandra.db.marshal.UTF8Type)"}
+             (select-keys (first (column-families cluster random-ks))
+                          [:comparator :comparator-alias])))
+      (drop-keyspace cluster random-ks))))
