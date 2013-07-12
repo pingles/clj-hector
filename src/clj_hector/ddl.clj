@@ -165,7 +165,7 @@
 
 (defn- convert-metadata [cf-m]
   (let [base {:name (.fromByteBuffer (BytesArraySerializer/get) (.getName cf-m))
-              :validation-class (.get types (.getValidationClass cf-m))}]
+              :validator (.get types (.getValidationClass cf-m))}]
     (if (.getIndexName cf-m)
       (assoc base
         :index-type (keyword (clojure.string/lower-case (.name (.getIndexType cf-m))))
