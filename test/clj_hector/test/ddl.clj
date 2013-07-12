@@ -172,9 +172,9 @@
               expected [{:name "col"
                          :index-name "colidx",
                          :index-type :keys,
-                         :validation-class :utf-8}
+                         :validator :utf-8}
                         {:name "coltwo"
-                         :validation-class :integer}]]
+                         :validator :integer}]]
           (is (= (set expected) (set actual))))
 
 (drop-keyspace cluster random-ks))))
