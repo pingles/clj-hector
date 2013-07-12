@@ -7,7 +7,7 @@
            [me.prettyprint.hector.api.beans Composite AbstractComposite$ComponentEquality]
            [me.prettyprint.hector.api.ddl ComparatorType ColumnFamilyDefinition ColumnType KeyspaceDefinition ColumnIndexType]
            [me.prettyprint.cassandra.model BasicColumnDefinition BasicColumnFamilyDefinition]
-           [me.prettyprint.cassandra.serializers StringSerializer BytesArraySerializer]))
+           [me.prettyprint.cassandra.serializers StringSerializer BytesArraySerializer TypeInferringSerializer]))
 
 
 (def component-equality-type {:less_than_equal    AbstractComposite$ComponentEquality/LESS_THAN_EQUAL
@@ -56,7 +56,7 @@
   "Returns an object defining a column with validation and optional index"
   ([{:keys [name index-name index-type validator id]}]
    (let [c-def (BasicColumnDefinition.)
-         name (.toByteBuffer (StringSerializer/get) name)]
+         name (.toByteBuffer (TypeInferringSerializer/get) name)]
      (doto c-def
        (.setName name)
        (.setValidationClass (.getClassName (comparator-types validator))))
