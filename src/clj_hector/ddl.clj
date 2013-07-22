@@ -161,7 +161,12 @@
 
 (defn- parse-comparator
   [^ComparatorType comparator-type]
-  (get types (.getClassName comparator-type)))
+  (let [comparator-match (re-matches #"([\w\.]+)(\([\w\.=>\,]+\)){0,1}"
+                                     (.getClassName comparator-type))]
+    (merge
+     {:comparator (get types (get comparator-match 1))}
+     (if-let [alias (get comparator-match 2)]
+       {:comparator-alias alias}))))
 
 (defn- convert-metadata [cf-m]
   (let [base {:name (.fromByteBuffer (BytesArraySerializer/get) (.getName cf-m))
@@ -179,11 +184,12 @@
                              (.describeKeyspaces cluster)))
            cf-defs (.getCfDefs ^KeyspaceDefinition ks)]
        (map (fn [^ColumnFamilyDefinition cf-def]
-              {:id (.getId cf-def)
-               :name (.getName cf-def)
-               :comparator (parse-comparator (.getComparatorType cf-def))
-               :type (parse-type (.getColumnType cf-def))
-               :validator (get types (.getDefaultValidationClass cf-def))
-               :k-validator (get types (.getKeyValidationClass cf-def))
-               :column-metadata (map convert-metadata (.getColumnMetadata cf-def))})
+              (merge
+               {:id (.getId cf-def)
+                :name (.getName cf-def)
+                :type (parse-type (.getColumnType cf-def))
+                :validator (get types (.getDefaultValidationClass cf-def))
+                :k-validator (get types (.getKeyValidationClass cf-def))
+                :column-metadata (map convert-metadata (.getColumnMetadata cf-def))}
+               (parse-comparator (.getComparatorType cf-def))))
             cf-defs))))
