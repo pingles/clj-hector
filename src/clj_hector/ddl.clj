@@ -38,7 +38,8 @@
                       :composite         "CompositeType"
                       :dynamic-composite "DynamicCompositeType"
                       :uuid              "UUIDType"
-                      :counter           "CounterColumnType"})
+                      :counter           "CounterColumnType"
+                      :boolean           "BooleanType"})
 
 (def column-index-types {:keys ColumnIndexType/KEYS})
 
@@ -59,7 +60,7 @@
          name (.toByteBuffer (TypeInferringSerializer/get) name)]
      (doto c-def
        (.setName name)
-       (.setValidationClass (.getClassName (comparator-types validator))))
+       (.setValidationClass (validator-types validator)))
      (if index-type
        (.setIndexType c-def (column-index-types index-type)))
      (if index-name
@@ -157,7 +158,8 @@
             "org.apache.cassandra.db.marshal.CompositeType"        :composite
             "org.apache.cassandra.db.marshal.DynamicCompositeType" :dynamic-composite
             "org.apache.cassandra.db.marshal.UUIDType"             :uuid
-            "org.apache.cassandra.db.marshal.CounterColumnType"    :counter})
+            "org.apache.cassandra.db.marshal.CounterColumnType"    :counter
+            "org.apache.cassandra.db.marshal.BooleanType"          :boolean})
 
 (defn- parse-comparator
   [^ComparatorType comparator-type]

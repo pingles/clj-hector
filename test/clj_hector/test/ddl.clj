@@ -162,7 +162,8 @@
                                           :index-name "colidx"
                                           :index-type :keys
                                           :validator :utf-8}
-                                        {:name "coltwo" :validator :integer}] )]
+                                        {:name "coltwo" :validator :integer}
+                                        {:name "colthree" :validator :boolean}] )]
 
         (update-column-family cluster random-ks new-cf))
         ;; Column names need to be converted to strings to test for equality.
@@ -174,7 +175,8 @@
                          :index-type :keys,
                          :validator :utf-8}
                         {:name "coltwo"
-                         :validator :integer}]]
+                         :validator :integer}
+                        {:name "colthree" :validator :boolean}]]
           (is (= (set expected) (set actual))))
 
 (drop-keyspace cluster random-ks))))
