@@ -18,3 +18,11 @@
 (deftest keyword-serialization
   (let [s (serializer :keyword)]
     (is (= :kw (.fromBytes s (.toBytes s :kw))))))
+
+(deftest bad-serializer-name
+  (is (thrown? NullPointerException (serializer :bad-serializer-keyword)))
+  (try
+    (serializer :bad-serializer-keyword)
+    (is false "Should have gotten a NPE")
+    (catch NullPointerException e
+      (is (= ":bad-serializer-keyword did not resolve to a serializer." (.getMessage e))))))
