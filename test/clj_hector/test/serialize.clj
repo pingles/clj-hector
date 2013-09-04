@@ -20,9 +20,6 @@
     (is (= :kw (.fromBytes s (.toBytes s :kw))))))
 
 (deftest bad-serializer-name
-  (is (thrown? NullPointerException (serializer :bad-serializer-keyword)))
-  (try
-    (serializer :bad-serializer-keyword)
-    (is false "Should have gotten a NPE")
-    (catch NullPointerException e
-      (is (= ":bad-serializer-keyword did not resolve to a serializer." (.getMessage e))))))
+  (is (thrown-with-msg? IllegalArgumentException
+                        #"bad-serializer-keyword did not resolve to a serializer"
+                        (serializer :bad-serializer-keyword))))

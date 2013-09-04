@@ -55,7 +55,7 @@
    (cond (keyword? x) (x serializers)
          (instance? Serializer x) x
          :else (SerializerTypeInferer/getSerializer x))
-   (throw (NullPointerException. (str x " did not resolve to a serializer.")))))
+   (throw (IllegalArgumentException. (str x " did not resolve to a serializer.")))))
 
 (defn- deserialize-composite
   "Given a composite and a list of deserializers deserialize the
