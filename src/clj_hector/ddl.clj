@@ -182,8 +182,7 @@
 (defn column-families
   "Returns all the column families for a certain keyspace"
   ([^Cluster cluster ^String keyspace]
-     (let [ks (first (filter (fn [^KeyspaceDefinition ks] (= (.getName ks) keyspace))
-                             (.describeKeyspaces cluster)))
+     (let [ks (.describeKeyspace cluster keyspace)
            cf-defs (.getCfDefs ^KeyspaceDefinition ks)]
        (map (fn [^ColumnFamilyDefinition cf-def]
               (merge
