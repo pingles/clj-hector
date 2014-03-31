@@ -91,14 +91,17 @@
        (ThriftCfDef. cf-def))))
 
 (defn- make-keyspace-definition
-  ([keyspace strategy-class replication-factor column-families]
+  ([keyspace strategy-class replication-factor column-families strategy-options]
      (let [column-families (map (fn [column-family]
                                   (make-column-family keyspace column-family))
-                                column-families)]
-       (HFactory/createKeyspaceDefinition keyspace
-                                          strategy-class
-                                          replication-factor
-                                          column-families))))
+                                column-families)
+           definition (HFactory/createKeyspaceDefinition keyspace
+                                                         strategy-class
+                                                         replication-factor
+                                                         column-families)]
+       (when strategy-options
+         (.setStrategyOptions definition strategy-options))
+       definition)))
 
 (defn add-column-family
   "Adds a column family to a keyspace"
@@ -117,7 +120,7 @@
 
 (defn add-keyspace
   "Creates a new keyspace from the definition passed as a map"
-  ([^Cluster cluster {:keys [name strategy replication column-families]}]
+  ([^Cluster cluster {:keys [name strategy replication column-families strategy-options]}]
      (let [strategy (condp = strategy
                         :local            "org.apache.cassandra.locator.LocalStrategy"
                         :network-topology "org.apache.cassandra.locator.NetworkTopologyStrategy"
@@ -126,20 +129,13 @@
        (.addKeyspace cluster (make-keyspace-definition name
                                                        strategy
                                                        replication
-                                                       column-families)))))
+                                                       column-families
+                                                       strategy-options)))))
 
 (defn drop-keyspace
   "Deletes a whole keyspace from the cluster"
   ([^Cluster cluster keyspace-name]
      (.dropKeyspace cluster keyspace-name)))
-
-(defn keyspaces
-  "Description of the keyspaces available in the Cassandra cluster"
-  ([^Cluster cluster]
-     (let [kss (.describeKeyspaces cluster)]
-       (map (fn [^KeyspaceDefinition ks] {:name (.getName ks)
-                                         :replication-factor (.getReplicationFactor ks)})
-            kss))))
 
 (defn- parse-type
   [x]
@@ -161,15 +157,6 @@
             "org.apache.cassandra.db.marshal.CounterColumnType"    :counter
             "org.apache.cassandra.db.marshal.BooleanType"          :boolean})
 
-(defn- parse-comparator
-  [^ComparatorType comparator-type]
-  (let [comparator-match (re-matches #"([\w\.]+)(\([\w\.=>\,]+\)){0,1}"
-                                     (.getClassName comparator-type))]
-    (merge
-     {:comparator (get types (get comparator-match 1))}
-     (if-let [alias (get comparator-match 2)]
-       {:comparator-alias alias}))))
-
 (defn- convert-metadata [cf-m]
   (let [base {:name (.fromByteBuffer (BytesArraySerializer/get) (.getName cf-m))
               :validator (.get types (.getValidationClass cf-m))}]
@@ -179,18 +166,45 @@
         :index-name (.getIndexName cf-m))
       base)))
 
+(defn- parse-comparator
+  [^ComparatorType comparator-type]
+  (let [comparator-match (re-matches #"([\w\.]+)(\([\w\.=>\,]+\)){0,1}"
+                                     (.getClassName comparator-type))]
+    (merge
+     {:comparator (get types (get comparator-match 1))}
+     (if-let [alias (get comparator-match 2)]
+       {:comparator-alias alias}))))
+
+(defn- cf-def-to-map
+  "Converts a ColumnFamilyDefinition to a map"
+  [^ColumnFamilyDefinition cf-def]
+  (merge
+   {:id (.getId cf-def)
+    :name (.getName cf-def)
+    :type (parse-type (.getColumnType cf-def))
+    :validator (get types (.getDefaultValidationClass cf-def))
+    :k-validator (get types (.getKeyValidationClass cf-def))
+    :column-metadata (map convert-metadata (.getColumnMetadata cf-def))}
+   (parse-comparator (.getComparatorType cf-def))))
+
+(defn keyspaces
+  "Description of the keyspaces available in the Cassandra cluster"
+  ([^Cluster cluster]
+     (let [kss (.describeKeyspaces cluster)]
+       (map (fn [^KeyspaceDefinition ks] {:name (.getName ks)
+                                          :replication (.getReplicationFactor ks)
+                                          :strategy (condp = (.getStrategyClass ks)
+                                                        "org.apache.cassandra.locator.LocalStrategy" :local
+                                                        "org.apache.cassandra.locator.NetworkTopologyStrategy" :network-topology
+                                                        "org.apache.cassandra.locator.SimpleStrategy" :simple
+                                                        (.getStrategyClass ks))
+                                          :strategy-options  (clojure.lang.PersistentHashMap/create (.getStrategyOptions ks))
+                                          :column-families (map cf-def-to-map (.getCfDefs ks))})
+            kss))))
+
 (defn column-families
   "Returns all the column families for a certain keyspace"
   ([^Cluster cluster ^String keyspace]
      (let [ks (.describeKeyspace cluster keyspace)
            cf-defs (.getCfDefs ^KeyspaceDefinition ks)]
-       (map (fn [^ColumnFamilyDefinition cf-def]
-              (merge
-               {:id (.getId cf-def)
-                :name (.getName cf-def)
-                :type (parse-type (.getColumnType cf-def))
-                :validator (get types (.getDefaultValidationClass cf-def))
-                :k-validator (get types (.getKeyValidationClass cf-def))
-                :column-metadata (map convert-metadata (.getColumnMetadata cf-def))}
-               (parse-comparator (.getComparatorType cf-def))))
-            cf-defs))))
+       (map cf-def-to-map cf-defs))))

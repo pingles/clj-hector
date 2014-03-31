@@ -45,6 +45,22 @@
       (let [kss (map :name (keyspaces cluster))]
         (is (= 0 (count (filter (partial = random-ks) kss))))))))
 
+(deftest should-add-ks-strategy-options
+  (let [random-ks (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")
+        ks-def {:name random-ks
+                :strategy :simple
+                :replication 1
+                :column-families [{:name "a"}
+                                  {:name "b"
+                                   :comparator :long}]
+                :strategy-options {"foo" "bar"
+                                   "replication_factor" "1"}}]
+    (with-test-cluster cluster
+      (add-keyspace cluster
+                    ks-def)
+      (let [kss (keyspaces cluster)]
+        (is (= 1 (count (filter (partial = (dissoc ks-def :column-families)) (map #(dissoc % :column-families) kss)))))))))
+
 (deftest should-add-remove-counter-column-family
   (let [random-ks (.replace (str "ks" (java.util.UUID/randomUUID)) "-" "")]
     (with-test-cluster cluster
