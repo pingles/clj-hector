@@ -105,37 +105,39 @@
 
 (defn add-column-family
   "Adds a column family to a keyspace"
-  ([^Cluster cluster keyspace opts]
-       (.addColumnFamily cluster (make-column-family keyspace opts))))
+  ([^Cluster cluster keyspace opts & {:keys [block] :or {block false}}]
+       (.addColumnFamily cluster (make-column-family keyspace opts) block)))
 
 (defn update-column-family
   "Updates a column family in a keyspace"
-  ([^Cluster cluster keyspace opts]
-       (.updateColumnFamily cluster (make-column-family keyspace opts))))
+  ([^Cluster cluster keyspace opts & {:keys [block] :or {block false}}]
+       (.updateColumnFamily cluster (make-column-family keyspace opts) block)))
 
 (defn drop-column-family
   "Removes a column family from a keyspace"
-  ([^Cluster cluster keyspace-name column-family-name]
-     (.dropColumnFamily cluster keyspace-name column-family-name)))
+  ([^Cluster cluster keyspace-name column-family-name & {:keys [block] :or {block false}}]
+     (.dropColumnFamily cluster keyspace-name column-family-name block)))
 
 (defn add-keyspace
   "Creates a new keyspace from the definition passed as a map"
-  ([^Cluster cluster {:keys [name strategy replication column-families strategy-options]}]
-     (let [strategy (condp = strategy
-                        :local            "org.apache.cassandra.locator.LocalStrategy"
-                        :network-topology "org.apache.cassandra.locator.NetworkTopologyStrategy"
-                        "org.apache.cassandra.locator.SimpleStrategy")
-           replication (or replication 1)]
-       (.addKeyspace cluster (make-keyspace-definition name
-                                                       strategy
-                                                       replication
-                                                       column-families
-                                                       strategy-options)))))
+  ([^Cluster cluster {:keys [name strategy replication column-families strategy-options]} & {:keys [block] :or {block false}}]
+   (let [strategy (condp = strategy
+                    :local "org.apache.cassandra.locator.LocalStrategy"
+                    :network-topology "org.apache.cassandra.locator.NetworkTopologyStrategy"
+                    "org.apache.cassandra.locator.SimpleStrategy")
+         replication (or replication 1)]
+     (.addKeyspace cluster
+                   (make-keyspace-definition name
+                                             strategy
+                                             replication
+                                             column-families
+                                             strategy-options)
+                   block))))
 
 (defn drop-keyspace
   "Deletes a whole keyspace from the cluster"
-  ([^Cluster cluster keyspace-name]
-     (.dropKeyspace cluster keyspace-name)))
+  ([^Cluster cluster keyspace-name & {:keys [block] :or {block false}}]
+     (.dropKeyspace cluster keyspace-name block)))
 
 (defn- parse-type
   [x]
